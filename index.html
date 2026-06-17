@@ -283,6 +283,30 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
   </div>
 </div>
 
+<!-- Welcome / first-visit invitation to take the tour -->
+<div id="welcome-overlay" style="display:none;position:fixed;inset:0;z-index:700;background:rgba(0,0,0,0.78);align-items:center;justify-content:center">
+  <svg id="welcome-arrow-svg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none">
+    <defs>
+      <marker id="welcome-arrowhead" markerWidth="10" markerHeight="10" refX="7" refY="5" orient="auto">
+        <path d="M0,0 L10,5 L0,10 Z" fill="#6dca8a"/>
+      </marker>
+    </defs>
+    <path id="welcome-arrow-path" d="" fill="none" stroke="#6dca8a" stroke-width="2.5" stroke-dasharray="6,5" marker-end="url(#welcome-arrowhead)"/>
+  </svg>
+  <div style="background:#1e1e1e;border:1px solid #4a9eff;border-radius:16px;width:380px;padding:28px 26px;text-align:center;box-shadow:0 16px 50px rgba(0,0,0,0.7)">
+    <div style="font-size:32px;margin-bottom:10px">⚡</div>
+    <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:10px">Пройдите обучение за 2 минуты!</div>
+    <div style="font-size:13px;color:#aaa;line-height:1.6;margin-bottom:22px">
+      Покажем как загрузить план, задать масштаб, провести линии и сразу получить точный расчёт кабеля.<br>
+      Кнопка «Обучение» всегда доступна в верхней панели.
+    </div>
+    <div style="display:flex;gap:10px">
+      <button id="welcome-later" style="flex:1;padding:11px 0;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:#999;font-size:13px;cursor:pointer">Потом</button>
+      <button id="welcome-start" style="flex:1;padding:11px 0;background:#1a3a5c;border:1px solid #4a9eff;border-radius:8px;color:#7dc4ff;font-size:13px;font-weight:700;cursor:pointer">Пройти обучение</button>
+    </div>
+  </div>
+</div>
+
 <!-- Interactive tour overlay -->
 <div id="tour-overlay" style="display:none;position:fixed;inset:0;z-index:600;pointer-events:none">
   <svg id="tour-mask-svg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:auto" >
@@ -2468,6 +2492,46 @@ Ctrl+Z / Ctrl+Y — отмена/повтор | Esc — сброс выбора`
 }
 
 // ═══════════════════════════════════════════════════════
+// WELCOME OVERLAY — first-visit invitation to take the tour
+// ═══════════════════════════════════════════════════════
+function drawWelcomeArrow(){
+  const btn = document.getElementById('btn-tour');
+  const overlay = document.getElementById('welcome-overlay');
+  if(!btn || overlay.style.display!=='flex') return;
+  const btnRect = btn.getBoundingClientRect();
+  const cardRect = overlay.querySelector('div[style*="border-radius:16px"]').getBoundingClientRect();
+
+  // Start the arrow from the top edge of the card, end near the button
+  const startX = cardRect.left + cardRect.width*0.5;
+  const startY = cardRect.top;
+  const endX = btnRect.left + btnRect.width/2;
+  const endY = btnRect.bottom + 6;
+
+  // Curve control point — bow upward/outward a bit for a natural pointing arc
+  const midX = (startX+endX)/2;
+  const midY = Math.min(startY, endY) - 70;
+
+  const path = document.getElementById('welcome-arrow-path');
+  path.setAttribute('d', `M${startX},${startY} Q${midX},${midY} ${endX},${endY}`);
+}
+
+function showWelcomeOverlay(){
+  document.getElementById('welcome-overlay').style.display='flex';
+  requestAnimationFrame(drawWelcomeArrow); // wait for layout
+}
+function hideWelcomeOverlay(){
+  document.getElementById('welcome-overlay').style.display='none';
+}
+document.getElementById('welcome-start').addEventListener('click', ()=>{
+  hideWelcomeOverlay();
+  startTour();
+});
+document.getElementById('welcome-later').addEventListener('click', hideWelcomeOverlay);
+window.addEventListener('resize', ()=>{
+  if(document.getElementById('welcome-overlay').style.display==='flex') drawWelcomeArrow();
+});
+
+// ═══════════════════════════════════════════════════════
 // INTERACTIVE TOUR
 // ═══════════════════════════════════════════════════════
 const TOUR_STEPS = [
@@ -2615,6 +2679,7 @@ resize();
 setMode('line');
 renderMarkerTypesList();
 setInfo('Есть фото? «Фон» → «Масштаб». Нет фото? «Масштаб» → «Стены» для контура комнаты.');
+setTimeout(showWelcomeOverlay, 250); // slight delay so toolbar layout is fully settled before measuring arrow position
 </script>
 </body>
 </html>

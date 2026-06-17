@@ -1,0 +1,2620 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Калькулятор проводки</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#1a1a1a;color:#e8e8e8}
+#app{display:flex;flex-direction:column;width:100vw;height:100vh}
+#toolbar{display:flex;align-items:center;gap:3px;padding:5px 8px;background:#222;border-bottom:1px solid #333;flex-wrap:wrap;flex-shrink:0;z-index:10}
+.tb-btn{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;font-size:12px;border:1px solid #444;border-radius:6px;background:#2a2a2a;color:#ccc;cursor:pointer;white-space:nowrap;transition:background .1s,border-color .1s;user-select:none}
+.tb-btn:hover{background:#333;border-color:#555}
+.tb-btn.active{border-color:#4a9eff;background:#1a3a5c;color:#7dc4ff}
+.tb-btn i{font-size:14px}
+.tb-btn.danger{color:#e24b4a;border-color:#4a2222}
+.tb-btn.danger:hover{background:#2a1a1a}
+.tb-btn.success{color:#6dca8a;border-color:#2a4a2a}
+.tb-btn.success:hover{background:#1a2a1a}
+.sep{width:1px;height:22px;background:#3a3a3a;margin:0 2px;flex-shrink:0}
+#color-picker-row{display:flex;align-items:center;gap:3px}
+.color-dot{width:20px;height:20px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .1s;flex-shrink:0}
+.color-dot:hover{transform:scale(1.2)}
+.color-dot.active{border-color:#fff;box-shadow:0 0 0 1px #777}
+#scale-badge{font-size:11px;padding:3px 7px;background:#1a3a2a;border:1px solid #2a5a3a;border-radius:6px;color:#6dca8a;display:none;align-items:center;gap:4px}
+#main{display:flex;flex:1;overflow:hidden}
+#canvas-wrap{position:relative;flex:1;overflow:hidden;background:#111}
+#bg-canvas,#draw-canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+#draw-canvas{cursor:crosshair}
+#sidebar{width:240px;flex-shrink:0;background:#222;border-left:1px solid #333;display:flex;flex-direction:column;overflow:hidden}
+#sidebar-tabs{display:flex;border-bottom:1px solid #333;flex-shrink:0}
+.stab{flex:1;padding:8px 0;font-size:11px;text-align:center;cursor:pointer;color:#666;border-bottom:2px solid transparent;user-select:none}
+.stab.active{color:#7dc4ff;border-color:#4a9eff}
+.stab:hover{color:#aaa}
+.spanel{flex:1;overflow-y:auto;display:none;padding:10px}
+.spanel.active{display:block}
+.res-row{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid #2a2a2a}
+.res-row:last-child{border-bottom:none}
+.res-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.res-name{flex:1;font-size:12px;color:#aaa}
+.res-val{font-size:12px;font-weight:600;color:#e8e8e8}
+.res-sub{font-size:10px;color:#555;padding-left:18px;padding-bottom:3px}
+.res-section{font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.05em;padding:8px 0 3px;margin-top:4px}
+#total-row{padding:8px 12px;border-top:1px solid #333;display:flex;justify-content:space-between;align-items:center;font-size:12px;flex-shrink:0}
+#total-val{font-weight:700;font-size:14px;color:#7dc4ff}
+.prop-group{margin-bottom:13px}
+.prop-label{font-size:10px;color:#666;margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em}
+.prop-input{width:100%;padding:6px 8px;background:#1a1a1a;border:1px solid #444;border-radius:5px;color:#e8e8e8;font-size:13px;outline:none}
+.prop-input:focus{border-color:#4a9eff}
+.prop-colors{display:flex;flex-wrap:wrap;gap:4px}
+.prop-btn{width:100%;padding:6px 0;font-size:12px;border:1px solid #444;border-radius:5px;background:#2a2a2a;color:#ccc;cursor:pointer;margin-bottom:5px;display:flex;align-items:center;justify-content:center;gap:5px}
+.prop-btn:hover{background:#333}
+.prop-btn.del{border-color:#4a2222;color:#e24b4a}
+.prop-btn.del:hover{background:#2a1a1a}
+#no-selection{font-size:12px;color:#555;padding:8px 0;text-align:center}
+/* Marker type list */
+#marker-types-list{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
+.mtype-row{display:flex;align-items:center;gap:6px;padding:5px 6px;border:1px solid #333;border-radius:5px;background:#1e1e1e;cursor:pointer}
+.mtype-row:hover{background:#2a2a2a}
+.mtype-row.active-mtype{border-color:#4a9eff;background:#1a3a5c}
+.mtype-badge{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;color:#fff;background:#555}
+.mtype-info{flex:1;min-width:0}
+.mtype-label{font-size:12px;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mtype-desc{font-size:10px;color:#666;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mtype-extra{font-size:10px;color:#4dcbaa}
+.mtype-actions{display:flex;gap:2px;flex-shrink:0}
+.mtype-del{background:none;border:none;color:#555;cursor:pointer;font-size:13px;padding:3px;border-radius:3px}
+.mtype-del:hover{color:#e24b4a;background:#2a1a1a}
+.mtype-edit{background:none;border:none;color:#555;cursor:pointer;font-size:13px;padding:3px;border-radius:3px}
+.mtype-edit:hover{color:#4a9eff;background:#1a2a3a}
+/* Info bar */
+#info-bar{padding:4px 12px;background:#1c1c1c;border-top:1px solid #2a2a2a;font-size:11px;color:#555;flex-shrink:0}
+/* Drop hint */
+#drop-hint{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;gap:10px;color:#2a2a2a}
+#drop-hint i{font-size:44px}
+#drop-hint p{font-size:13px}
+#drop-hint.hidden{display:none}
+/* Generic modal */
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);align-items:center;justify-content:center;z-index:200}
+#modal.show{display:flex}
+#modal-box{background:#272727;border:1px solid #444;border-radius:10px;padding:20px 22px;min-width:270px;max-width:380px;width:92%}
+#modal-box h3{font-size:14px;font-weight:600;margin-bottom:14px;color:#e8e8e8}
+.mfield{margin-bottom:12px}
+.mfield label{font-size:12px;color:#888;display:block;margin-bottom:4px}
+.mfield input,.mfield select,.mfield textarea{width:100%;padding:7px 9px;background:#1a1a1a;border:1px solid #444;border-radius:5px;color:#e8e8e8;font-size:13px;outline:none;font-family:inherit}
+.mfield input:focus,.mfield select:focus,.mfield textarea:focus{border-color:#4a9eff}
+.modal-btns{display:flex;gap:7px;justify-content:flex-end;margin-top:4px}
+.modal-btns button{font-size:12px;padding:5px 14px;border-radius:5px;border:1px solid #444;cursor:pointer;background:#2a2a2a;color:#ccc}
+.modal-btns button:hover{background:#333}
+.modal-btns button.primary{background:#1a3a5c;border-color:#4a9eff;color:#7dc4ff;font-weight:600}
+.modal-btns button.primary:hover{background:#1e4570}
+.modal-color-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+/* Connection popup */
+#conn-popup{display:none;position:fixed;z-index:400;background:#272727;border:1px solid #4a9eff;border-radius:10px;padding:12px 14px;min-width:180px;box-shadow:0 6px 28px rgba(0,0,0,.7)}
+#conn-popup.show{display:block}
+#conn-popup h4{font-size:12px;color:#aaa;margin-bottom:10px;font-weight:400}
+.conn-btn{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border:1px solid #444;border-radius:6px;background:#2a2a2a;color:#e8e8e8;cursor:pointer;font-size:12px;margin-bottom:6px}
+.conn-btn:last-child{margin-bottom:0}
+.conn-btn:hover{background:#333;border-color:#555}
+.conn-btn.connect{border-color:#6dca5a;color:#6dca5a}
+.conn-btn.connect:hover{background:#1a2a1a}
+.conn-btn.transit{border-color:#f08840;color:#f08840}
+.conn-btn.transit:hover{background:#2a1a0a}
+/* Context menu */
+#ctx-menu{display:none;position:fixed;background:#222;border:1px solid #444;border-radius:7px;z-index:300;min-width:170px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+#ctx-menu.show{display:block}
+.ctx-item{padding:8px 14px;font-size:12px;cursor:pointer;color:#ccc;display:flex;align-items:center;gap:8px}
+.ctx-item:hover{background:#333}
+.ctx-item i{font-size:14px;color:#888}
+.ctx-item.del{color:#e24b4a}
+.ctx-item.del i{color:#e24b4a}
+.ctx-sep{height:1px;background:#333;margin:3px 0}
+.exp-opt{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border:1px solid #333;border-radius:6px;background:#1a1a1a;cursor:pointer;margin-bottom:0}
+.exp-opt:has(input:checked){border-color:#4a9eff;background:#1a2a3a}
+.exp-opt input{margin-top:2px;flex-shrink:0;accent-color:#4a9eff}
+.exp-opt-body{flex:1}
+.exp-opt-title{font-size:12px;color:#ccc;font-weight:500;display:flex;align-items:center;gap:6px}
+.exp-opt-desc{font-size:10px;color:#555;margin-top:2px}
+.exp-opt-badge{font-size:10px;padding:1px 6px;border-radius:3px;background:#2a2a2a;border:1px solid #444;color:#888;font-weight:700}
+/* Guide modal */
+.guide-step{display:flex;gap:14px;margin-bottom:18px;align-items:flex-start}
+.guide-num{width:26px;height:26px;border-radius:50%;background:#1a3a5c;border:1px solid #4a9eff;color:#7dc4ff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.guide-title{font-size:13px;font-weight:600;color:#e8e8e8;margin-bottom:5px}
+.guide-text{font-size:12px;color:#888;line-height:1.6}
+.guide-body{flex:1}
+/* Marker connections list in props */
+.conn-list-item{display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #2a2a2a;font-size:11px;color:#aaa}
+.conn-list-item:last-child{border-bottom:none}
+.conn-badge{font-size:10px;padding:1px 5px;border-radius:3px;font-weight:600}
+.conn-badge.connected{background:#1a3a1a;color:#6dca5a;border:1px solid #2a5a2a}
+.conn-badge.transit{background:#2a1a0a;color:#f08840;border:1px solid #4a2a0a}
+.conn-toggle{background:none;border:none;color:#555;cursor:pointer;font-size:11px;padding:2px 5px;border-radius:3px;margin-left:auto}
+.conn-toggle:hover{color:#ccc;background:#333}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="toolbar">
+    <label class="tb-btn" title="Загрузить план помещения" style="cursor:pointer">
+      <i class="ti ti-photo-up"></i> Фон
+      <input type="file" accept="image/*" id="file-in" style="display:none">
+    </label>
+    <button class="tb-btn success" id="btn-save"><i class="ti ti-device-floppy"></i> Сохранить</button>
+    <button class="tb-btn" id="btn-export-img" title="Экспорт в PNG высокого качества"><i class="ti ti-photo-down"></i> PNG</button>
+    <label class="tb-btn" style="cursor:pointer">
+      <i class="ti ti-folder-open"></i> Открыть
+      <input type="file" accept=".wiring,.json" id="project-in" style="display:none">
+    </label>
+    <div class="sep"></div>
+    <button class="tb-btn" id="btn-scale"><i class="ti ti-ruler"></i> Масштаб</button>
+    <div id="scale-badge"><i class="ti ti-ruler" style="font-size:11px"></i> Масштаб задан</div>
+    <div class="sep"></div>
+    <button class="tb-btn" id="btn-wall" title="Нарисовать стены (контур помещения)"><i class="ti ti-border-outer"></i> Стены</button>
+    <button class="tb-btn active" id="btn-line"><i class="ti ti-pencil"></i> Линия</button>
+    <button class="tb-btn" id="btn-marker"><i class="ti ti-map-pin"></i> Значок</button>
+    <button class="tb-btn" id="btn-select"><i class="ti ti-pointer"></i> Выбор</button>
+    <button class="tb-btn" id="btn-pan"><i class="ti ti-hand-move"></i> Фон</button>
+    <div class="sep"></div>
+    <div id="color-picker-row"><span style="font-size:11px;color:#555;margin-right:2px">Цвет:</span></div>
+    <div class="sep"></div>
+    <button class="tb-btn" id="btn-undo"><i class="ti ti-arrow-back-up"></i></button>
+    <button class="tb-btn" id="btn-redo"><i class="ti ti-arrow-forward-up"></i></button>
+    <button class="tb-btn danger" id="btn-clear"><i class="ti ti-trash"></i> Сбросить</button>
+    <div class="sep"></div>
+    <!-- Bg opacity -->
+    <div style="display:flex;align-items:center;gap:5px;flex-shrink:0" title="Прозрачность фона. Без фото-плана — регулирует яркость подложки (тёмная/светлая)">
+      <i class="ti ti-sun" style="font-size:13px;color:#666"></i>
+      <input type="range" id="bg-opacity" min="0" max="100" value="100" step="1"
+        style="width:70px;accent-color:#4a9eff;cursor:pointer">
+      <span id="bg-opacity-val" style="font-size:11px;color:#666;width:28px">100%</span>
+    </div>
+    <div class="sep"></div>
+    <!-- Cursor size -->
+    <div style="display:flex;align-items:center;gap:5px;flex-shrink:0" title="Размер курсора-прицела">
+      <i class="ti ti-crosshair" style="font-size:13px;color:#666"></i>
+      <input type="range" id="cursor-size" min="10" max="120" value="0" step="2"
+        style="width:60px;accent-color:#4a9eff;cursor:pointer">
+    </div>
+    <div class="sep"></div>
+    <!-- Marker alignment snap radius -->
+    <div style="display:flex;align-items:center;gap:5px;flex-shrink:0" title="Радиус прилипания значков к общей вертикали/горизонтали">
+      <i class="ti ti-layout-align-center" style="font-size:13px;color:#666"></i>
+      <input type="range" id="marker-snap" min="0" max="30" value="10" step="1"
+        style="width:55px;accent-color:#4a9eff;cursor:pointer">
+      <span id="marker-snap-val" style="font-size:11px;color:#666;width:24px">10px</span>
+    </div>
+    <div class="sep"></div>
+    <!-- Ortho-only mode -->
+    <button class="tb-btn" id="btn-ortho" title="Только горизонтальные и вертикальные линии">
+      <i class="ti ti-arrow-right"></i> Ортого
+    </button>
+    <div class="sep"></div>
+    <button class="tb-btn success" id="btn-tour" style="margin-left:auto;font-weight:600" title="Пошаговое обучение">
+      <i class="ti ti-school"></i> Обучение
+    </button>
+    <button class="tb-btn" id="help-btn"><i class="ti ti-help-circle"></i></button>
+  </div>
+
+  <div id="main">
+    <div id="canvas-wrap">
+      <canvas id="bg-canvas"></canvas>
+      <canvas id="draw-canvas"></canvas>
+      <div id="drop-hint"><i class="ti ti-photo-off"></i><p>Перетащите план сюда или нажмите «Фон»</p></div>
+    </div>
+
+    <div id="sidebar">
+      <div id="sidebar-tabs">
+        <div class="stab active" data-tab="results">Итого</div>
+        <div class="stab" data-tab="markers-cfg">Значки</div>
+        <div class="stab" data-tab="props">Свойства</div>
+      </div>
+
+      <div id="tab-results" class="spanel active">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+          <button id="btn-show-all" style="font-size:11px;padding:3px 8px;background:#2a2a2a;border:1px solid #444;border-radius:4px;color:#888;cursor:pointer" title="Показать все скрытые линии">
+            <i class="ti ti-eye" style="font-size:11px"></i> Показать все
+          </button>
+        </div>
+        <div id="results-list"><p style="font-size:12px;color:#555">Нет данных</p></div>
+      </div>
+
+      <div id="tab-markers-cfg" class="spanel">
+        <div style="margin-bottom:8px;font-size:11px;color:#666">Универсальные типы значков</div>
+        <div id="marker-types-list"></div>
+        <button class="tb-btn" id="btn-add-mtype" style="width:100%;justify-content:center;margin-top:4px">
+          <i class="ti ti-plus"></i> Добавить тип значка
+        </button>
+      </div>
+
+      <div id="tab-props" class="spanel">
+        <div id="no-selection">Выберите объект в режиме «Выбор»</div>
+        <div id="props-content" style="display:none">
+          <div class="prop-group">
+            <div class="prop-label">Цвет</div>
+            <div class="prop-colors" id="prop-colors"></div>
+          </div>
+          <div class="prop-group" id="prop-len-group">
+            <div class="prop-label">Длина (м)</div>
+            <input type="number" class="prop-input" id="prop-len" min="0.01" step="0.01">
+          </div>
+          <div class="prop-group" id="prop-mtype-group" style="display:none">
+            <div class="prop-label">Тип значка</div>
+            <select class="prop-input" id="prop-mtype"></select>
+          </div>
+          <!-- Connections list shown for markers -->
+          <div class="prop-group" id="prop-conns-group" style="display:none">
+            <div class="prop-label">Подключения</div>
+            <div id="prop-conns-list"></div>
+          </div>
+          <button class="prop-btn" id="prop-apply"><i class="ti ti-check" style="font-size:12px"></i> Применить</button>
+          <button class="prop-btn del" id="prop-delete"><i class="ti ti-trash" style="font-size:12px"></i> Удалить</button>
+        </div>
+      </div>
+
+      <div id="total-row"><span style="color:#666">Всего:</span><span id="total-val">0.00 м</span></div>
+    </div>
+  </div>
+  <div id="info-bar"><span id="info-text">Загрузите план или рисуйте. Задайте масштаб для точных измерений.</span></div>
+</div>
+
+<!-- Partner shop card (shown before save/export) -->
+<div id="partner-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:550;align-items:center;justify-content:center">
+  <div style="background:#1e1e1e;border:1px solid #444;border-radius:14px;width:320px;padding:0;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.6)">
+    <div style="background:linear-gradient(135deg,#1a3a5c,#16314d);padding:18px 20px 14px">
+      <div style="font-size:10px;color:#7dc4ff;text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-bottom:4px">Материалы для вашего проекта</div>
+      <div style="font-size:16px;font-weight:700;color:#fff" id="partner-name">Электро-Маркет</div>
+    </div>
+    <div style="padding:16px 20px">
+      <div id="partner-address-row" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;font-size:12px;color:#bbb">
+        <i class="ti ti-map-pin" style="font-size:15px;color:#666;margin-top:1px"></i>
+        <span id="partner-address"></span>
+      </div>
+      <div id="partner-phone-row" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:12px;color:#bbb">
+        <i class="ti ti-phone" style="font-size:15px;color:#666"></i>
+        <span id="partner-phone"></span>
+      </div>
+      <div id="partner-actions" style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap"></div>
+      <button id="partner-continue" style="width:100%;padding:10px 0;background:#2a2a2a;border:1px solid #444;border-radius:7px;color:#aaa;font-size:12px;cursor:pointer">
+        Продолжить без перехода →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Interactive tour overlay -->
+<div id="tour-overlay" style="display:none;position:fixed;inset:0;z-index:600;pointer-events:none">
+  <svg id="tour-mask-svg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:auto" >
+    <defs>
+      <mask id="tour-mask">
+        <rect x="0" y="0" width="100%" height="100%" fill="white"/>
+        <rect id="tour-hole" x="0" y="0" width="0" height="0" rx="10" fill="black"/>
+      </mask>
+    </defs>
+    <rect x="0" y="0" width="100%" height="100%" fill="rgba(0,0,0,0.7)" mask="url(#tour-mask)"/>
+    <rect id="tour-hole-border" x="0" y="0" width="0" height="0" rx="10" fill="none" stroke="#4a9eff" stroke-width="2.5"/>
+  </svg>
+  <div id="tour-card" style="position:absolute;background:#1e1e1e;border:1px solid #4a9eff;border-radius:10px;padding:16px 18px;max-width:320px;box-shadow:0 8px 30px rgba(0,0,0,0.6);pointer-events:auto">
+    <div style="font-size:10px;color:#4a9eff;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px" id="tour-step-counter">Шаг 1 из 10</div>
+    <div style="font-size:13px;font-weight:600;color:#e8e8e8;margin-bottom:6px" id="tour-title"></div>
+    <div style="font-size:12px;color:#aaa;line-height:1.55;margin-bottom:14px" id="tour-text"></div>
+    <div style="display:flex;gap:8px;justify-content:space-between;align-items:center">
+      <button id="tour-skip" style="font-size:11px;color:#666;background:none;border:none;cursor:pointer">Пропустить тур</button>
+      <div style="display:flex;gap:6px">
+        <button id="tour-prev" style="font-size:12px;padding:6px 12px;border-radius:6px;border:1px solid #444;background:#2a2a2a;color:#ccc;cursor:pointer">Назад</button>
+        <button id="tour-next" style="font-size:12px;padding:6px 14px;border-radius:6px;border:1px solid #4a9eff;background:#1a3a5c;color:#7dc4ff;font-weight:600;cursor:pointer">Далее</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Export modal -->
+<div id="export-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;align-items:center;justify-content:center">
+  <div style="background:#1e1e1e;border:1px solid #444;border-radius:12px;width:340px;padding:24px;position:relative">
+    <button onclick="document.getElementById('export-modal').style.display='none'"
+      style="position:absolute;top:12px;right:14px;background:none;border:none;color:#666;font-size:20px;cursor:pointer">✕</button>
+    <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;color:#e8e8e8">
+      <i class="ti ti-photo-down" style="margin-right:6px"></i>Экспорт в PNG
+    </h3>
+
+    <!-- Quality presets -->
+    <div style="margin-bottom:14px">
+      <div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Качество / масштаб</div>
+      <div style="display:flex;flex-direction:column;gap:6px" id="export-quality-list">
+        <label class="exp-opt" data-dpr="1">
+          <input type="radio" name="exp-q" value="1">
+          <div class="exp-opt-body">
+            <div class="exp-opt-title">Стандарт <span class="exp-opt-badge">1×</span></div>
+            <div class="exp-opt-desc">Размер экрана, быстро, для мессенджеров</div>
+          </div>
+        </label>
+        <label class="exp-opt" data-dpr="2">
+          <input type="radio" name="exp-q" value="2" checked>
+          <div class="exp-opt-body">
+            <div class="exp-opt-title">Высокое <span class="exp-opt-badge" style="background:#1a3a5c;color:#7dc4ff;border-color:#4a9eff">2×</span></div>
+            <div class="exp-opt-desc">Вдвое крупнее — читаемые подписи при приближении</div>
+          </div>
+        </label>
+        <label class="exp-opt" data-dpr="4">
+          <input type="radio" name="exp-q" value="4">
+          <div class="exp-opt-body">
+            <div class="exp-opt-title">Максимум <span class="exp-opt-badge" style="background:#1a2a1a;color:#6dca5a;border-color:#2a5a2a">4×</span></div>
+            <div class="exp-opt-desc">Печать / резка кабеля — каждый мм виден</div>
+          </div>
+        </label>
+        <label class="exp-opt" data-dpr="8">
+          <input type="radio" name="exp-q" value="8">
+          <div class="exp-opt-body">
+            <div class="exp-opt-title">Ультра <span class="exp-opt-badge" style="background:#2a1a0a;color:#f08840;border-color:#5a3a0a">8×</span></div>
+            <div class="exp-opt-desc">Огромный файл — только если нужна крупная печать</div>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <!-- Scope: viewport vs full drawing -->
+    <div style="margin-bottom:14px">
+      <div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Область</div>
+      <div style="display:flex;gap:6px">
+        <label style="flex:1;display:flex;align-items:center;gap:7px;padding:8px 10px;border:1px solid #444;border-radius:6px;background:#2a2a2a;cursor:pointer;font-size:12px;color:#ccc">
+          <input type="radio" name="exp-scope" value="viewport" checked> Текущий вид
+        </label>
+        <label style="flex:1;display:flex;align-items:center;gap:7px;padding:8px 10px;border:1px solid #444;border-radius:6px;background:#2a2a2a;cursor:pointer;font-size:12px;color:#ccc">
+          <input type="radio" name="exp-scope" value="full"> Весь чертёж
+        </label>
+      </div>
+      <div style="font-size:10px;color:#555;margin-top:5px">«Весь чертёж» автоматически вписывает все линии и значки с полями</div>
+    </div>
+
+    <!-- Size preview -->
+    <div id="exp-size-info" style="font-size:11px;color:#555;margin-bottom:14px;padding:6px 8px;background:#151515;border-radius:5px;font-family:monospace"></div>
+
+    <button id="exp-do-btn" style="width:100%;padding:10px;background:#1a3a5c;border:1px solid #4a9eff;border-radius:7px;color:#7dc4ff;font-size:13px;font-weight:600;cursor:pointer">
+      <i class="ti ti-download"></i> Скачать PNG
+    </button>
+  </div>
+</div>
+
+<!-- Guide modal -->
+<div id="guide-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;align-items:center;justify-content:center;overflow:auto;padding:20px">
+  <div style="background:#1e1e1e;border:1px solid #444;border-radius:12px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;padding:28px 30px;position:relative">
+    <button id="guide-close" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#666;font-size:22px;cursor:pointer;line-height:1">✕</button>
+    <h2 style="font-size:18px;font-weight:700;margin-bottom:6px;color:#e8e8e8">Как пользоваться калькулятором проводки</h2>
+    <p style="font-size:12px;color:#555;margin-bottom:20px">Краткое руководство за 2 минуты</p>
+
+    <div class="guide-step">
+      <div class="guide-num">1</div>
+      <div class="guide-body">
+        <div class="guide-title">Сценарий А — есть фото плана</div>
+        <div class="guide-text">Нажмите <b>«Фон»</b> или перетащите изображение на холст. Затем сразу переходите к шагу 2 — «Задайте масштаб».</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-num">2</div>
+      <div class="guide-body">
+        <div class="guide-title">Задайте масштаб</div>
+        <div class="guide-text">Нажмите <b>«Масштаб»</b>, нарисуйте линию вдоль известного отрезка (на фото плана — например, стена 4 метра; без фото — на условной сетке) и введите её реальную длину. После этого все отрезки будут автоматически пересчитываться в метры.<br><span style="color:#6dca5a;font-size:11px">✓ Масштаб сохраняется при очистке чертежа</span></div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-num">2.5</div>
+      <div class="guide-body">
+        <div class="guide-title">Сценарий Б — нет фото плана? Сначала масштаб, потом стены</div>
+        <div class="guide-text">Если фото нет — порядок такой: сначала задайте масштаб (шаг выше, на условной сетке), а уже потом нажмите режим <b>«Стены»</b> и кликами по точкам накидайте контур комнаты (углы прилипают к шагу 15°, можно вводить точную длину числом во время рисования). Двойной клик или Enter — завершить контур. Это просто ориентир, в расчёт метража стены не входят.</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-num">3</div>
+      <div class="guide-body">
+        <div class="guide-title">Расставьте значки (опционально)</div>
+        <div class="guide-text">Откройте вкладку <b>«Значки»</b> в правой панели. Там уже есть Розетка, Выключатель, Распредкоробка — или создайте свои. У каждого типа есть аббревиатура, расшифровка и базовый расход материала на установку.<br>Переключитесь в режим <b>«Значок»</b> и кликайте по плану.</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-num">4</div>
+      <div class="guide-body">
+        <div class="guide-title">Прокладывайте линии</div>
+        <div class="guide-text">Режим <b>«Линия»</b>: первый клик — начало, второй — конец. Цепочка: следующая линия начнётся от конца предыдущей.<br>
+        <span style="color:#aaa">• Привязка к концам других линий и к значкам (синяя пунктирная рамка)</span><br>
+        <span style="color:#aaa">• Ортогональная привязка: отклонение ≤7° от горизонтали/вертикали — линия «защёлкивается»</span><br>
+        <span style="color:#aaa">• Когда конец линии попадает на значок — появляется выбор: <b style="color:#6dca5a">Подключить</b> (метры считаются) или <b style="color:#f08840">Транзит</b> (проход насквозь)</span></div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-num">5</div>
+      <div class="guide-body">
+        <div class="guide-title">Назначьте цветам подписи</div>
+        <div class="guide-text">Каждый цвет — это отдельная цепь или группа линий. <b>Правая кнопка мыши</b> на цветной точке в тулбаре → вводите название: «Детская», «Розетки кухня», «Силовая 16А». Подписи появятся на линиях и в таблице итогов.</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-num">6</div>
+      <div class="guide-body">
+        <div class="guide-title">Навигация по плану</div>
+        <div class="guide-text">
+        <span style="color:#aaa">• <b style="color:#ccc">Колесо мыши</b> — масштаб фона (линии двигаются вместе)</span><br>
+        <span style="color:#aaa">• <b style="color:#ccc">Средняя кнопка</b> (колёсико зажать) — перемещение фона в любом режиме, даже во время рисования</span><br>
+        <span style="color:#aaa">• Режим <b style="color:#ccc">«Фон»</b> — перемещение левой кнопкой</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-num">7</div>
+      <div class="guide-body">
+        <div class="guide-title">Редактирование и итоги</div>
+        <div class="guide-text">Режим <b>«Выбор»</b>: кликните линию или значок → тяните целиком или за концы. ПКМ → контекстное меню. Панель <b>«Свойства»</b> справа — цвет, длина, тип значка, список подключений.<br>
+        В панели <b>«Итого»</b> видны метры по каждому цвету и по каждому значку (база + подключённые линии).</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-num">8</div>
+      <div class="guide-body">
+        <div class="guide-title">Сохранение и экспорт</div>
+        <div class="guide-text">
+        <b>Сохранить</b> — проект в файл <code style="color:#7dc4ff">.wiring</code>, открывается кнопкой «Открыть». Хранит всё: фон, линии, значки, масштаб.<br>
+        <b>PNG</b> — экспорт в чёткое изображение 2× разрешения с легендой цветов. Удобно для отправки в мессенджере.</div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;padding:12px 14px;background:#1a2a1a;border:1px solid #2a5a2a;border-radius:8px;font-size:12px;color:#6dca8a">
+      <b>Горячие клавиши:</b> &nbsp;Ctrl+Z — отмена &nbsp;·&nbsp; Ctrl+Y — повтор &nbsp;·&nbsp; Esc — сброс выбора/рисования &nbsp;·&nbsp; Del — удалить выбранный объект
+    </div>
+
+    <button id="guide-close-bottom" style="margin-top:18px;width:100%;padding:10px;background:#1a3a5c;border:1px solid #4a9eff;border-radius:7px;color:#7dc4ff;font-size:13px;font-weight:600;cursor:pointer">Понятно, начать работу!</button>
+  </div>
+</div>
+
+<!-- Generic modal -->
+<div id="modal">
+  <div id="modal-box">
+    <h3 id="modal-title">Заголовок</h3>
+    <div id="modal-body"></div>
+    <div class="modal-btns">
+      <button id="modal-cancel">Отмена</button>
+      <button class="primary" id="modal-ok">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Connection popup -->
+<div id="conn-popup">
+  <h4 id="conn-popup-title">Подключить к значку?</h4>
+  <button class="conn-btn connect" id="conn-btn-connect">
+    <i class="ti ti-plug-connected" style="font-size:16px"></i>
+    Подключить<span style="font-size:10px;color:#aaa;margin-left:auto">метры учитываются</span>
+  </button>
+  <button class="conn-btn transit" id="conn-btn-transit">
+    <i class="ti ti-arrow-right" style="font-size:16px"></i>
+    Транзит<span style="font-size:10px;color:#aaa;margin-left:auto">проход насквозь</span>
+  </button>
+</div>
+
+<!-- Context menu -->
+<div id="ctx-menu">
+  <div class="ctx-item" id="ctx-move"><i class="ti ti-arrows-move"></i> Переместить</div>
+  <div class="ctx-item" id="ctx-color"><i class="ti ti-palette"></i> Цвет</div>
+  <div class="ctx-item" id="ctx-len"><i class="ti ti-ruler-measure"></i> Изменить длину</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item del" id="ctx-delete"><i class="ti ti-trash"></i> Удалить</div>
+</div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════
+const COLORS=[
+  {hex:'#e24b4a',name:'Красный'},      {hex:'#ff8a8a',name:'Светло-красный'},
+  {hex:'#4a9eff',name:'Синий'},         {hex:'#a8d4ff',name:'Светло-синий'},
+  {hex:'#6dca5a',name:'Зелёный'},       {hex:'#b5eeaa',name:'Светло-зелёный'},
+  {hex:'#f0c040',name:'Жёлтый'},        {hex:'#ffe599',name:'Светло-жёлтый'},
+  {hex:'#d47ccc',name:'Розовый'},       {hex:'#f7c0f2',name:'Светло-розовый'},
+  {hex:'#a088ee',name:'Фиолетовый'},    {hex:'#cfc0ff',name:'Лавандовый'},
+  {hex:'#4dcbaa',name:'Бирюзовый'},     {hex:'#a8f0e0',name:'Мятный'},
+  {hex:'#f08840',name:'Оранжевый'},     {hex:'#ffc299',name:'Персиковый'},
+  {hex:'#7a5230',name:'Коричневый'},    {hex:'#c09060',name:'Бежевый'},
+  {hex:'#aaaaaa',name:'Серый'},         {hex:'#dddddd',name:'Светло-серый'},
+  {hex:'#e8e020',name:'Лимонный'},      {hex:'#20c8e8',name:'Голубой'},
+  {hex:'#e85090',name:'Малиновый'},     {hex:'#ffffff',name:'Белый'},
+];
+const SNAP_PX   = 14;
+const HIT_SEG   = 10;
+const HIT_MK    = 18;
+const MK_R      = 14; // marker circle radius px (canvas)
+const ORTHO_DEG = 7;
+
+// ═══════════════════════════════════════════════════════
+// ID GENERATOR
+// ═══════════════════════════════════════════════════════
+let _idCtr=0;
+function uid(){ return (++_idCtr)+'_'+Math.random().toString(36).slice(2,6); }
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let currentColor = COLORS[0].hex;
+let bgOpacity = 1.0;       // 0..1
+let cursorSize = 0;        // 0 = system cursor; >0 = custom crosshair px radius
+let orthoOnly  = false;    // snap ALL lines to H/V only
+let markerSnapRadius = 10; // px tolerance for marker H/V alignment snap (0 = off)
+// colorLabels: hex -> string label set by user
+let colorLabels = {};
+let hiddenColors = new Set(); // colors whose segments are hidden
+// walls: {id, wx1,wy1,wx2,wy2} — visual room outline, no metres calculation
+let walls = [];
+const WALL_WIDTH = 8;   // canvas px (constant, not affected by zoom... actually let's scale with bgS for realism)
+const WALL_SNAP_ANGLE = 15; // degrees — angle grid step
+let mode = 'line';
+let scale = null; // metres per world-px
+
+// Segments: {id, wx1,wy1,wx2,wy2, color, real,
+//            connStart:{markerId,type} | null,
+//            connEnd:  {markerId,type} | null }
+// type: 'connected' | 'transit'
+let segments = [];
+
+// Markers: {id, wx,wy, mtypeId}
+// Universal — no per-instance color, color comes from markerType
+let markers = [];
+
+// MarkerTypes: {id, abbr, desc, extra}
+// abbr: 1-2 char abbreviation shown in circle
+// desc: full name e.g. "Розетка"
+// extra: metres of material per instance (base cost just for placing the device)
+let markerTypes = [
+  {id:uid(), abbr:'Рз', desc:'Розетка', extra:0.5},
+  {id:uid(), abbr:'Вк', desc:'Выключатель', extra:0.3},
+  {id:uid(), abbr:'Кр', desc:'Распредкоробка', extra:0.0},
+];
+
+let selectedMarkerTypeId = markerTypes[0].id;
+
+let undoStack=[], redoStack=[];
+let selType=null, selIdx=null;
+let startPt=null, mousePos=null;
+let wallStartPt=null; // separate chain-start for wall mode
+let wallLenInput='';  // buffer for typed length while drawing a wall (digits/dot)
+let wallLastAngle=0;  // angle (deg) at moment of last mousemove, used when Enter commits typed length
+let pendingAction=null, modalCb=null;
+
+// Drag
+let isDragging=false, dragObj=null;
+
+// Pan
+let bgImg=null, bgImgDataUrl=null;
+let bgX=0, bgY=0, bgS=1;
+let isPanning=false, panStart=null, panOrigin=null;
+let isMidPan=false, midStart=null, midOrigin=null;
+
+// Connection popup pending
+let connPending=null;        // {segIdx, end:'start'|'end', markerIdx, cx, cy}
+let startMarkerIdx=null;    // marker index if line was started from a marker
+
+// ═══════════════════════════════════════════════════════
+// DOM
+// ═══════════════════════════════════════════════════════
+const wrap=document.getElementById('canvas-wrap');
+const bgC=document.getElementById('bg-canvas');
+const drC=document.getElementById('draw-canvas');
+const bgCtx=bgC.getContext('2d');
+const ctx=drC.getContext('2d');
+const modal=document.getElementById('modal');
+const ctxMenu=document.getElementById('ctx-menu');
+const connPopup=document.getElementById('conn-popup');
+
+// ═══════════════════════════════════════════════════════
+// COORD HELPERS
+// ═══════════════════════════════════════════════════════
+const c2w=(cx,cy)=>({wx:(cx-bgX)/bgS, wy:(cy-bgY)/bgS});
+const w2c=(wx,wy)=>({cx:wx*bgS+bgX, cy:wy*bgS+bgY});
+
+// ═══════════════════════════════════════════════════════
+// RESIZE
+// ═══════════════════════════════════════════════════════
+function resize(){
+  const w=wrap.clientWidth,h=wrap.clientHeight;
+  bgC.width=drC.width=w; bgC.height=drC.height=h;
+  redrawBg(); redraw();
+}
+window.addEventListener('resize',resize);
+
+// ═══════════════════════════════════════════════════════
+// BACKGROUND
+// ═══════════════════════════════════════════════════════
+function redrawBg(){
+  bgCtx.clearRect(0,0,bgC.width,bgC.height);
+  if(bgImg){
+    // Photo background: dark canvas base, image drawn at chosen opacity
+    bgCtx.fillStyle='#111'; bgCtx.fillRect(0,0,bgC.width,bgC.height);
+    bgCtx.strokeStyle='#1e1e1e'; bgCtx.lineWidth=1;
+    for(let x=0;x<bgC.width;x+=40){bgCtx.beginPath();bgCtx.moveTo(x,0);bgCtx.lineTo(x,bgC.height);bgCtx.stroke();}
+    for(let y=0;y<bgC.height;y+=40){bgCtx.beginPath();bgCtx.moveTo(0,y);bgCtx.lineTo(bgC.width,y);bgCtx.stroke();}
+    bgCtx.globalAlpha=bgOpacity;
+    bgCtx.drawImage(bgImg,bgX,bgY,bgImg.width*bgS,bgImg.height*bgS);
+    bgCtx.globalAlpha=1;
+  } else {
+    // No photo: opacity slider controls base brightness (dark → light),
+    // useful for drawing walls on a clean light canvas
+    const t=bgOpacity; // 0..1
+    const baseGray = Math.round(17 + t*(245-17));     // 0%→#111, 100%→near white
+    const gridGray = Math.round(30 + t*(225-30));
+    bgCtx.fillStyle=`rgb(${baseGray},${baseGray},${baseGray})`;
+    bgCtx.fillRect(0,0,bgC.width,bgC.height);
+    bgCtx.strokeStyle=`rgb(${gridGray},${gridGray},${gridGray})`;
+    bgCtx.lineWidth=1;
+    for(let x=0;x<bgC.width;x+=40){bgCtx.beginPath();bgCtx.moveTo(x,0);bgCtx.lineTo(x,bgC.height);bgCtx.stroke();}
+    for(let y=0;y<bgC.height;y+=40){bgCtx.beginPath();bgCtx.moveTo(0,y);bgCtx.lineTo(bgC.width,y);bgCtx.stroke();}
+  }
+}
+function loadBgImage(url){
+  const img=new Image();
+  img.onload=()=>{
+    bgImg=img;
+    const sx=bgC.width/img.width,sy=bgC.height/img.height;
+    bgS=Math.min(sx,sy,1);
+    bgX=(bgC.width-img.width*bgS)/2; bgY=(bgC.height-img.height*bgS)/2;
+    document.getElementById('drop-hint').classList.add('hidden');
+    redrawBg(); redraw();
+  };
+  img.src=url;
+}
+document.getElementById('file-in').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{bgImgDataUrl=ev.target.result;loadBgImage(ev.target.result);};
+  r.readAsDataURL(f);
+});
+wrap.addEventListener('dragover',e=>e.preventDefault());
+wrap.addEventListener('drop',e=>{
+  e.preventDefault();
+  const f=e.dataTransfer.files[0];
+  if(f&&f.type.startsWith('image/')){
+    const r=new FileReader();
+    r.onload=ev=>{bgImgDataUrl=ev.target.result;loadBgImage(ev.target.result);};
+    r.readAsDataURL(f);
+  }
+});
+
+// ═══════════════════════════════════════════════════════
+// DRAW
+// ═══════════════════════════════════════════════════════
+function markerColor(mk){
+  const mt=markerTypes.find(t=>t.id===mk.mtypeId);
+  return mt?'#7dc4ff':'#aaa';
+}
+
+// ── Parallel offset for overlapping / collinear segments ──
+// Two segments "overlap" if they are nearly collinear AND their
+// projections onto the shared axis actually intersect.
+// All such mutually-overlapping groups are spread perpendicular with GAP px.
+const PARALLEL_GAP   = 4;    // px gap between parallel lines (canvas space)
+const PARALLEL_ANG   = 8;    // degrees — max angle difference to be "parallel"
+const PARALLEL_PERP  = 6;    // world px — max perpendicular distance between axes
+
+// Precompute overlap groups once per redraw call, cache by frame.
+let _overlapCache = null;
+function buildOverlapGroups(){
+  // Returns array of same length as segments; each entry = {groupId, posInGroup, groupSize}
+  const n = segments.length;
+  const result = new Array(n).fill(null).map(()=>({groupId:-1,posInGroup:0,groupSize:1}));
+
+  // direction vector of segment (normalised, canonical: dx>=0, or dx==0&&dy>=0)
+  function segDir(s){
+    let dx=s.wx2-s.wx1, dy=s.wy2-s.wy1;
+    const len=Math.hypot(dx,dy)||1; dx/=len; dy/=len;
+    if(dx<0||(dx===0&&dy<0)){dx=-dx;dy=-dy;}
+    return{dx,dy};
+  }
+  // project world point onto line through origin with direction (dx,dy)
+  function proj(wx,wy,dx,dy){ return wx*dx+wy*dy; }
+  // perpendicular distance from world point to line through (wx1,wy1) with dir (dx,dy)
+  function perpDist(px,py,wx1,wy1,dx,dy){
+    const relX=px-wx1, relY=py-wy1;
+    return Math.abs(relX*dy - relY*dx);
+  }
+
+  function doOverlap(a,b){
+    const da=segDir(a), db=segDir(b);
+    // angle between directions
+    const dot=Math.abs(da.dx*db.dx+da.dy*db.dy); // 1 = parallel, 0 = perpendicular
+    const angDeg=Math.acos(Math.min(dot,1))*180/Math.PI;
+    if(angDeg>PARALLEL_ANG) return false;
+    // use segment a's direction as reference axis
+    const {dx,dy}=da;
+    // perpendicular distance between axes
+    const pd=perpDist(b.wx1,b.wy1,a.wx1,a.wy1,dx,dy);
+    if(pd>PARALLEL_PERP) return false;
+    // check projection overlap
+    const pA1=proj(a.wx1,a.wy1,dx,dy), pA2=proj(a.wx2,a.wy2,dx,dy);
+    const pB1=proj(b.wx1,b.wy1,dx,dy), pB2=proj(b.wx2,b.wy2,dx,dy);
+    const aMin=Math.min(pA1,pA2), aMax=Math.max(pA1,pA2);
+    const bMin=Math.min(pB1,pB2), bMax=Math.max(pB1,pB2);
+    // overlap if intervals intersect (with small tolerance)
+    return aMax-bMin>2 && bMax-aMin>2;
+  }
+
+  // Union-Find
+  const parent=Array.from({length:n},(_,i)=>i);
+  function find(x){ return parent[x]===x?x:parent[x]=find(parent[x]); }
+  function unite(x,y){ parent[find(x)]=find(y); }
+
+  for(let i=0;i<n;i++){
+    if(hiddenColors.has(segments[i].color)) continue;
+    for(let j=i+1;j<n;j++){
+      if(hiddenColors.has(segments[j].color)) continue;
+      if(doOverlap(segments[i],segments[j])) unite(i,j);
+    }
+  }
+
+  // Build groups
+  const groups={};
+  for(let i=0;i<n;i++){
+    const root=find(i);
+    if(!groups[root]) groups[root]=[];
+    groups[root].push(i);
+  }
+  Object.values(groups).forEach(g=>{
+    g.forEach((idx,pos)=>{
+      result[idx]={groupSize:g.length,posInGroup:pos};
+    });
+  });
+  return result;
+}
+
+function parallelOffset(segIdx, overlapData){
+  const {groupSize,posInGroup}=overlapData[segIdx];
+  if(groupSize<=1) return 0;
+  return (posInGroup-(groupSize-1)/2)*PARALLEL_GAP;
+}
+
+function redraw(){
+  ctx.clearRect(0,0,drC.width,drC.height);
+
+  // Hide the "no plan" watermark whenever there's any content to look at
+  const hint=document.getElementById('drop-hint');
+  if(hint) hint.classList.toggle('hidden', !!(bgImg || walls.length || segments.length || markers.length));
+
+  // ── Walls (drawn first, beneath everything) ──
+  walls.forEach((w,i)=>{
+    const p1=w2c(w.wx1,w.wy1), p2=w2c(w.wx2,w.wy2);
+    const isSel = selType==='wall' && selIdx===i;
+    ctx.lineWidth = WALL_WIDTH * bgS / (bgS||1); // visually constant-ish; scale a bit with zoom
+    ctx.lineWidth = Math.max(4, WALL_WIDTH); // keep simple: fixed canvas px width
+    ctx.strokeStyle = isSel ? '#7a8a9a' : '#5a6472';
+    ctx.lineCap = 'square';
+    ctx.beginPath(); ctx.moveTo(p1.cx,p1.cy); ctx.lineTo(p2.cx,p2.cy);
+    ctx.setLineDash([]); ctx.stroke();
+    if(isSel){
+      ctx.strokeStyle='#fff'; ctx.lineWidth=1.5;
+      [[p1.cx,p1.cy],[p2.cx,p2.cy]].forEach(([x,y])=>{
+        ctx.beginPath();ctx.arc(x,y,7,0,Math.PI*2);ctx.stroke();
+      });
+    }
+  });
+  ctx.lineCap = 'butt'; // reset for everything else
+
+  // ── Segments ──
+  const overlapData = segments.length ? buildOverlapGroups() : [];
+  segments.forEach((seg,i)=>{
+    if(hiddenColors.has(seg.color)) return; // visibility toggle
+    const p1=w2c(seg.wx1,seg.wy1),p2=w2c(seg.wx2,seg.wy2);
+    const isSel=selType==='segment'&&selIdx===i;
+
+    // Compute perpendicular offset in canvas px
+    const offset=parallelOffset(i, overlapData);
+    let ox=0,oy=0;
+    if(offset!==0){
+      const dx=p2.cx-p1.cx,dy=p2.cy-p1.cy,len=Math.hypot(dx,dy)||1;
+      ox=(-dy/len)*offset; oy=(dx/len)*offset;
+    }
+    const ax=p1.cx+ox,ay=p1.cy+oy,bx=p2.cx+ox,by=p2.cy+oy;
+
+    ctx.lineWidth=isSel?4:2.5;
+    ctx.strokeStyle=seg.color;
+    if(isSel){ctx.shadowColor=seg.color;ctx.shadowBlur=8;}
+    ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);
+    ctx.setLineDash([]);ctx.stroke();ctx.shadowBlur=0;
+
+    // Label at midpoint
+    if(scale!==null){
+      const m=(seg.real||0).toFixed(2);
+      const mx=(ax+bx)/2,my=(ay+by)/2;
+      ctx.font='bold 11px sans-serif';
+      ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillText(m+'м',mx+5,my-3);
+      ctx.fillStyle=seg.color;ctx.fillText(m+'м',mx+4,my-4);
+    }
+    // Color label (user-defined name for this color)
+    if(colorLabels[seg.color]){
+      const mx=(ax+bx)/2,my=(ay+by)/2;
+      ctx.font='10px sans-serif';
+      const lbl=colorLabels[seg.color];
+      ctx.fillStyle='rgba(0,0,0,0.55)';ctx.fillText(lbl,mx+5,my+11);
+      ctx.fillStyle=seg.color;ctx.globalAlpha=0.8;ctx.fillText(lbl,mx+4,my+10);ctx.globalAlpha=1;
+    }
+
+    // Endpoint dots — filled=connected, hollow=transit, plain=free
+    [[ax,ay,seg.connStart],[bx,by,seg.connEnd]].forEach(([x,y,conn])=>{
+      if(conn){
+
+        if(conn.type==='connected'){
+          // Filled green dot
+          ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);
+          ctx.fillStyle='#6dca5a';ctx.fill();
+        } else {
+          // Hollow orange ring
+          ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);
+          ctx.strokeStyle='#f08840';ctx.lineWidth=2;ctx.stroke();
+        }
+      } else {
+        ctx.beginPath();ctx.arc(x,y,isSel?5:3.5,0,Math.PI*2);
+        ctx.fillStyle=seg.color;ctx.fill();
+      }
+    });
+
+    if(isSel){
+      ctx.strokeStyle='#fff';ctx.lineWidth=1.5;
+      [[ax,ay],[bx,by]].forEach(([x,y])=>{
+        ctx.beginPath();ctx.arc(x,y,8,0,Math.PI*2);ctx.stroke();
+      });
+    }
+  });
+
+  // ── Markers ──
+  markers.forEach((mk,i)=>{
+    const p=w2c(mk.wx,mk.wy);
+    const mt=markerTypes.find(t=>t.id===mk.mtypeId);
+    const isSel=selType==='marker'&&selIdx===i;
+    const abbr=mt?mt.abbr:'?';
+    const r=MK_R;
+
+    ctx.beginPath();ctx.arc(p.cx,p.cy,r,0,Math.PI*2);
+    const mkBg=mk.color||'#1a2a3a';
+    // darken bg for readability
+    ctx.fillStyle=mkBg==='#ffffff'?'#cccccc':mkBg;ctx.fill();
+    ctx.strokeStyle=isSel?'#fff':(mk.color||'#4a9eff');
+    ctx.lineWidth=isSel?2.5:1.5;
+    ctx.stroke();
+    if(isSel){ctx.shadowColor='#4a9eff';ctx.shadowBlur=10;}
+    ctx.shadowBlur=0;
+
+    // pick readable text color based on bg luminance
+    function lum(hex){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return 0.299*r+0.587*g+0.114*b;}
+    const mkTextColor=(mk.color&&lum(mk.color)>140)?'#111':'#fff';
+    ctx.fillStyle=mkTextColor;
+    ctx.font=`bold ${abbr.length>1?'9':'11'}px sans-serif`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(abbr,p.cx,p.cy);
+    ctx.textAlign='left';ctx.textBaseline='alphabetic';
+
+    // Small desc label below
+    if(mt&&mt.desc){
+      ctx.font='9px sans-serif';ctx.fillStyle='#667';ctx.textAlign='center';
+      ctx.fillText(mt.desc,p.cx,p.cy+r+9);
+      ctx.textAlign='left';
+    }
+  });
+
+  // ── Marker placement preview (alignment guides) ──
+  if(mode==='marker' && mousePos && !(isDragging&&dragObj)){
+    const snap=markerAlignSnap(mousePos.x, mousePos.y, -1);
+    if(snap.hLine!==null){
+      ctx.strokeStyle='rgba(255,200,80,0.55)'; ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(0,snap.hLine);ctx.lineTo(drC.width,snap.hLine);ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+    }
+    if(snap.vLine!==null){
+      ctx.strokeStyle='rgba(255,200,80,0.55)'; ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(snap.vLine,0);ctx.lineTo(snap.vLine,drC.height);ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+    }
+    // Ghost preview of marker at (possibly snapped) position
+    const ghostX = snap.sx!==null?snap.sx:mousePos.x;
+    const ghostY = snap.sy!==null?snap.sy:mousePos.y;
+    ctx.beginPath();ctx.arc(ghostX,ghostY,MK_R,0,Math.PI*2);
+    ctx.strokeStyle='rgba(125,196,255,0.7)';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);
+  }
+  // ── Alignment guides while dragging an existing marker ──
+  if(isDragging && dragObj && dragObj.type==='marker'){
+    if(dragObj.guideH!=null){
+      ctx.strokeStyle='rgba(255,200,80,0.55)'; ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(0,dragObj.guideH);ctx.lineTo(drC.width,dragObj.guideH);ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+    }
+    if(dragObj.guideV!=null){
+      ctx.strokeStyle='rgba(255,200,80,0.55)'; ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(dragObj.guideV,0);ctx.lineTo(dragObj.guideV,drC.height);ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+    }
+  }
+
+  // ── Wall preview ──
+  if(wallStartPt && mousePos && mode==='wall'){
+    const spC=w2c(wallStartPt.wx,wallStartPt.wy);
+    const snapped=angleSnap15(spC.cx,spC.cy,mousePos.x,mousePos.y);
+    let ex=snapped.x, ey=snapped.y;
+
+    // Compute angle for this preview (used for typed-length commit on Enter)
+    let angRaw=Math.atan2(ey-spC.cy,ex-spC.cx)*180/Math.PI;
+    wallLastAngle = angRaw;
+
+    // If user is typing a length, override the endpoint to match exactly
+    if(wallLenInput.length>0){
+      const typedM=parseFloat(wallLenInput);
+      if(!isNaN(typedM)&&scale!==null){
+        const pxLen=typedM/scale*bgS; // world px → canvas px (since scale is m/world-px, world-px = m/scale, canvas px = world-px*bgS)
+        const rad=angRaw*Math.PI/180;
+        ex=spC.cx+Math.cos(rad)*pxLen;
+        ey=spC.cy+Math.sin(rad)*pxLen;
+      }
+    }
+
+    // ── Alignment guides: highlight when ex/ey aligns with any other wall endpoint ──
+    const ALIGN_TOL=4; // canvas px tolerance
+    let alignH=null, alignV=null; // matched canvas coordinate, if any
+    walls.forEach(w=>{
+      [[w.wx1,w.wy1],[w.wx2,w.wy2]].forEach(([wx,wy])=>{
+        const pc=w2c(wx,wy);
+        if(Math.abs(pc.cy-ey)<ALIGN_TOL) alignH=pc.cy;
+        if(Math.abs(pc.cx-ex)<ALIGN_TOL) alignV=pc.cx;
+      });
+    });
+    if(alignH!==null){
+      ctx.strokeStyle='rgba(255,200,80,0.55)'; ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(0,alignH);ctx.lineTo(drC.width,alignH);ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+      ey=alignH; // snap to alignment
+    }
+    if(alignV!==null){
+      ctx.strokeStyle='rgba(255,200,80,0.55)'; ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(alignV,0);ctx.lineTo(alignV,drC.height);ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+      ex=alignV;
+    }
+
+    // Main preview line
+    ctx.lineWidth=Math.max(4,WALL_WIDTH); ctx.strokeStyle='rgba(122,138,154,0.8)'; ctx.lineCap='square';
+    ctx.beginPath();ctx.moveTo(spC.cx,spC.cy);ctx.lineTo(ex,ey);
+    ctx.setLineDash([8,4]);ctx.stroke();ctx.setLineDash([]);
+    ctx.lineCap='butt';
+
+    // Length readout (instead of angle)
+    const w2=c2w(ex,ey);
+    const distWorld=Math.hypot(w2.wx-wallStartPt.wx,w2.wy-wallStartPt.wy);
+    const lenLabel = scale!==null ? (distWorld*scale).toFixed(2)+'м' : Math.round(Math.hypot(ex-spC.cx,ey-spC.cy))+'px';
+    ctx.font='bold 12px sans-serif';
+    ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillText(lenLabel, ex+9, ey-7);
+    ctx.fillStyle='#cfd8e3'; ctx.fillText(lenLabel, ex+8, ey-8);
+
+    // Typed-length indicator (shows what's being entered before Enter)
+    if(wallLenInput.length>0){
+      ctx.font='11px sans-serif'; ctx.fillStyle='#7dc4ff';
+      ctx.fillText('Ввод: '+wallLenInput+'м (Enter — применить)', ex+8, ey+14);
+    }
+  }
+
+  // ── Preview line ──
+  if(startPt&&mousePos&&(mode==='line'||mode==='scale')){
+    const spDraw=w2c(startPt.wx,startPt.wy);
+    let ex=mousePos.x,ey=mousePos.y;
+    let snapped=false,snapAxis=null;
+    if(mode==='line'){
+      const s=orthoSnap(spDraw.cx,spDraw.cy,mousePos.x,mousePos.y);
+      ex=s.x;ey=s.y;snapped=s.snapped;snapAxis=s.axis;
+    }
+    ctx.beginPath();ctx.moveTo(spDraw.cx,spDraw.cy);ctx.lineTo(ex,ey);
+    ctx.strokeStyle=mode==='scale'?'#aaa':currentColor;
+    ctx.lineWidth=mode==='scale'?1.5:2.5;ctx.setLineDash([6,5]);ctx.stroke();ctx.setLineDash([]);
+    if(snapped){
+      ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1;
+      if(snapAxis==='h'){ctx.beginPath();ctx.moveTo(0,ey);ctx.lineTo(drC.width,ey);ctx.setLineDash([3,6]);ctx.stroke();ctx.setLineDash([]);}
+      else{ctx.beginPath();ctx.moveTo(ex,0);ctx.lineTo(ex,drC.height);ctx.setLineDash([3,6]);ctx.stroke();ctx.setLineDash([]);}
+    }
+    if(scale!==null&&mode==='line'){
+      const w2p=c2w(ex,ey);
+      const m=(Math.hypot(w2p.wx-startPt.wx,w2p.wy-startPt.wy)*scale).toFixed(2);
+      ctx.font='11px sans-serif';ctx.fillStyle='#aaa';ctx.fillText(m+'м',ex+8,ey-5);
+    }
+    // Highlight nearest marker if within snap range
+    const nearMk=nearestMarker({x:ex,y:ey});
+    if(nearMk!==null){
+      const p=w2c(markers[nearMk].wx,markers[nearMk].wy);
+      ctx.beginPath();ctx.arc(p.cx,p.cy,MK_R+4,0,Math.PI*2);
+      ctx.strokeStyle='#4a9eff';ctx.lineWidth=1.5;ctx.setLineDash([3,4]);ctx.stroke();ctx.setLineDash([]);
+    }
+  }
+  // ── Custom crosshair cursor ──
+  if(cursorSize>0 && mousePos && !isDragging){
+    const x=mousePos.x, y=mousePos.y, r=cursorSize;
+    ctx.save();
+    ctx.strokeStyle='rgba(255,255,255,0.85)';
+    ctx.lineWidth=1.5;
+    // horizontal line
+    ctx.beginPath();ctx.moveTo(x-r,y);ctx.lineTo(x+r,y);ctx.stroke();
+    // vertical line
+    ctx.beginPath();ctx.moveTo(x,y-r);ctx.lineTo(x,y+r);ctx.stroke();
+    // small centre gap
+    ctx.clearRect(x-3,y-3,6,6);
+    // outer circle for large cursors
+    if(r>30){
+      ctx.strokeStyle='rgba(255,255,255,0.3)';
+      ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  updateResults();
+}
+
+function orthoSnap(x1,y1,x2,y2){
+  const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy);
+  if(len<2) return{x:x2,y:y2,snapped:false,axis:null};
+  if(orthoOnly){
+    // Force to whichever axis is closer
+    const ang=Math.abs(Math.atan2(dy,dx)*180/Math.PI);
+    const fromH=Math.min(ang,180-ang),fromV=Math.abs(90-ang);
+    if(fromH<=fromV) return{x:x1+dx,y:y1,snapped:true,axis:'h'};
+    else             return{x:x1,y:y1+dy,snapped:true,axis:'v'};
+  }
+  const ang=Math.abs(Math.atan2(dy,dx)*180/Math.PI);
+  const fromH=Math.min(ang,180-ang),fromV=Math.abs(90-ang);
+  if(fromH<ORTHO_DEG) return{x:x1+dx,y:y1,snapped:true,axis:'h'};
+  if(fromV<ORTHO_DEG) return{x:x1,y:y1+dy,snapped:true,axis:'v'};
+  return{x:x2,y:y2,snapped:false,axis:null};
+}
+
+// Snap to nearest 15° angle step (0,15,30,...,345) — used for walls
+function angleSnap15(x1,y1,x2,y2){
+  const dx=x2-x1, dy=y2-y1, len=Math.hypot(dx,dy);
+  if(len<2) return{x:x2,y:y2};
+  let ang=Math.atan2(dy,dx)*180/Math.PI; // -180..180
+  const snappedAng = Math.round(ang/WALL_SNAP_ANGLE)*WALL_SNAP_ANGLE;
+  const rad = snappedAng*Math.PI/180;
+  return{ x:x1+Math.cos(rad)*len, y:y1+Math.sin(rad)*len };
+}
+
+// ═══════════════════════════════════════════════════════
+// HIT TESTING
+// ═══════════════════════════════════════════════════════
+function distToSegC(p,seg){
+  const p1=w2c(seg.wx1,seg.wy1),p2=w2c(seg.wx2,seg.wy2);
+  const dx=p2.cx-p1.cx,dy=p2.cy-p1.cy,l2=dx*dx+dy*dy;
+  if(l2===0) return Math.hypot(p.x-p1.cx,p.y-p1.cy);
+  const t=Math.max(0,Math.min(1,((p.x-p1.cx)*dx+(p.y-p1.cy)*dy)/l2));
+  return Math.hypot(p.x-(p1.cx+t*dx),p.y-(p1.cy+t*dy));
+}
+function hitTest(p){
+  for(let i=markers.length-1;i>=0;i--){
+    const mp=w2c(markers[i].wx,markers[i].wy);
+    if(Math.hypot(p.x-mp.cx,p.y-mp.cy)<HIT_MK) return{type:'marker',idx:i};
+  }
+  for(let i=segments.length-1;i>=0;i--){
+    if(distToSegC(p,segments[i])<HIT_SEG) return{type:'segment',idx:i};
+  }
+  for(let i=walls.length-1;i>=0;i--){
+    if(distToSegC(p,walls[i])<WALL_WIDTH) return{type:'wall',idx:i};
+  }
+  return null;
+}
+function nearEndpointC(p,seg){
+  const p1=w2c(seg.wx1,seg.wy1),p2=w2c(seg.wx2,seg.wy2);
+  if(Math.hypot(p.x-p1.cx,p.y-p1.cy)<12) return'start';
+  if(Math.hypot(p.x-p2.cx,p.y-p2.cy)<12) return'end';
+  return null;
+}
+// Returns marker index if canvas point is within snap range of a marker
+function nearestMarker(p){
+  for(let i=markers.length-1;i>=0;i--){
+    const mp=w2c(markers[i].wx,markers[i].wy);
+    if(Math.hypot(p.x-mp.cx,p.y-mp.cy)<HIT_MK+4) return i;
+  }
+  return null;
+}
+
+// Given a candidate canvas position (cx,cy), check if it aligns horizontally
+// or vertically with any OTHER marker (excluding excludeIdx, used while dragging).
+// Returns {sx, sy, hLine, vLine} — sx/sy are snapped coords (or null if no match),
+// hLine/vLine are the canvas coordinate of the matched guide line (for drawing).
+function markerAlignSnap(cx, cy, excludeIdx){
+  if(markerSnapRadius<=0) return {sx:null,sy:null,hLine:null,vLine:null};
+  let sx=null, sy=null, hLine=null, vLine=null;
+  markers.forEach((mk,i)=>{
+    if(i===excludeIdx) return;
+    const mp=w2c(mk.wx,mk.wy);
+    if(hLine===null && Math.abs(mp.cy-cy)<markerSnapRadius){ hLine=mp.cy; sy=mp.cy; }
+    if(vLine===null && Math.abs(mp.cx-cx)<markerSnapRadius){ vLine=mp.cx; sx=mp.cx; }
+  });
+  return {sx,sy,hLine,vLine};
+}
+
+function getPos(e){
+  const r=drC.getBoundingClientRect();
+  const s=e.touches?e.touches[0]:e;
+  return{x:s.clientX-r.left,y:s.clientY-r.top};
+}
+
+// ═══════════════════════════════════════════════════════
+// CONNECTION POPUP
+// ═══════════════════════════════════════════════════════
+function showConnPopup(cx,cy,segIdx,end,markerIdx,chainCb){
+  const mt=markerTypes.find(t=>t.id===markers[markerIdx].mtypeId);
+  const endLabel=end==='start'?'Начало линии':'Конец линии';
+  document.getElementById('conn-popup-title').textContent=
+    `${endLabel} у «${mt?mt.abbr:'?'}» — ${mt?mt.desc:''}`;
+  // Show near current mouse cursor position, not near marker
+  const mx=mousePos?mousePos.x+drC.getBoundingClientRect().left:cx;
+  const my=mousePos?mousePos.y+drC.getBoundingClientRect().top:cy;
+  connPopup.style.left=(mx+16)+'px';
+  connPopup.style.top=(my+16)+'px';
+  connPopup.classList.add('show');
+  connPending={segIdx,end,markerIdx,chainCb:chainCb||null};
+  requestAnimationFrame(()=>{
+    const r=connPopup.getBoundingClientRect();
+    if(r.right>window.innerWidth)  connPopup.style.left=(mx-r.width-4)+'px';
+    if(r.bottom>window.innerHeight) connPopup.style.top=(my-r.height-4)+'px';
+  });
+}
+function hideConnPopup(){ connPopup.classList.remove('show'); connPending=null; }
+
+document.getElementById('conn-btn-connect').addEventListener('click',()=>{
+  if(!connPending) return;
+  const chain=connPending.chainCb;
+  applyConnection(connPending,'connected');
+  hideConnPopup();
+  if(chain) chain();
+});
+document.getElementById('conn-btn-transit').addEventListener('click',()=>{
+  if(!connPending) return;
+  const chain=connPending.chainCb;
+  applyConnection(connPending,'transit');
+  hideConnPopup();
+  if(chain) chain();
+});
+
+function applyConnection(pending,type){
+  const seg=segments[pending.segIdx];
+  const mk=markers[pending.markerIdx];
+  const connObj={markerId:mk.id,type};
+  if(pending.end==='end') seg.connEnd=connObj;
+  else                     seg.connStart=connObj;
+  redraw();
+  updatePropsPanel();
+}
+
+// ═══════════════════════════════════════════════════════
+// MOUSE EVENTS
+// ═══════════════════════════════════════════════════════
+drC.addEventListener('contextmenu',e=>{
+  e.preventDefault();
+  hideConnPopup();
+  const p=getPos(e);
+  const hit=hitTest(p);
+  if(!hit){hideCtxMenu();return;}
+  selType=hit.type;selIdx=hit.idx;
+  redraw();showPropsTab();updatePropsPanel();
+  showCtxMenu(e.clientX,e.clientY,hit);
+});
+
+drC.addEventListener('mousedown',e=>{
+  hideCtxMenu();hideConnPopup();
+  const p=getPos(e);
+  if(e.button===1){
+    e.preventDefault();
+    isMidPan=true;midStart={...p};midOrigin={bgX,bgY};
+    drC.style.cursor='grabbing';return;
+  }
+  if(e.button!==0) return;
+  if(mode==='pan'){
+    isPanning=true;panStart={...p};panOrigin={bgX,bgY};
+    drC.style.cursor='grabbing';return;
+  }
+  if(mode==='select'&&selType!==null&&selIdx!==null){
+    const obj=selType==='segment'?segments[selIdx]:selType==='wall'?walls[selIdx]:markers[selIdx];
+    if(selType==='segment'||selType==='wall'){
+      const ep=nearEndpointC(p,obj);
+      if(ep){isDragging=true;dragObj={type:selType==='wall'?'wall-endpoint':'endpoint',segIdx:selIdx,end:ep,orig:{...obj}};return;}
+    }
+    const hit=hitTest(p);
+    if(hit&&hit.type===selType&&hit.idx===selIdx){
+      isDragging=true;dragObj={type:selType,idx:selIdx,startP:{...p},orig:{...obj}};
+      drC.style.cursor='move';return;
+    }
+  }
+});
+
+drC.addEventListener('mousemove',e=>{
+  const p=getPos(e); mousePos=p;
+  if(isMidPan){
+    bgX=midOrigin.bgX+(p.x-midStart.x);bgY=midOrigin.bgY+(p.y-midStart.y);
+    redrawBg();redraw();return;
+  }
+  if(isPanning&&mode==='pan'){
+    bgX=panOrigin.bgX+(p.x-panStart.x);bgY=panOrigin.bgY+(p.y-panStart.y);
+    redrawBg();redraw();return;
+  }
+  if(isDragging&&dragObj){
+    if(dragObj.type==='endpoint'){
+      const seg=segments[dragObj.segIdx];
+      const w=c2w(p.x,p.y);
+      if(dragObj.end==='start'){seg.wx1=w.wx;seg.wy1=w.wy;seg.connStart=null;}
+      else{seg.wx2=w.wx;seg.wy2=w.wy;seg.connEnd=null;}
+      if(scale!==null) seg.real=Math.hypot(seg.wx2-seg.wx1,seg.wy2-seg.wy1)*scale;
+    } else if(dragObj.type==='wall-endpoint'){
+      const w=walls[dragObj.segIdx];
+      const wc=c2w(p.x,p.y);
+      if(dragObj.end==='start'){w.wx1=wc.wx;w.wy1=wc.wy;}
+      else{w.wx2=wc.wx;w.wy2=wc.wy;}
+    } else if(dragObj.type==='segment'){
+      const dx=(p.x-dragObj.startP.x)/bgS,dy=(p.y-dragObj.startP.y)/bgS;
+      const seg=segments[dragObj.idx];
+      seg.wx1=dragObj.orig.wx1+dx;seg.wy1=dragObj.orig.wy1+dy;
+      seg.wx2=dragObj.orig.wx2+dx;seg.wy2=dragObj.orig.wy2+dy;
+      seg.connStart=null;seg.connEnd=null; // moving breaks connections
+    } else if(dragObj.type==='wall'){
+      const dx=(p.x-dragObj.startP.x)/bgS,dy=(p.y-dragObj.startP.y)/bgS;
+      const w=walls[dragObj.idx];
+      w.wx1=dragObj.orig.wx1+dx;w.wy1=dragObj.orig.wy1+dy;
+      w.wx2=dragObj.orig.wx2+dx;w.wy2=dragObj.orig.wy2+dy;
+    } else if(dragObj.type==='marker'){
+      let px=p.x, py=p.y;
+      const snap=markerAlignSnap(px,py,dragObj.idx);
+      if(snap.sx!==null) px=snap.sx;
+      if(snap.sy!==null) py=snap.sy;
+      dragObj.guideH=snap.hLine; dragObj.guideV=snap.vLine;
+      const w=c2w(px,py);markers[dragObj.idx].wx=w.wx;markers[dragObj.idx].wy=w.wy;
+    }
+    redraw();return;
+  }
+  if(mode==='line'||mode==='scale'||mode==='wall'||mode==='marker') redraw();
+  if(mode==='select'){ drC.style.cursor=cursorSize>0?'none':hitTest(p)?'pointer':'default'; }
+  // Redraw crosshair on every mousemove when custom cursor active
+  if(cursorSize>0) redraw();
+});
+
+drC.addEventListener('mouseup',e=>{
+  if(isMidPan){isMidPan=false;drC.style.cursor=mode==='pan'?'grab':'crosshair';return;}
+  if(isPanning){isPanning=false;drC.style.cursor='grab';return;}
+  if(isDragging){
+    saveHistory();isDragging=false;dragObj=null;
+    drC.style.cursor=mode==='select'?'pointer':'default';
+    updatePropsPanel();return;
+  }
+});
+drC.addEventListener('mouseleave',()=>{
+  isMidPan=false;isPanning=false;
+  if(isDragging){isDragging=false;dragObj=null;}
+  mousePos=null; // clear crosshair when cursor leaves canvas
+  if(cursorSize>0) redraw();
+});
+
+drC.addEventListener('click',e=>{
+  if(e.button!==0||isDragging) return;
+  const p=getPos(e);
+  if(mode==='pan') return;
+
+  if(mode==='line'){
+    if(!startPt){
+      // Check if clicking on a marker first
+      const mkIdxStart=nearestMarker(p);
+      if(mkIdxStart!==null){
+        const mk=markers[mkIdxStart];
+        startPt={wx:mk.wx,wy:mk.wy};
+        startMarkerIdx=mkIdxStart;
+        setInfo('Кликните конечную точку. Esc — отмена.');
+        redraw();
+        return;
+      }
+      // Snap to existing segment endpoint
+      let snapped=null;
+      for(const seg of segments){
+        const p1=w2c(seg.wx1,seg.wy1),p2=w2c(seg.wx2,seg.wy2);
+        if(Math.hypot(p1.cx-p.x,p1.cy-p.y)<SNAP_PX){snapped={wx:seg.wx1,wy:seg.wy1};break;}
+        if(Math.hypot(p2.cx-p.x,p2.cy-p.y)<SNAP_PX){snapped={wx:seg.wx2,wy:seg.wy2};break;}
+      }
+      const pw=c2w(p.x,p.y);
+      startPt=snapped||{wx:pw.wx,wy:pw.wy};
+      startMarkerIdx=null;
+      setInfo('Кликните конечную точку. Esc — отмена.');
+    } else {
+      const spC=w2c(startPt.wx,startPt.wy);
+      const snap=orthoSnap(spC.cx,spC.cy,p.x,p.y);
+      const ex=snap.snapped?snap.x:p.x, ey=snap.snapped?snap.y:p.y;
+      if(Math.hypot(ex-spC.cx,ey-spC.cy)<3){startPt=null;startMarkerIdx=null;return;}
+
+      const w1={wx:startPt.wx,wy:startPt.wy},w2=c2w(ex,ey);
+      const real=scale!==null?Math.hypot(w2.wx-w1.wx,w2.wy-w1.wy)*scale:null;
+      const newSegIdx=segments.length;
+      saveHistory();
+      const newSeg={
+        id:uid(),
+        wx1:w1.wx,wy1:w1.wy,wx2:w2.wx,wy2:w2.wy,
+        color:currentColor,real,
+        connStart:null,connEnd:null
+      };
+      // If started from a marker, snap start exactly
+      if(startMarkerIdx!==null){
+        const mk=markers[startMarkerIdx];
+        newSeg.wx1=mk.wx;newSeg.wy1=mk.wy;
+        if(scale!==null) newSeg.real=Math.hypot(newSeg.wx2-newSeg.wx1,newSeg.wy2-newSeg.wy1)*scale;
+      }
+      segments.push(newSeg);
+      // Update startPt to world coords of end point
+      startPt={wx:w2.wx,wy:w2.wy};
+
+      // Check if END point is near a marker
+      const mkIdxEnd=nearestMarker({x:ex,y:ey});
+      const rect=drC.getBoundingClientRect();
+
+      if(mkIdxEnd!==null){
+        const mk=markers[mkIdxEnd];
+        const mp=w2c(mk.wx,mk.wy);
+        newSeg.wx2=mk.wx;newSeg.wy2=mk.wy;
+        if(scale!==null) newSeg.real=Math.hypot(newSeg.wx2-newSeg.wx1,newSeg.wy2-newSeg.wy1)*scale;
+        startPt={wx:mk.wx,wy:mk.wy};
+        const savedStartMkIdx=startMarkerIdx;
+        startMarkerIdx=mkIdxEnd; // next segment can continue from this marker
+        redraw();
+
+        // If also started from a marker, show start popup first, then chain end popup
+        if(savedStartMkIdx!==null){
+          showConnPopup(
+            w2c(markers[savedStartMkIdx].wx,markers[savedStartMkIdx].wy).cx+rect.left,
+            w2c(markers[savedStartMkIdx].wx,markers[savedStartMkIdx].wy).cy+rect.top,
+            newSegIdx,'start',savedStartMkIdx,
+            // callback: after start choice, show end popup
+            ()=>showConnPopup(mp.cx+rect.left,mp.cy+rect.top,newSegIdx,'end',mkIdxEnd)
+          );
+        } else {
+          showConnPopup(mp.cx+rect.left,mp.cy+rect.top,newSegIdx,'end',mkIdxEnd);
+        }
+        setInfo('Выберите тип подключения к значку.');
+        return;
+      }
+
+      // End not on marker — but start was on a marker → show start popup
+      startPt={wx:w2.wx,wy:w2.wy};
+      redraw();
+      if(startMarkerIdx!==null){
+        const mk=markers[startMarkerIdx];
+        const mp=w2c(mk.wx,mk.wy);
+        startMarkerIdx=null;
+        showConnPopup(mp.cx+rect.left,mp.cy+rect.top,newSegIdx,'start',
+          markers.indexOf(mk));
+        setInfo('Выберите тип подключения к значку.');
+        return;
+      }
+      startMarkerIdx=null;
+      setInfo('Продолжайте от конца или кликните новую точку.');
+    }
+  } else if(mode==='scale'){
+    if(!startPt){const pw2=c2w(p.x,p.y);startPt={wx:pw2.wx,wy:pw2.wy};setInfo('Кликните конец масштабной линии.');}
+    else{
+      const spC2=w2c(startPt.wx,startPt.wy);
+      const dpx=Math.hypot(p.x-spC2.cx,p.y-spC2.cy);
+      if(dpx<3){startPt=null;return;}
+      const w1s=startPt,w2s=c2w(p.x,p.y);
+      const dwpx=Math.hypot(w2s.wx-w1s.wx,w2s.wy-w1s.wy);
+      pendingAction={type:'scale',worldPx:dwpx};
+      openModal('Масштаб','Длина нарисованной линии (м):','1');
+      startPt=null;
+    }
+  } else if(mode==='wall'){
+    const p=getPos(e);
+    if(!wallStartPt){
+      // Snap to existing wall endpoints first
+      let snapped=null;
+      for(const w of walls){
+        const p1=w2c(w.wx1,w.wy1), p2=w2c(w.wx2,w.wy2);
+        if(Math.hypot(p1.cx-p.x,p1.cy-p.y)<SNAP_PX){snapped={wx:w.wx1,wy:w.wy1};break;}
+        if(Math.hypot(p2.cx-p.x,p2.cy-p.y)<SNAP_PX){snapped={wx:w.wx2,wy:w.wy2};break;}
+      }
+      const pw=c2w(p.x,p.y);
+      wallStartPt = snapped || {wx:pw.wx, wy:pw.wy};
+      wallLenInput='';
+      setInfo('Кликните следующую точку (или введите число — Enter). Esc — отмена, двойной клик/Enter без числа — замкнуть.');
+    } else {
+      const spC=w2c(wallStartPt.wx, wallStartPt.wy);
+      const snapped=angleSnap15(spC.cx,spC.cy,p.x,p.y);
+      let ex=snapped.x, ey=snapped.y;
+      // Alignment snap to other wall endpoints (same as preview)
+      const ALIGN_TOL=4;
+      walls.forEach(w=>{
+        [[w.wx1,w.wy1],[w.wx2,w.wy2]].forEach(([wx,wy])=>{
+          const pc=w2c(wx,wy);
+          if(Math.abs(pc.cy-ey)<ALIGN_TOL) ey=pc.cy;
+          if(Math.abs(pc.cx-ex)<ALIGN_TOL) ex=pc.cx;
+        });
+      });
+      if(Math.hypot(ex-spC.cx,ey-spC.cy)<3){ wallStartPt=null; wallLenInput=''; return; }
+      const w2=c2w(ex,ey);
+      saveHistory();
+      walls.push({id:uid(), wx1:wallStartPt.wx, wy1:wallStartPt.wy, wx2:w2.wx, wy2:w2.wy});
+      wallStartPt = {wx:w2.wx, wy:w2.wy};
+      wallLenInput='';
+      redraw();
+      setInfo('Продолжайте стену или Enter/Esc для завершения.');
+    }
+  } else if(mode==='marker'){
+    const mt=markerTypes.find(t=>t.id===selectedMarkerTypeId);
+    if(!mt){alert('Сначала создайте тип значка на вкладке «Значки».');return;}
+    let px=p.x, py=p.y;
+    const snap=markerAlignSnap(px,py,-1);
+    if(snap.sx!==null) px=snap.sx;
+    if(snap.sy!==null) py=snap.sy;
+    const w=c2w(px,py);
+    saveHistory();
+    markers.push({id:uid(),wx:w.wx,wy:w.wy,mtypeId:mt.id,color:currentColor});
+    redraw();
+  } else if(mode==='select'){
+    hideConnPopup();
+    const hit=hitTest(p);
+    if(hit){selType=hit.type;selIdx=hit.idx;showPropsTab();updatePropsPanel();}
+    else{selType=null;selIdx=null;updatePropsPanel();}
+    redraw();
+  }
+});
+
+drC.addEventListener('dblclick',e=>{
+  if(mode==='wall'&&wallStartPt){ wallStartPt=null; setInfo('Стена завершена.'); redraw(); }
+});
+
+drC.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const p=getPos(e);
+  const d=e.deltaY>0?0.9:1.1;
+  const ns=Math.max(0.02,Math.min(20,bgS*d));
+  bgX=p.x-(p.x-bgX)*(ns/bgS);bgY=p.y-(p.y-bgY)*(ns/bgS);
+  bgS=ns;redrawBg();redraw();
+},{passive:false});
+drC.addEventListener('mousedown',e=>{if(e.button===1)e.preventDefault();},{passive:false,capture:true});
+
+// ═══════════════════════════════════════════════════════
+// KEYBOARD
+// ═══════════════════════════════════════════════════════
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT'||e.target.tagName==='TEXTAREA') return;
+
+  // ── Wall length typing (active only while drawing a wall chain) ──
+  if(mode==='wall' && wallStartPt){
+    if(/^[0-9]$/.test(e.key)){ wallLenInput+=e.key; redraw(); return; }
+    if(e.key==='.'||e.key===','){ if(!wallLenInput.includes('.')) wallLenInput+= wallLenInput?'.':'0.'; redraw(); return; }
+    if(e.key==='Backspace'){ wallLenInput=wallLenInput.slice(0,-1); redraw(); return; }
+    if(e.key==='Enter'){
+      if(wallLenInput.length>0 && scale!==null){
+        // Commit a wall segment using typed length at the angle captured on last mousemove
+        const typedM=parseFloat(wallLenInput);
+        if(!isNaN(typedM)&&typedM>0){
+          const pxLen=typedM/scale; // world px
+          const rad=wallLastAngle*Math.PI/180;
+          const newWx=wallStartPt.wx+Math.cos(rad)*pxLen;
+          const newWy=wallStartPt.wy+Math.sin(rad)*pxLen;
+          saveHistory();
+          walls.push({id:uid(), wx1:wallStartPt.wx, wy1:wallStartPt.wy, wx2:newWx, wy2:newWy});
+          wallStartPt={wx:newWx, wy:newWy};
+          wallLenInput='';
+          setInfo('Продолжайте стену или Enter/Esc для завершения.');
+          redraw();
+        }
+      } else {
+        // No typed length — Enter finishes the chain
+        wallStartPt=null; wallLenInput=''; setInfo('Стена завершена.'); redraw();
+      }
+      return;
+    }
+  }
+
+  if((e.key==='Delete'||e.key==='Backspace')&&selType!==null) deleteSelected();
+  if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();undo();}
+  if((e.ctrlKey||e.metaKey)&&(e.key==='y'||(e.shiftKey&&e.key==='z'))){e.preventDefault();redo();}
+  if(e.key==='Escape'){startPt=null;startMarkerIdx=null;wallStartPt=null;wallLenInput='';selType=null;selIdx=null;isPanning=false;isDragging=false;hideConnPopup();redraw();}
+});
+
+// ═══════════════════════════════════════════════════════
+// MODAL (generic)
+// ═══════════════════════════════════════════════════════
+function openModal(title,htmlOrLabel,defaultVal,cb,isHtml){
+  document.getElementById('modal-title').textContent=title;
+  const body=document.getElementById('modal-body');
+  body.innerHTML=isHtml?htmlOrLabel:
+    `<div class="mfield"><label>${htmlOrLabel}</label><input type="number" id="modal-num" min="0.001" step="0.01" value="${defaultVal||''}"></div>`;
+  modalCb=cb||null;
+  modal.classList.add('show');
+  setTimeout(()=>{const inp=body.querySelector('input');if(inp){inp.focus();inp.select();}},50);
+}
+document.getElementById('modal-ok').addEventListener('click',()=>{
+  if(modalCb){modalCb();return;}
+  confirmDefaultModal();
+});
+document.getElementById('modal-cancel').addEventListener('click',()=>{
+  modal.classList.remove('show');
+  if(pendingAction?.type==='line') startPt=null;
+  pendingAction=null;modalCb=null;
+});
+document.getElementById('modal-body').addEventListener('keydown',e=>{
+  if(e.key==='Enter') document.getElementById('modal-ok').click();
+});
+function confirmDefaultModal(){
+  const inp=document.getElementById('modal-num');
+  if(!inp) return;
+  const val=parseFloat(inp.value);
+  if(isNaN(val)||val<=0){inp.style.borderColor='#e24b4a';return;}
+  inp.style.borderColor='';
+  modal.classList.remove('show');
+  if(pendingAction?.type==='scale'){
+    scale=val/pendingAction.worldPx;
+    segments.forEach(seg=>{ seg.real=Math.hypot(seg.wx2-seg.wx1,seg.wy2-seg.wy1)*scale; });
+    document.getElementById('scale-badge').style.display='flex';
+    setInfo('Масштаб задан. Рисуйте линии.');
+    setMode('line');
+  }
+  pendingAction=null;redraw();
+}
+
+// ═══════════════════════════════════════════════════════
+// MARKER TYPE MANAGEMENT
+// ═══════════════════════════════════════════════════════
+function renderMarkerTypesList(){
+  const list=document.getElementById('marker-types-list');
+  list.innerHTML='';
+  markerTypes.forEach(mt=>{
+    const row=document.createElement('div');
+    row.className='mtype-row'+(mt.id===selectedMarkerTypeId?' active-mtype':'');
+    row.innerHTML=`
+      <div class="mtype-badge">${mt.abbr}</div>
+      <div class="mtype-info">
+        <div class="mtype-label">${mt.desc}</div>
+        <div class="mtype-extra">База: +${mt.extra} м/шт</div>
+      </div>
+      <div class="mtype-actions">
+        <button class="mtype-edit ti ti-pencil" data-edit="${mt.id}" title="Изменить"></button>
+        <button class="mtype-del ti ti-trash" data-del="${mt.id}" title="Удалить"></button>
+      </div>`;
+    row.addEventListener('click',ev=>{
+      if(ev.target.dataset.edit||ev.target.dataset.del) return;
+      selectedMarkerTypeId=mt.id;
+      renderMarkerTypesList();
+      setMode('marker');
+    });
+    list.appendChild(row);
+  });
+  // Sync prop-mtype select
+  const sel=document.getElementById('prop-mtype');
+  sel.innerHTML=markerTypes.map(mt=>`<option value="${mt.id}">${mt.abbr} — ${mt.desc} (+${mt.extra}м)</option>`).join('');
+}
+
+document.getElementById('marker-types-list').addEventListener('click',e=>{
+  const editId=e.target.dataset.edit,delId=e.target.dataset.del;
+  if(editId) openMarkerTypeModal(markerTypes.find(t=>t.id===editId));
+  if(delId){
+    if(!confirm('Удалить тип? Все значки этого типа будут удалены.')) return;
+    saveHistory();
+    markerTypes=markerTypes.filter(t=>t.id!==delId);
+    markers=markers.filter(m=>m.mtypeId!==delId);
+    // Remove connections pointing to deleted markers
+    const deletedMkIds=new Set(markers.filter(m=>!markerTypes.find(t=>t.id===m.mtypeId)).map(m=>m.id));
+    segments.forEach(seg=>{
+      if(seg.connStart&&deletedMkIds.has(seg.connStart.markerId)) seg.connStart=null;
+      if(seg.connEnd&&deletedMkIds.has(seg.connEnd.markerId))   seg.connEnd=null;
+    });
+    if(selectedMarkerTypeId===delId) selectedMarkerTypeId=markerTypes[0]?.id||null;
+    renderMarkerTypesList();redraw();
+  }
+});
+
+document.getElementById('btn-add-mtype').addEventListener('click',()=>openMarkerTypeModal(null));
+
+function openMarkerTypeModal(existing){
+  const isNew=!existing;
+  const html=`
+    <div class="mfield"><label>Аббревиатура (1-2 символа)</label>
+      <input type="text" id="mt-abbr" maxlength="2" value="${existing?existing.abbr:''}" placeholder="Рз"></div>
+    <div class="mfield"><label>Расшифровка (полное название)</label>
+      <input type="text" id="mt-desc" value="${existing?existing.desc:''}" placeholder="Розетка"></div>
+    <div class="mfield"><label>Базовый расход материала на 1 шт (м)</label>
+      <input type="number" id="mt-extra" min="0" step="0.1" value="${existing?existing.extra:0}">
+      <div style="font-size:10px;color:#555;margin-top:3px">Расход за сам прибор (монтаж, подключение). Плюс длины подключённых линий считаются отдельно.</div>
+    </div>`;
+  openModal(isNew?'Новый тип значка':'Изменить тип значка',html,null,()=>{
+    const abbr=document.getElementById('mt-abbr').value.trim().slice(0,2);
+    const desc=document.getElementById('mt-desc').value.trim();
+    if(!abbr){alert('Введите аббревиатуру');return;}
+    const extra=parseFloat(document.getElementById('mt-extra').value)||0;
+    if(isNew){
+      const id=uid();
+      markerTypes.push({id,abbr,desc,extra});
+      selectedMarkerTypeId=id;
+    } else {
+      existing.abbr=abbr;existing.desc=desc;existing.extra=extra;
+      // Update placed markers label cache (not needed since we look up by mtypeId, but good practice)
+    }
+    renderMarkerTypesList();redraw();
+    modal.classList.remove('show');modalCb=null;
+  },true);
+}
+
+// ═══════════════════════════════════════════════════════
+// CONTEXT MENU
+// ═══════════════════════════════════════════════════════
+function showCtxMenu(cx,cy,hit){
+  document.getElementById('ctx-len').style.display=hit.type==='segment'?'flex':'none';
+  ctxMenu.style.left=cx+'px';ctxMenu.style.top=cy+'px';
+  ctxMenu.classList.add('show');
+  requestAnimationFrame(()=>{
+    const r=ctxMenu.getBoundingClientRect();
+    if(r.right>window.innerWidth)  ctxMenu.style.left=(cx-r.width)+'px';
+    if(r.bottom>window.innerHeight) ctxMenu.style.top=(cy-r.height)+'px';
+  });
+}
+function hideCtxMenu(){ctxMenu.classList.remove('show');}
+document.addEventListener('click',e=>{
+  if(!ctxMenu.contains(e.target)) hideCtxMenu();
+  if(!connPopup.contains(e.target)&&e.target!==drC) hideConnPopup();
+});
+
+document.getElementById('ctx-move').addEventListener('click',()=>{setMode('select');setInfo('Перетащите выбранный объект.');});
+document.getElementById('ctx-color').addEventListener('click',()=>{showPropsTab();updatePropsPanel();});
+document.getElementById('ctx-len').addEventListener('click',()=>{
+  if(selType!=='segment') return;
+  const seg=segments[selIdx];
+  openModal('Изменить длину','Новая длина (м):',(seg.real||0).toFixed(2),()=>{
+    const val=parseFloat(document.getElementById('modal-num').value);
+    if(isNaN(val)||val<=0) return;
+    modal.classList.remove('show');modalCb=null;
+    saveHistory();
+    if(scale!==null){
+      const dw=seg.wx2-seg.wx1,dh=seg.wy2-seg.wy1,cur=Math.hypot(dw,dh)||1,r=(val/scale)/cur;
+      seg.wx2=seg.wx1+dw*r;seg.wy2=seg.wy1+dh*r;
+    }
+    seg.real=val;updatePropsPanel();redraw();
+  });
+});
+document.getElementById('ctx-delete').addEventListener('click',deleteSelected);
+
+// ═══════════════════════════════════════════════════════
+// PROPS PANEL
+// ═══════════════════════════════════════════════════════
+function showPropsTab(){
+  document.querySelectorAll('.stab').forEach(t=>t.classList.toggle('active',t.dataset.tab==='props'));
+  document.querySelectorAll('.spanel').forEach(p=>p.classList.toggle('active',p.id==='tab-props'));
+}
+function updatePropsPanel(){
+  const noSel=document.getElementById('no-selection');
+  const content=document.getElementById('props-content');
+  if(selType===null){noSel.style.display='block';content.style.display='none';return;}
+  noSel.style.display='none';content.style.display='block';
+  const obj=selType==='segment'?segments[selIdx]:markers[selIdx];
+
+  // Color (only for segments)
+  document.getElementById('prop-colors').parentElement.style.display=selType==='segment'?'block':'none';
+  if(selType==='segment'){
+    document.getElementById('prop-colors').querySelectorAll('.color-dot')
+      .forEach(d=>d.classList.toggle('active',d.dataset.hex===obj.color));
+  }
+
+  document.getElementById('prop-len-group').style.display=selType==='segment'?'block':'none';
+  document.getElementById('prop-mtype-group').style.display=selType==='marker'?'block':'none';
+  document.getElementById('prop-conns-group').style.display=selType==='marker'?'block':'none';
+
+  if(selType==='segment'){
+    document.getElementById('prop-len').value=(obj.real||0).toFixed(2);
+  }
+  if(selType==='marker'){
+    renderMarkerTypesList();
+    document.getElementById('prop-mtype').value=obj.mtypeId;
+    // Show connections
+    const cl=document.getElementById('prop-conns-list');
+    const conns=getMarkerConnections(obj.id);
+    if(!conns.length){cl.innerHTML='<div style="font-size:11px;color:#555">Нет подключённых линий</div>';return;}
+    cl.innerHTML=conns.map(c=>{
+      const typeLabel=c.type==='connected'?'Подключён':'Транзит';
+      const colorName=COLORS.find(col=>col.hex===c.color)?.name||c.color;
+      return `<div class="conn-list-item">
+        <span class="conn-badge ${c.type}">${typeLabel}</span>
+        <span>${colorName}</span>
+        <button class="conn-toggle" data-segid="${c.segId}" data-end="${c.end}" title="Переключить тип">⇄</button>
+      </div>`;
+    }).join('');
+  }
+}
+
+function getMarkerConnections(markerId){
+  const result=[];
+  segments.forEach(seg=>{
+    if(seg.connStart?.markerId===markerId) result.push({segId:seg.id,end:'start',type:seg.connStart.type,color:seg.color});
+    if(seg.connEnd?.markerId===markerId)   result.push({segId:seg.id,end:'end',  type:seg.connEnd.type,  color:seg.color});
+  });
+  return result;
+}
+
+// Toggle connection type from props
+document.getElementById('prop-conns-list').addEventListener('click',e=>{
+  const btn=e.target.closest('.conn-toggle');
+  if(!btn) return;
+  const segId=btn.dataset.segid,end=btn.dataset.end;
+  const seg=segments.find(s=>s.id===segId);
+  if(!seg) return;
+  saveHistory();
+  const connKey=end==='start'?'connStart':'connEnd';
+  if(seg[connKey]) seg[connKey].type=seg[connKey].type==='connected'?'transit':'connected';
+  redraw();updatePropsPanel();
+});
+
+document.getElementById('prop-apply').addEventListener('click',()=>{
+  if(selType===null) return;
+  saveHistory();
+  const obj=selType==='segment'?segments[selIdx]:markers[selIdx];
+  if(selType==='segment'){
+    const ac=document.querySelector('#prop-colors .color-dot.active');
+    if(ac) obj.color=ac.dataset.hex;
+    const val=parseFloat(document.getElementById('prop-len').value);
+    if(!isNaN(val)&&val>0){
+      if(scale!==null){const dw=obj.wx2-obj.wx1,dh=obj.wy2-obj.wy1,cur=Math.hypot(dw,dh)||1,r=(val/scale)/cur;obj.wx2=obj.wx1+dw*r;obj.wy2=obj.wy1+dh*r;}
+      obj.real=val;
+    }
+  }
+  if(selType==='marker'){
+    obj.mtypeId=document.getElementById('prop-mtype').value;
+  }
+  redraw();
+});
+document.getElementById('prop-delete').addEventListener('click',deleteSelected);
+
+// Prop color dots
+const pcEl=document.getElementById('prop-colors');
+COLORS.forEach(c=>{
+  const d=document.createElement('div');
+  d.className='color-dot';d.style.background=c.hex;d.title=c.name;d.dataset.hex=c.hex;
+  d.addEventListener('click',()=>{
+    pcEl.querySelectorAll('.color-dot').forEach(x=>x.classList.remove('active'));d.classList.add('active');
+  });
+  pcEl.appendChild(d);
+});
+
+// Tabs
+document.querySelectorAll('.stab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.stab').forEach(t=>t.classList.toggle('active',t===tab));
+    document.querySelectorAll('.spanel').forEach(p=>p.classList.toggle('active',p.id==='tab-'+tab.dataset.tab));
+    if(tab.dataset.tab==='markers-cfg') renderMarkerTypesList();
+  });
+});
+
+// ═══════════════════════════════════════════════════════
+// DELETE
+// ═══════════════════════════════════════════════════════
+function deleteSelected(){
+  if(selType===null) return;
+  saveHistory();
+  if(selType==='segment'){
+    segments.splice(selIdx,1);
+  } else if(selType==='wall'){
+    walls.splice(selIdx,1);
+  } else {
+    const mkId=markers[selIdx].id;
+    markers.splice(selIdx,1);
+    segments.forEach(seg=>{
+      if(seg.connStart?.markerId===mkId) seg.connStart=null;
+      if(seg.connEnd?.markerId===mkId)   seg.connEnd=null;
+    });
+  }
+  selType=null;selIdx=null;updatePropsPanel();redraw();
+}
+
+// ═══════════════════════════════════════════════════════
+// HISTORY
+// ═══════════════════════════════════════════════════════
+function snapshot(){
+  return{
+    segments:JSON.parse(JSON.stringify(segments)),
+    markers:JSON.parse(JSON.stringify(markers)),
+    walls:JSON.parse(JSON.stringify(walls)),
+    markerTypes:JSON.parse(JSON.stringify(markerTypes)),
+    colorLabels:JSON.parse(JSON.stringify(colorLabels)),
+    hiddenColors:[...hiddenColors],
+    scale
+  };
+}
+function saveHistory(){
+  undoStack.push(snapshot());
+  if(undoStack.length>60) undoStack.shift();
+  redoStack=[];
+}
+function applySnapshot(h){
+  segments=h.segments;markers=h.markers;walls=h.walls||walls;markerTypes=h.markerTypes||markerTypes;colorLabels=h.colorLabels||colorLabels;hiddenColors=new Set(h.hiddenColors||[]);scale=h.scale;
+  selType=null;selIdx=null;startPt=null;
+  document.getElementById('scale-badge').style.display=scale!==null?'flex':'none';
+  renderMarkerTypesList();updatePropsPanel();redraw();
+}
+function undo(){if(!undoStack.length) return;redoStack.push(snapshot());applySnapshot(undoStack.pop());}
+function redo(){if(!redoStack.length) return;undoStack.push(snapshot());applySnapshot(redoStack.pop());}
+document.getElementById('btn-undo').addEventListener('click',undo);
+document.getElementById('btn-redo').addEventListener('click',redo);
+
+// ═══════════════════════════════════════════════════════
+// CLEAR
+// ═══════════════════════════════════════════════════════
+document.getElementById('btn-clear').addEventListener('click',()=>{
+  if(!segments.length&&!markers.length&&!walls.length) return;
+  if(!confirm('Очистить весь чертёж?')) return;
+  saveHistory();segments=[];markers=[];walls=[];selType=null;selIdx=null;startPt=null;startMarkerIdx=null;wallStartPt=null;
+  // NOTE: scale is intentionally kept — it belongs to the floor plan, not the drawing
+  updatePropsPanel();redraw();setInfo('Чертёж очищен. Масштаб сохранён.');
+});
+
+// ═══════════════════════════════════════════════════════
+// PARTNER SHOP CARD (shown before save/export — see docs for monetisation plan)
+// ═══════════════════════════════════════════════════════
+// Loads partners.json (same folder as this HTML) at startup.
+// Structure: { "CityName": [ {name,address,phone,whatsapp,whatsappMsg,gis2,website}, ... ], "default": [...] }
+// All fields except "name" are optional — only buttons with data are shown.
+// Multiple partners per city/default rotate in order via localStorage (per-key counter).
+// Geolocation by city is NOT implemented yet (deliberate, see project docs) — always uses "default" for now.
+const FALLBACK_PARTNER = {
+  name: 'Электро-Маркет',
+  address: 'ул. Протозанова 50, Усть-Каменогорск',
+  phone: '+7 (723) 25-00-00',
+  whatsapp: '77232500000',
+  whatsappMsg: 'Здравствуйте, нашёл вас через калькулятор проводки',
+  gis2: 'https://2gis.kz/ust-kamenogorsk',
+  website: ''
+};
+
+let partnersConfig = null; // loaded from partners.json, or null if fetch failed
+let partnerCardPendingAction = null;
+
+async function loadPartnersConfig(){
+  try{
+    const res = await fetch('partners.json', {cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    partnersConfig = data;
+  }catch(err){
+    // Network unavailable, file missing, or opened as local file:// (fetch often blocked) — use fallback
+    partnersConfig = null;
+  }
+}
+
+// Picks the next partner for a given region key, rotating through the list.
+// Falls back to FALLBACK_PARTNER if config didn't load or region list is empty.
+function pickPartner(regionKey){
+  let list = null;
+  if(partnersConfig){
+    list = partnersConfig[regionKey] || partnersConfig['default'] || null;
+  }
+  if(!list || !list.length) return FALLBACK_PARTNER;
+
+  const storeKey = 'wiring_partner_rotation_' + regionKey;
+  let idx = 0;
+  try{ idx = parseInt(localStorage.getItem(storeKey)||'0') || 0; }catch(e){}
+  const partner = list[idx % list.length];
+  try{ localStorage.setItem(storeKey, String((idx+1) % list.length)); }catch(e){}
+  return partner;
+}
+
+function buildPartnerActionButton(kind, p){
+  // Returns an <a> element, or null if the partner has no data for this kind.
+  const defs = {
+    whatsapp: {
+      cond: !!p.whatsapp,
+      href: `https://wa.me/${p.whatsapp}?text=${encodeURIComponent(p.whatsappMsg||'')}`,
+      bg:'#1a3a1a', border:'#2a5a2a', color:'#6dca8a', icon:'ti-brand-whatsapp', label:'WhatsApp'
+    },
+    gis2: {
+      cond: !!p.gis2,
+      href: p.gis2,
+      bg:'#1a2a3a', border:'#2a4a6a', color:'#7dc4ff', icon:'ti-map-2', label:'2ГИС'
+    },
+    website: {
+      cond: !!p.website,
+      href: p.website,
+      bg:'#2a241a', border:'#5a4a2a', color:'#e0b86a', icon:'ti-world', label:'Сайт'
+    },
+  };
+  const d = defs[kind];
+  if(!d || !d.cond) return null;
+  const a = document.createElement('a');
+  a.href = d.href; a.target='_blank'; a.rel='noopener';
+  a.style.cssText = `flex:1;min-width:90px;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 0;background:${d.bg};border:1px solid ${d.border};border-radius:7px;color:${d.color};font-size:12px;font-weight:600;text-decoration:none`;
+  a.innerHTML = `<i class="ti ${d.icon}" style="font-size:15px"></i> ${d.label}`;
+  a.addEventListener('click', ()=>{ setTimeout(hidePartnerCardAndProceed, 400); });
+  return a;
+}
+
+function showPartnerCard(onContinue){
+  const p = pickPartner('default'); // region key fixed to 'default' until geolocation is added
+
+  document.getElementById('partner-name').textContent = p.name || 'Партнёр';
+
+  const addrRow = document.getElementById('partner-address-row');
+  if(p.address){ addrRow.style.display='flex'; document.getElementById('partner-address').textContent = p.address; }
+  else addrRow.style.display='none';
+
+  const phoneRow = document.getElementById('partner-phone-row');
+  if(p.phone){ phoneRow.style.display='flex'; document.getElementById('partner-phone').textContent = p.phone; }
+  else phoneRow.style.display='none';
+
+  const actions = document.getElementById('partner-actions');
+  actions.innerHTML='';
+  ['whatsapp','gis2','website'].forEach(kind=>{
+    const btn = buildPartnerActionButton(kind, p);
+    if(btn) actions.appendChild(btn);
+  });
+  actions.style.display = actions.children.length ? 'flex' : 'none';
+
+  partnerCardPendingAction = onContinue;
+  document.getElementById('partner-modal').style.display='flex';
+}
+function hidePartnerCardAndProceed(){
+  document.getElementById('partner-modal').style.display='none';
+  if(partnerCardPendingAction){ partnerCardPendingAction(); partnerCardPendingAction=null; }
+}
+document.getElementById('partner-continue').addEventListener('click', hidePartnerCardAndProceed);
+document.getElementById('partner-modal').addEventListener('click', e=>{
+  if(e.target===e.currentTarget) hidePartnerCardAndProceed();
+});
+
+loadPartnersConfig(); // kick off at startup, non-blocking
+
+// ═══════════════════════════════════════════════════════
+// SAVE / OPEN
+// ═══════════════════════════════════════════════════════
+
+function doSaveProject(){
+  const data={version:9,scale,segments,markers,walls,markerTypes,colorLabels,hiddenColors:[...hiddenColors],bg:bgImgDataUrl,bgX,bgY,bgS,bgOpacity,markerSnapRadius};
+  const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='wiring-project.wiring';a.click();
+}
+document.getElementById('btn-save').addEventListener('click',()=>{
+  showPartnerCard(doSaveProject);
+});
+document.getElementById('project-in').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const d=JSON.parse(ev.target.result);
+      saveHistory();
+      segments=d.segments||[];
+      markers=d.markers||[];
+      walls=d.walls||[];
+      markerTypes=d.markerTypes||markerTypes;
+      scale=d.scale||null;
+      colorLabels=d.colorLabels||{};
+      hiddenColors=new Set(d.hiddenColors||[]);
+      if(d.bgOpacity!=null){
+        bgOpacity=d.bgOpacity;
+        bgOpacitySlider.value=Math.round(bgOpacity*100);
+        bgOpacityVal.textContent=Math.round(bgOpacity*100)+'%';
+      }
+      if(d.markerSnapRadius!=null){
+        markerSnapRadius=d.markerSnapRadius;
+        markerSnapSlider.value=markerSnapRadius;
+        markerSnapVal.textContent=markerSnapRadius+'px';
+      }
+      bgX=d.bgX||0;bgY=d.bgY||0;bgS=d.bgS||d.bgScale||1;
+      document.getElementById('scale-badge').style.display=scale!==null?'flex':'none';
+      if(d.bg){
+        bgImgDataUrl=d.bg;
+        const img=new Image();
+        img.onload=()=>{bgImg=img;document.getElementById('drop-hint').classList.add('hidden');redrawBg();redraw();};
+        img.src=d.bg;
+      } else {bgImg=null;redrawBg();redraw();}
+      selType=null;selIdx=null;
+      renderMarkerTypesList();updatePropsPanel();setInfo('Проект загружен.');
+    }catch(err){alert('Ошибка открытия: '+err.message);}
+  };
+  r.readAsText(f);
+});
+
+// ═══════════════════════════════════════════════════════
+// RESULTS
+// ═══════════════════════════════════════════════════════
+function updateResults(){
+  // Lines by color
+  const linesByColor={};
+  segments.forEach(s=>{linesByColor[s.color]=(linesByColor[s.color]||0)+(s.real||0);});
+
+  // Markers: group by type, sum base extra + connected lines
+  const mkByType={};
+  markerTypes.forEach(mt=>{mkByType[mt.id]={mt,count:0,base:0,connected:0};});
+  markers.forEach(mk=>{
+    if(!mkByType[mk.mtypeId]) return;
+    const g=mkByType[mk.mtypeId];
+    g.count++;
+    g.base+=g.mt.extra;
+  });
+  // Connected lines contribution
+  segments.forEach(seg=>{
+    const real=seg.real||0;
+    [seg.connStart,seg.connEnd].forEach(conn=>{
+      if(!conn||conn.type!=='connected') return;
+      const mk=markers.find(m=>m.id===conn.markerId);
+      if(!mk||!mkByType[mk.mtypeId]) return;
+      mkByType[mk.mtypeId].connected+=real;
+    });
+  });
+
+  const el=document.getElementById('results-list');
+  const lineKeys=Object.keys(linesByColor);
+  const mkKeys=Object.keys(mkByType).filter(k=>mkByType[k].count>0);
+
+  if(!lineKeys.length&&!mkKeys.length){
+    el.innerHTML='<p style="font-size:12px;color:#555">Нет данных</p>';
+    document.getElementById('total-val').textContent='0.00 м';return;
+  }
+
+  let html='';
+  if(lineKeys.length){
+    html+='<div class="res-section">Линии</div>';
+    lineKeys.forEach(hex=>{
+      const name=COLORS.find(c=>c.hex===hex)?.name||hex;
+      const label=colorLabels[hex]?`<div style="font-size:10px;color:#888;margin-top:1px">${colorLabels[hex]}</div>`:'';
+      const hidden=hiddenColors.has(hex);
+      const eyeIcon=hidden?'ti-eye-off':'ti-eye';
+      const rowStyle=hidden?'opacity:0.4':'';
+      html+=`<div class="res-row" style="${rowStyle}">
+        <div class="res-dot" style="background:${hex}"></div>
+        <span class="res-name">${name}${label}</span>
+        <span class="res-val">${linesByColor[hex].toFixed(2)} м</span>
+        <button class="vis-toggle" data-hex="${hex}" title="${hidden?'Показать':'Скрыть'} линии" style="background:none;border:none;cursor:pointer;color:${hidden?'#555':'#888'};padding:2px 4px;flex-shrink:0">
+          <i class="ti ${eyeIcon}" style="font-size:13px"></i>
+        </button>
+      </div>`;
+    });
+  }
+  if(mkKeys.length){
+    html+='<div class="res-section">Значки</div>';
+    mkKeys.forEach(id=>{
+      const g=mkByType[id];
+      const total=g.base+g.connected;
+      html+=`<div class="res-row">
+        <div class="mtype-badge" style="width:20px;height:20px;font-size:8px;border-radius:50%;background:#1a2a3a;border:1px solid #4a9eff;display:inline-flex;align-items:center;justify-content:center;color:#7dc4ff;font-weight:700;flex-shrink:0">${g.mt.abbr}</div>
+        <span class="res-name">${g.mt.desc} ×${g.count}</span>
+        <span class="res-val">${total.toFixed(2)} м</span>
+      </div>
+      ${g.base>0||g.connected>0?`<div class="res-sub">База: ${g.base.toFixed(2)}м · Подкл: ${g.connected.toFixed(2)}м</div>`:''}`;
+    });
+  }
+  el.innerHTML=html;
+
+  const totalLines=Object.values(linesByColor).reduce((a,b)=>a+b,0);
+  const totalMk=mkKeys.reduce((a,k)=>a+mkByType[k].base+mkByType[k].connected,0);
+  document.getElementById('total-val').textContent=(totalLines+totalMk).toFixed(2)+' м';
+
+  // Wire visibility toggle buttons (freshly rendered each call)
+  document.querySelectorAll('.vis-toggle').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      const hex=btn.dataset.hex;
+      if(hiddenColors.has(hex)) hiddenColors.delete(hex);
+      else hiddenColors.add(hex);
+      redraw(); // updateResults called inside redraw
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// MODES
+// ═══════════════════════════════════════════════════════
+const modeInfo={
+  wall:'Кликните точки контура стен (шаг угла 15°). Двойной клик или Enter — завершить контур. Esc — отмена.',
+  line:'Клик — начало, клик — конец. Привязка к точкам и значкам. Ортогональная привязка ±7°.',
+  scale:'Нарисуйте линию известной длины → введите длину в метрах.',
+  marker:'Кликните для установки значка. Активный тип выбирается на вкладке «Значки».',
+  select:'Клик — выбор. Тяните объект или концы линий. ПКМ — меню. Del — удалить.',
+  pan:'Тяните фон. Колесо — масштаб. Средняя кнопка работает в любом режиме.',
+};
+function setMode(m){
+  mode=m;startPt=null;isPanning=false;
+  if(m!=='wall'){ wallStartPt=null; wallLenInput=''; }
+  if(m!=='select'){selType=null;selIdx=null;}
+  ['btn-wall','btn-line','btn-scale','btn-marker','btn-select','btn-pan'].forEach(id=>{
+    document.getElementById(id)?.classList.toggle('active',id==='btn-'+m);
+  });
+  drC.style.cursor=cursorSize>0?'none':m==='select'?'pointer':m==='pan'?'grab':'crosshair';
+  setInfo(modeInfo[m]||'');redraw();
+}
+document.getElementById('btn-show-all').addEventListener('click',()=>{
+  hiddenColors.clear(); redraw();
+});
+
+['wall','line','scale','marker','select','pan'].forEach(m=>
+  document.getElementById('btn-'+m)?.addEventListener('click',()=>setMode(m))
+);
+
+// ═══════════════════════════════════════════════════════
+// TOOLBAR COLORS
+// ═══════════════════════════════════════════════════════
+const colorRow=document.getElementById('color-picker-row');
+
+// Color picker: dots + right-click to set label
+function buildColorPicker(){
+  // Remove old dots (keep the label span)
+  colorRow.querySelectorAll('.color-dot,.color-dot-wrap').forEach(el=>el.remove());
+  COLORS.forEach(c=>{
+    const wrap=document.createElement('div');
+    wrap.style.cssText='position:relative;display:inline-flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer';
+    wrap.className='color-dot-wrap';
+    const d=document.createElement('div');
+    d.className='color-dot'+(c.hex===currentColor?' active':'');
+    d.style.background=c.hex;d.title=c.name+' (ПКМ — подпись)';d.dataset.hex=c.hex;
+    // Short label under dot if set
+    const lbl=document.createElement('div');
+    lbl.style.cssText='font-size:8px;color:#888;max-width:22px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;line-height:1';
+    lbl.textContent=colorLabels[c.hex]||'';
+    lbl.className='cdot-lbl';
+    d.addEventListener('click',ev=>{
+      ev.stopPropagation();
+      currentColor=c.hex;
+      colorRow.querySelectorAll('.color-dot').forEach(x=>x.classList.remove('active'));
+      d.classList.add('active');
+    });
+    d.addEventListener('contextmenu',ev=>{
+      ev.preventDefault();ev.stopPropagation();
+      const cur=colorLabels[c.hex]||'';
+      const txt=prompt(`Подпись для цвета «${c.name}»:\n(например: Детская, Кухня, Силовая)`, cur);
+      if(txt===null) return;
+      if(txt.trim()) colorLabels[c.hex]=txt.trim();
+      else delete colorLabels[c.hex];
+      buildColorPicker(); redraw();
+    });
+    wrap.appendChild(d);wrap.appendChild(lbl);
+    colorRow.appendChild(wrap);
+  });
+}
+buildColorPicker();
+
+// ═══════════════════════════════════════════════════════
+// TOOLBAR CONTROLS: opacity, cursor size, ortho-only
+// ═══════════════════════════════════════════════════════
+const bgOpacitySlider = document.getElementById('bg-opacity');
+const bgOpacityVal    = document.getElementById('bg-opacity-val');
+bgOpacitySlider.addEventListener('input',()=>{
+  bgOpacity = bgOpacitySlider.value / 100;
+  bgOpacityVal.textContent = bgOpacitySlider.value + '%';
+  redrawBg();
+});
+
+const cursorSlider = document.getElementById('cursor-size');
+cursorSlider.addEventListener('input',()=>{
+  cursorSize = parseInt(cursorSlider.value);
+  // Hide system cursor when custom crosshair is active
+  drC.style.cursor = cursorSize > 0 ? 'none' : (mode==='select'?'pointer':mode==='pan'?'grab':'crosshair');
+  redraw();
+});
+
+const markerSnapSlider = document.getElementById('marker-snap');
+const markerSnapVal    = document.getElementById('marker-snap-val');
+markerSnapSlider.addEventListener('input',()=>{
+  markerSnapRadius = parseInt(markerSnapSlider.value);
+  markerSnapVal.textContent = markerSnapRadius + 'px';
+  redraw();
+});
+
+document.getElementById('btn-ortho').addEventListener('click',()=>{
+  orthoOnly = !orthoOnly;
+  document.getElementById('btn-ortho').classList.toggle('active', orthoOnly);
+  setInfo(orthoOnly ? 'Режим только Г/В линий включён. Все отрезки будут горизонтальными или вертикальными.' : 'Режим Г/В линий выключен.');
+});
+
+// Also redraw on mousemove to update crosshair position — already done in existing mousemove handler
+
+// ═══════════════════════════════════════════════════════
+// EXPORT AS IMAGE
+// ═══════════════════════════════════════════════════════
+// ── Export helpers ──
+function getBoundingBox(margin=60){
+  // Returns {x,y,w,h} in CANVAS coords covering all segments and markers
+  // with given pixel margin. Falls back to full canvas if nothing drawn.
+  if(!segments.length && !markers.length) return {x:0,y:0,w:bgC.width,h:bgC.height};
+  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  segments.forEach(seg=>{
+    const p1=w2c(seg.wx1,seg.wy1),p2=w2c(seg.wx2,seg.wy2);
+    minX=Math.min(minX,p1.cx,p2.cx); minY=Math.min(minY,p1.cy,p2.cy);
+    maxX=Math.max(maxX,p1.cx,p2.cx); maxY=Math.max(maxY,p1.cy,p2.cy);
+  });
+  markers.forEach(mk=>{
+    const p=w2c(mk.wx,mk.wy);
+    minX=Math.min(minX,p.cx-MK_R); minY=Math.min(minY,p.cy-MK_R);
+    maxX=Math.max(maxX,p.cx+MK_R); maxY=Math.max(maxY,p.cy+MK_R);
+  });
+  return {
+    x: Math.max(0, minX-margin),
+    y: Math.max(0, minY-margin),
+    w: Math.min(bgC.width,  maxX+margin) - Math.max(0, minX-margin),
+    h: Math.min(bgC.height, maxY+margin) - Math.max(0, minY-margin),
+  };
+}
+
+function updateExpSizeInfo(){
+  const dpr = parseInt(document.querySelector('input[name="exp-q"]:checked')?.value||2);
+  const scope = document.querySelector('input[name="exp-scope"]:checked')?.value||'viewport';
+  let W,H;
+  if(scope==='full'){ const bb=getBoundingBox(); W=bb.w; H=bb.h; }
+  else { W=bgC.width; H=bgC.height; }
+  const usedColors=[...new Set(segments.filter(s=>!hiddenColors.has(s.color)).map(s=>s.color))];
+  H += getLegendStripHeight(usedColors);
+  const pw=Math.round(W*dpr), ph=Math.round(H*dpr);
+  const mb=(pw*ph*4/1024/1024).toFixed(1);
+  document.getElementById('exp-size-info').textContent =
+    `Размер изображения: ${pw} × ${ph} px (~${mb} МБ в памяти)${usedColors.length?' — включает полосу легенды':''}`;
+}
+
+function doExport(){
+  const dpr   = parseInt(document.querySelector('input[name="exp-q"]:checked')?.value||2);
+  const scope = document.querySelector('input[name="exp-scope"]:checked')?.value||'viewport';
+
+  const savedBgX=bgX, savedBgY=bgY, savedBgS=bgS;
+  const MARGIN=80;
+  const usedColors=[...new Set(segments.filter(s=>!hiddenColors.has(s.color)).map(s=>s.color))];
+  const legendH = getLegendStripHeight(usedColors);
+
+  if(scope==='full' && (segments.length||markers.length||walls.length)){
+    // Bounding box in WORLD coordinates
+    let minWx=Infinity,minWy=Infinity,maxWx=-Infinity,maxWy=-Infinity;
+    segments.forEach(s=>{
+      minWx=Math.min(minWx,s.wx1,s.wx2); maxWx=Math.max(maxWx,s.wx1,s.wx2);
+      minWy=Math.min(minWy,s.wy1,s.wy2); maxWy=Math.max(maxWy,s.wy1,s.wy2);
+    });
+    markers.forEach(m=>{
+      minWx=Math.min(minWx,m.wx); maxWx=Math.max(maxWx,m.wx);
+      minWy=Math.min(minWy,m.wy); maxWy=Math.max(maxWy,m.wy);
+    });
+    walls.forEach(w=>{
+      minWx=Math.min(minWx,w.wx1,w.wx2); maxWx=Math.max(maxWx,w.wx1,w.wx2);
+      minWy=Math.min(minWy,w.wy1,w.wy2); maxWy=Math.max(maxWy,w.wy1,w.wy2);
+    });
+    const contentW=maxWx-minWx||1, contentH=maxWy-minWy||1;
+    const sceneW=Math.round(contentW*bgS+MARGIN*2);
+    const sceneH=Math.round(contentH*bgS+MARGIN*2);
+    // Shift bgX/bgY so world origin (minWx,minWy) maps to (MARGIN,MARGIN)
+    bgX=MARGIN-minWx*bgS;
+    bgY=MARGIN-minWy*bgS;
+    // bgS unchanged — same zoom as on screen
+
+    const totalH = sceneH + legendH;
+    const off=document.createElement('canvas');
+    off.width=sceneW*dpr; off.height=totalH*dpr;
+    const octx=off.getContext('2d');
+    octx.scale(dpr,dpr);
+    renderToCtx(octx,sceneW,sceneH,dpr);
+    if(legendH>0) drawLegendStrip(octx, sceneW, sceneH, legendH, usedColors);
+
+    bgX=savedBgX; bgY=savedBgY; bgS=savedBgS;
+    document.getElementById('export-modal').style.display='none';
+    off.toBlob(blob=>{
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download=`wiring-plan-full-${dpr}x.png`;
+      a.click();
+    },'image/png');
+
+  } else {
+    const sceneW=bgC.width, sceneH=bgC.height;
+    const totalH = sceneH + legendH;
+    const off=document.createElement('canvas');
+    off.width=sceneW*dpr; off.height=totalH*dpr;
+    const octx=off.getContext('2d');
+    octx.scale(dpr,dpr);
+    renderToCtx(octx,sceneW,sceneH,dpr);
+    if(legendH>0) drawLegendStrip(octx, sceneW, sceneH, legendH, usedColors);
+    document.getElementById('export-modal').style.display='none';
+    off.toBlob(blob=>{
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download=`wiring-plan-${dpr}x.png`;
+      a.click();
+    },'image/png');
+  }
+}
+
+function renderToCtx(octx,W,H,dpr){
+  const fScale=Math.min(dpr,2);
+  if(bgImg){
+    octx.fillStyle='#111'; octx.fillRect(0,0,W,H);
+    octx.strokeStyle='#1e1e1e'; octx.lineWidth=1;
+    for(let x=0;x<W;x+=40){octx.beginPath();octx.moveTo(x,0);octx.lineTo(x,H);octx.stroke();}
+    for(let y=0;y<H;y+=40){octx.beginPath();octx.moveTo(0,y);octx.lineTo(W,y);octx.stroke();}
+    octx.globalAlpha=bgOpacity;
+    octx.drawImage(bgImg,bgX,bgY,bgImg.width*bgS,bgImg.height*bgS);
+    octx.globalAlpha=1;
+  } else {
+    const t=bgOpacity;
+    const baseGray=Math.round(17+t*(245-17));
+    const gridGray=Math.round(30+t*(225-30));
+    octx.fillStyle=`rgb(${baseGray},${baseGray},${baseGray})`; octx.fillRect(0,0,W,H);
+    octx.strokeStyle=`rgb(${gridGray},${gridGray},${gridGray})`; octx.lineWidth=1;
+    for(let x=0;x<W;x+=40){octx.beginPath();octx.moveTo(x,0);octx.lineTo(x,H);octx.stroke();}
+    for(let y=0;y<H;y+=40){octx.beginPath();octx.moveTo(0,y);octx.lineTo(W,y);octx.stroke();}
+  }
+  // Walls (beneath segments)
+  walls.forEach(w=>{
+    const p1=w2c(w.wx1,w.wy1), p2=w2c(w.wx2,w.wy2);
+    octx.lineWidth=Math.max(4,WALL_WIDTH); octx.strokeStyle='#5a6472'; octx.lineCap='square';
+    octx.beginPath();octx.moveTo(p1.cx,p1.cy);octx.lineTo(p2.cx,p2.cy);octx.setLineDash([]);octx.stroke();
+  });
+  octx.lineCap='butt';
+  const overlapData=segments.length?buildOverlapGroups():[];
+  segments.forEach((seg,i)=>{
+    if(hiddenColors.has(seg.color)) return;
+    const p1=w2c(seg.wx1,seg.wy1),p2=w2c(seg.wx2,seg.wy2);
+    const offset=parallelOffset(i,overlapData);
+    let ox=0,oy=0;
+    if(offset!==0){const dx=p2.cx-p1.cx,dy=p2.cy-p1.cy,len=Math.hypot(dx,dy)||1;ox=(-dy/len)*offset;oy=(dx/len)*offset;}
+    const ax=p1.cx+ox,ay=p1.cy+oy,bx=p2.cx+ox,by=p2.cy+oy;
+    octx.lineWidth=2.5;octx.strokeStyle=seg.color;
+    octx.beginPath();octx.moveTo(ax,ay);octx.lineTo(bx,by);octx.setLineDash([]);octx.stroke();
+    if(scale!==null){
+      const m=(seg.real||0).toFixed(2),mx=(ax+bx)/2,my=(ay+by)/2;
+      octx.font=`bold ${Math.round(12*fScale)}px sans-serif`;
+      octx.fillStyle='rgba(0,0,0,0.7)';octx.fillText(m+'м',mx+5,my-3);
+      octx.fillStyle=seg.color;octx.fillText(m+'м',mx+4,my-4);
+    }
+    if(colorLabels[seg.color]){
+      const mx=(ax+bx)/2,my=(ay+by)/2;
+      octx.font=`${Math.round(10*fScale)}px sans-serif`;
+      octx.fillStyle='rgba(0,0,0,0.6)';octx.fillText(colorLabels[seg.color],mx+5,my+11);
+      octx.fillStyle=seg.color;octx.globalAlpha=0.85;octx.fillText(colorLabels[seg.color],mx+4,my+10);octx.globalAlpha=1;
+    }
+    [[ax,ay,seg.connStart],[bx,by,seg.connEnd]].forEach(([x,y,conn])=>{
+      octx.beginPath();octx.arc(x,y,conn?5:3.5,0,Math.PI*2);
+      if(conn){octx.fillStyle=conn.type==='connected'?'#6dca5a':'transparent';octx.fill();
+        if(conn.type==='transit'){octx.strokeStyle='#f08840';octx.lineWidth=2;octx.stroke();}
+      } else {octx.fillStyle=seg.color;octx.fill();}
+    });
+  });
+  markers.forEach(mk=>{
+    const p=w2c(mk.wx,mk.wy),mt=markerTypes.find(t=>t.id===mk.mtypeId),r=MK_R;
+    const mkBg=mk.color||'#1a2a3a';
+    octx.beginPath();octx.arc(p.cx,p.cy,r,0,Math.PI*2);
+    octx.fillStyle=mkBg==='#ffffff'?'#cccccc':mkBg;octx.fill();
+    octx.strokeStyle='#4a9eff';octx.lineWidth=1.5;octx.stroke();
+    const abbr=mt?mt.abbr:'?';
+    function lum(h){const rv=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return 0.299*rv+0.587*g+0.114*b;}
+    octx.fillStyle=(mk.color&&lum(mk.color)>140)?'#111':'#fff';
+    octx.font=`bold ${abbr.length>1?9:11}px sans-serif`;
+    octx.textAlign='center';octx.textBaseline='middle';
+    octx.fillText(abbr,p.cx,p.cy);
+    if(mt?.desc){octx.font='9px sans-serif';octx.fillStyle='#667';octx.fillText(mt.desc,p.cx,p.cy+r+9);}
+    octx.textAlign='left';octx.textBaseline='alphabetic';
+  });
+}
+
+// Computes legend strip height in CSS px (before dpr scaling) for given usedColors.
+// Returns 0 if no colors used (no legend needed).
+function getLegendStripHeight(usedColors){
+  if(!usedColors.length) return 0;
+  const lineH=22, padV=14;
+  return padV*2 + usedColors.length*lineH;
+}
+
+// Draws the legend as its own horizontal strip below the scene, starting at y=stripY.
+// W is the full output width (CSS px); the strip spans the full width.
+function drawLegendStrip(octx, W, stripY, stripH, usedColors){
+  if(!usedColors.length) return;
+  octx.fillStyle='#181818';
+  octx.fillRect(0, stripY, W, stripH);
+  octx.strokeStyle='#2a2a2a'; octx.lineWidth=1;
+  octx.beginPath(); octx.moveTo(0,stripY); octx.lineTo(W,stripY); octx.stroke();
+
+  const padH=18, lineH=22, padV=14;
+  const colW = Math.min(260, (W-padH*2) / Math.max(1, Math.ceil(usedColors.length/Math.max(1,Math.floor((stripH-padV*2)/lineH)))));
+  // Simple layout: wrap into columns if many colors, else single column list
+  const maxRowsPerCol = Math.max(1, Math.floor((stripH-padV*2)/lineH));
+  octx.font='bold 13px sans-serif';
+  usedColors.forEach((hex,idx)=>{
+    const col = Math.floor(idx/maxRowsPerCol);
+    const row = idx % maxRowsPerCol;
+    const cx = padH + col*colW;
+    const cy = stripY + padV + row*lineH + lineH/2;
+    octx.beginPath();octx.arc(cx+6,cy,6,0,Math.PI*2);
+    octx.fillStyle=hex;octx.fill();
+    octx.strokeStyle='rgba(255,255,255,0.2)';octx.lineWidth=1;octx.stroke();
+    const name=COLORS.find(c=>c.hex===hex)?.name||hex;
+    const lbl=colorLabels[hex]?` — ${colorLabels[hex]}`:'';
+    octx.fillStyle='#eee';octx.textBaseline='middle';
+    octx.fillText(name+lbl, cx+18, cy);
+  });
+  octx.textBaseline='alphabetic';
+}
+
+document.getElementById('btn-export-img').addEventListener('click',()=>{
+  updateExpSizeInfo();
+  document.getElementById('export-modal').style.display='flex';
+});
+document.getElementById('exp-do-btn').addEventListener('click', ()=>{
+  document.getElementById('export-modal').style.display='none';
+  showPartnerCard(doExport);
+});
+document.querySelectorAll('input[name="exp-q"],input[name="exp-scope"]').forEach(r=>{
+  r.addEventListener('change', updateExpSizeInfo);
+});
+
+// ═══════════════════════════════════════════════════════
+// HELP
+// ═══════════════════════════════════════════════════════
+document.getElementById('guide-close').addEventListener('click',()=>{ document.getElementById('guide-modal').style.display='none'; });
+document.getElementById('guide-close-bottom').addEventListener('click',()=>{ document.getElementById('guide-modal').style.display='none'; });
+document.getElementById('guide-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) e.currentTarget.style.display='none'; });
+
+document.getElementById('help-btn').addEventListener('click',()=>{
+  document.getElementById('guide-modal').style.display='flex';
+});
+// Keep old alert as backup: remove old handler below
+function _OLD_help_UNUSED(){
+  alert(`Калькулятор проводки — справка
+
+ЗНАЧКИ (вкладка «Значки»):
+  Каждый тип значка имеет: аббревиатуру, расшифровку и базовый расход (на сам прибор).
+  Значки универсальны — размещаются без привязки к цвету линий.
+
+ПОДКЛЮЧЕНИЕ ЛИНИЙ К ЗНАЧКУ:
+  Когда конец линии попадает в значок, появляется попап:
+  • «Подключить» — зелёная точка. Метры этой линии идут в расход этого значка.
+  • «Транзит»    — оранжевое кольцо. Линия проходит насквозь, расход не начисляется.
+  Переключить тип можно в панели «Свойства» выбранного значка (кнопка ⇄).
+
+ИТОГИ:
+  Для каждого значка показывается: База (базовый расход × кол-во) + Подкл (сумма подключённых линий).
+
+НАВИГАЦИЯ:
+  • Средняя кнопка мыши — перемещение фона (в любом режиме)
+  • Колесо мыши — масштаб фона (линии и значки двигаются вместе)
+
+Ctrl+Z / Ctrl+Y — отмена/повтор | Esc — сброс выбора`);
+}
+
+// ═══════════════════════════════════════════════════════
+// INTERACTIVE TOUR
+// ═══════════════════════════════════════════════════════
+const TOUR_STEPS = [
+  {
+    target: null, // no highlight, intro screen
+    title: 'Добро пожаловать!',
+    text: 'Это калькулятор проводки: рисуете план, прокладываете кабель и сразу получаете метраж по цветам. Есть два сценария начала работы — разберём оба по порядку.'
+  },
+  {
+    target: '#file-in', targetParent: true,
+    title: 'Сценарий А, шаг 1: загрузите план',
+    text: 'Если есть фото плана — нажмите «Фон» или перетащите изображение на холст. Далее сразу переходите к заданию масштаба (следующий шаг).'
+  },
+  {
+    target: '#btn-scale',
+    title: 'Сценарий А, шаг 2: задайте масштаб',
+    text: 'После загрузки фона нарисуйте линию вдоль известного отрезка (например, стена 4 метра) и введите её реальную длину. Это даёт точные метры для всех последующих линий.'
+  },
+  {
+    target: '#btn-wall',
+    title: 'Сценарий Б: нет фото плана?',
+    text: 'Тогда порядок другой: сначала задайте «Масштаб» (предыдущий шаг) — это будет масштаб условной сетки. Потом нажимайте «Стены» и накидайте контур комнаты кликами — углы привязываются к шагу 15°. Стены не входят в расчёт кабеля, это просто ориентир.'
+  },
+  {
+    target: '#btn-marker',
+    title: 'Дальше — одинаково для обоих сценариев. Добавляйте значки',
+    text: 'Откройте вкладку «Значки» в правой панели — там создаются типы устройств (розетка, выключатель, щиток) с аббревиатурой и базовым расходом материала на установку.'
+  },
+  {
+    target: '#btn-line',
+    title: 'Прокладывайте линии проводки',
+    text: 'Клик — начало, клик — конец. Линии цепляются друг к другу: следующая начинается от конца предыдущей. Работает привязка к углам 90° и привязка к другим линиям и значкам.'
+  },
+  {
+    target: '#color-picker-row', targetParent: true,
+    title: 'Цвета — это группы проводки',
+    text: 'Каждый цвет — отдельная цепь (например, розетки кухни или освещение детской). Правой кнопкой мыши на цветной точке можно задать подпись — она появится на линиях и в итогах.'
+  },
+  {
+    target: null,
+    title: 'Подключение линии к значку',
+    text: 'Когда конец линии попадает в значок — появится выбор: «Подключить» (метры идут в расход значка) или «Транзит» (кабель проходит насквозь, расход не добавляется). Это позволяет точно считать материал для распредкоробок.'
+  },
+  {
+    target: '#tab-results', targetParent: false,
+    title: 'Считайте результат',
+    text: 'Вкладка «Итого» в правой панели показывает суммарную длину по каждому цвету и расход каждого значка (база + подключённые линии). Итоговая сумма — внизу панели.'
+  },
+  {
+    target: '#btn-export-img',
+    title: 'Сохраняйте результат',
+    text: '«Сохранить» — весь проект в файл .wiring для дальнейшего редактирования. «PNG» — изображение в высоком качестве с легендой цветов снизу. Перед скачиванием может показаться карточка местного магазина электрики — это не обязательно, можно сразу нажать «Продолжить без перехода».'
+  },
+];
+
+let tourIdx = 0;
+
+function getTourTargetRect(step){
+  if(!step.target) return null;
+  let el = document.querySelector(step.target);
+  if(!el) return null;
+  if(step.targetParent && el.parentElement) el = el.parentElement;
+  return el.getBoundingClientRect();
+}
+
+function renderTourStep(){
+  const step = TOUR_STEPS[tourIdx];
+  const overlay = document.getElementById('tour-overlay');
+  const hole = document.getElementById('tour-hole');
+  const holeBorder = document.getElementById('tour-hole-border');
+  const card = document.getElementById('tour-card');
+
+  document.getElementById('tour-step-counter').textContent = `Шаг ${tourIdx+1} из ${TOUR_STEPS.length}`;
+  document.getElementById('tour-title').textContent = step.title;
+  document.getElementById('tour-text').textContent = step.text;
+  document.getElementById('tour-prev').style.visibility = tourIdx===0 ? 'hidden' : 'visible';
+  document.getElementById('tour-next').textContent = tourIdx===TOUR_STEPS.length-1 ? 'Завершить' : 'Далее';
+
+  const rect = getTourTargetRect(step);
+  const PAD = 8;
+
+  if(rect){
+    hole.setAttribute('x', rect.left-PAD);
+    hole.setAttribute('y', rect.top-PAD);
+    hole.setAttribute('width', rect.width+PAD*2);
+    hole.setAttribute('height', rect.height+PAD*2);
+    holeBorder.setAttribute('x', rect.left-PAD);
+    holeBorder.setAttribute('y', rect.top-PAD);
+    holeBorder.setAttribute('width', rect.width+PAD*2);
+    holeBorder.setAttribute('height', rect.height+PAD*2);
+    holeBorder.style.display='block';
+  } else {
+    // No target — centre screen, no hole
+    hole.setAttribute('x', '50%'); hole.setAttribute('y','50%');
+    hole.setAttribute('width','0'); hole.setAttribute('height','0');
+    holeBorder.style.display='none';
+  }
+
+  // Position card: below target if room, else above; else centred for intro steps
+  const cardW = 320, cardMaxH = 220;
+  let cardX, cardY;
+  if(rect){
+    cardX = Math.min(Math.max(12, rect.left), window.innerWidth - cardW - 12);
+    const spaceBelow = window.innerHeight - rect.bottom;
+    if(spaceBelow > cardMaxH + 20){
+      cardY = rect.bottom + 16;
+    } else {
+      cardY = Math.max(12, rect.top - cardMaxH - 16);
+    }
+  } else {
+    cardX = (window.innerWidth - cardW)/2;
+    cardY = (window.innerHeight - cardMaxH)/2;
+  }
+  card.style.left = cardX+'px';
+  card.style.top  = cardY+'px';
+}
+
+function startTour(){
+  tourIdx = 0;
+  document.getElementById('tour-overlay').style.display='block';
+  renderTourStep();
+}
+function endTour(){
+  document.getElementById('tour-overlay').style.display='none';
+}
+
+document.getElementById('btn-tour').addEventListener('click', startTour);
+document.getElementById('tour-skip').addEventListener('click', endTour);
+document.getElementById('tour-next').addEventListener('click', ()=>{
+  if(tourIdx < TOUR_STEPS.length-1){ tourIdx++; renderTourStep(); }
+  else { endTour(); }
+});
+document.getElementById('tour-prev').addEventListener('click', ()=>{
+  if(tourIdx > 0){ tourIdx--; renderTourStep(); }
+});
+window.addEventListener('resize', ()=>{
+  if(document.getElementById('tour-overlay').style.display==='block') renderTourStep();
+});
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+function setInfo(t){document.getElementById('info-text').textContent=t;}
+resize();
+setMode('line');
+renderMarkerTypesList();
+setInfo('Есть фото? «Фон» → «Масштаб». Нет фото? «Масштаб» → «Стены» для контура комнаты.');
+</script>
+</body>
+</html>

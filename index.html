@@ -4,6 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Калькулятор проводки</title>
+
+<!-- ═══════════════════════════════════════════════════════
+     GOOGLE ANALYTICS — Measurement ID: G-3W2LP3HPNG (provodka.org ресурс)
+     ═══════════════════════════════════════════════════════ -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-3W2LP3HPNG"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-3W2LP3HPNG');
+</script>
+
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -137,8 +149,8 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 <body>
 <div id="app">
   <div id="toolbar">
-    <label class="tb-btn" title="Загрузить план помещения" style="cursor:pointer">
-      <i class="ti ti-photo-up"></i> Фон
+    <label class="tb-btn" title="Загрузить фотографию или план помещения" style="cursor:pointer">
+      <i class="ti ti-photo-up"></i> Загрузить фон
       <input type="file" accept="image/*" id="file-in" style="display:none">
     </label>
     <button class="tb-btn success" id="btn-save"><i class="ti ti-device-floppy"></i> Сохранить</button>
@@ -155,7 +167,6 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     <button class="tb-btn active" id="btn-line"><i class="ti ti-pencil"></i> Линия</button>
     <button class="tb-btn" id="btn-marker"><i class="ti ti-map-pin"></i> Значок</button>
     <button class="tb-btn" id="btn-select"><i class="ti ti-pointer"></i> Выбор</button>
-    <button class="tb-btn" id="btn-pan"><i class="ti ti-hand-move"></i> Фон</button>
     <div class="sep"></div>
     <div id="color-picker-row"><span style="font-size:11px;color:#555;margin-right:2px">Цвет:</span></div>
     <div class="sep"></div>
@@ -229,6 +240,14 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
       </div>
 
       <div id="tab-props" class="spanel">
+        <div class="prop-group" id="current-color-cable-group">
+          <div class="prop-label" style="display:flex;align-items:center;gap:6px">
+            <span class="current-color-dot" id="current-color-dot" style="width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0"></span>
+            Марка кабеля для текущего цвета
+          </div>
+          <input type="text" class="prop-input" id="current-color-cable" placeholder="например, ВВГ 3×2.5">
+          <div style="font-size:10px;color:#666;margin-top:3px">Применяется ко всем линиям этого цвета на чертеже</div>
+        </div>
         <div id="no-selection">Выберите объект в режиме «Выбор»</div>
         <div id="props-content" style="display:none">
           <div class="prop-group">
@@ -573,6 +592,7 @@ let orthoOnly  = false;    // snap ALL lines to H/V only
 let markerSnapRadius = 10; // px tolerance for marker H/V alignment snap (0 = off)
 // colorLabels: hex -> string label set by user
 let colorLabels = {};
+let colorCableTypes = {}; // hex -> cable type string (e.g. "ВВГ 3×2.5"), set once per color
 let hiddenColors = new Set(); // colors whose segments are hidden
 // walls: {id, wx1,wy1,wx2,wy2} — visual room outline, no metres calculation
 let walls = [];
@@ -617,8 +637,7 @@ let isDragging=false, dragObj=null;
 // Pan
 let bgImg=null, bgImgDataUrl=null;
 let bgX=0, bgY=0, bgS=1;
-let isPanning=false, panStart=null, panOrigin=null;
-let isMidPan=false, midStart=null, midOrigin=null;
+let isMidPan=false, midStart=null, midOrigin=null; // middle-mouse panning, works in ANY mode
 
 // Connection popup pending
 let connPending=null;        // {segIdx, end:'start'|'end', markerIdx, cx, cy}
@@ -718,87 +737,145 @@ function markerColor(mk){
 }
 
 // ── Parallel offset for overlapping / collinear segments ──
-// Two segments "overlap" if they are nearly collinear AND their
-// projections onto the shared axis actually intersect.
-// All such mutually-overlapping groups are spread perpendicular with GAP px.
-const PARALLEL_GAP   = 4;    // px gap between parallel lines (canvas space)
-const PARALLEL_ANG   = 8;    // degrees — max angle difference to be "parallel"
-const PARALLEL_PERP  = 6;    // world px — max perpendicular distance between axes
+// Two segments are considered "on the same line" (collinear) if nearly parallel
+// AND close enough perpendicular to the same axis. Where their projections onto
+// that shared axis overlap, we split into elementary sub-intervals so a SHORT
+// segment that only covers part of a LONGER segment's path still gets the
+// multi-color dash treatment exactly where they actually overlap.
+const COLLINEAR_ANG_TOL  = 1.5; // degrees — max angle difference to treat as same direction (tightened: was causing false "overlap" when a line was merely dragged near another)
+const COLLINEAR_PERP_TOL = 2;   // world px — max perpendicular distance between the two lines' axes (tightened from 5 for the same reason)
+const BREAKPOINT_SNAP_WORLD_PX = 3; // world px — breakpoints closer than this are merged into one, so tiny manual-drawing imprecision doesn't fragment a clean overlap into flickering micro-segments
+const MAX_OVERLAP_COLORS = 7;   // cap on how many colors we cycle through in the dashed pattern
+const OVERLAP_WIDTH_STEP = 1.3; // extra canvas px of line width added per additional overlapping line
 
-// Precompute overlap groups once per redraw call, cache by frame.
-let _overlapCache = null;
-function buildOverlapGroups(){
-  // Returns array of same length as segments; each entry = {groupId, posInGroup, groupSize}
+function pointsNear(ax,ay,bx,by){ return Math.hypot(ax-bx,ay-by) <= COLLINEAR_PERP_TOL; }
+
+// direction vector of segment (normalised, canonical: dx>=0, or dx==0&&dy>=0)
+function segDirCanonical(s){
+  let dx=s.wx2-s.wx1, dy=s.wy2-s.wy1;
+  const len=Math.hypot(dx,dy)||1; dx/=len; dy/=len;
+  if(dx<0||(dx===0&&dy<0)){dx=-dx;dy=-dy;}
+  return{dx,dy};
+}
+
+// Builds, for every VISIBLE segment, a list of elementary world-space sub-intervals
+// (each as {t0,t1,colors[]}, t expressed as 0..1 fraction along that segment) describing
+// exactly which other segments overlap which portion of it. A portion covered by only
+// itself gets colors=[itsOwnColor]; a portion covered by itself + 2 others gets all 3 colors.
+// This replaces the old "fully coincide" whole-segment grouping so partial overlaps
+// (e.g. a short segment riding along part of a longer one) are handled correctly.
+function buildOverlapIntervals(){
   const n = segments.length;
-  const result = new Array(n).fill(null).map(()=>({groupId:-1,posInGroup:0,groupSize:1}));
-
-  // direction vector of segment (normalised, canonical: dx>=0, or dx==0&&dy>=0)
-  function segDir(s){
-    let dx=s.wx2-s.wx1, dy=s.wy2-s.wy1;
-    const len=Math.hypot(dx,dy)||1; dx/=len; dy/=len;
-    if(dx<0||(dx===0&&dy<0)){dx=-dx;dy=-dy;}
-    return{dx,dy};
-  }
-  // project world point onto line through origin with direction (dx,dy)
-  function proj(wx,wy,dx,dy){ return wx*dx+wy*dy; }
-  // perpendicular distance from world point to line through (wx1,wy1) with dir (dx,dy)
-  function perpDist(px,py,wx1,wy1,dx,dy){
-    const relX=px-wx1, relY=py-wy1;
-    return Math.abs(relX*dy - relY*dx);
-  }
-
-  function doOverlap(a,b){
-    const da=segDir(a), db=segDir(b);
-    // angle between directions
-    const dot=Math.abs(da.dx*db.dx+da.dy*db.dy); // 1 = parallel, 0 = perpendicular
-    const angDeg=Math.acos(Math.min(dot,1))*180/Math.PI;
-    if(angDeg>PARALLEL_ANG) return false;
-    // use segment a's direction as reference axis
-    const {dx,dy}=da;
-    // perpendicular distance between axes
-    const pd=perpDist(b.wx1,b.wy1,a.wx1,a.wy1,dx,dy);
-    if(pd>PARALLEL_PERP) return false;
-    // check projection overlap
-    const pA1=proj(a.wx1,a.wy1,dx,dy), pA2=proj(a.wx2,a.wy2,dx,dy);
-    const pB1=proj(b.wx1,b.wy1,dx,dy), pB2=proj(b.wx2,b.wy2,dx,dy);
-    const aMin=Math.min(pA1,pA2), aMax=Math.max(pA1,pA2);
-    const bMin=Math.min(pB1,pB2), bMax=Math.max(pB1,pB2);
-    // overlap if intervals intersect (with small tolerance)
-    return aMax-bMin>2 && bMax-aMin>2;
-  }
-
-  // Union-Find
-  const parent=Array.from({length:n},(_,i)=>i);
-  function find(x){ return parent[x]===x?x:parent[x]=find(parent[x]); }
-  function unite(x,y){ parent[find(x)]=find(y); }
+  const visible = segments.map(s=>!hiddenColors.has(s.color));
+  const result = new Array(n).fill(null); // result[i] = array of {t0,t1,colors[]} in segment i's own 0..1 param space
 
   for(let i=0;i<n;i++){
-    if(hiddenColors.has(segments[i].color)) continue;
-    for(let j=i+1;j<n;j++){
-      if(hiddenColors.has(segments[j].color)) continue;
-      if(doOverlap(segments[i],segments[j])) unite(i,j);
+    if(!visible[i]){ result[i]=[]; continue; }
+    const a = segments[i];
+    const da = segDirCanonical(a); // canonical direction — used ONLY for angle comparison
+    const aLen = Math.hypot(a.wx2-a.wx1, a.wy2-a.wy1) || 1;
+    // ACTUAL direction of a, from a.wx1 toward a.wx2 (NOT canonically flipped) — this is
+    // what must be used to project other segments' endpoints into a's own 0..1 t-space.
+    // Using the canonical (possibly-flipped) direction here was the root bug: it silently
+    // mis-projected points whenever a segment's own start->end direction happened to be
+    // the "non-canonical" one (e.g. drawn right-to-left), producing t<0 or t>1 for an
+    // overlap that was actually a perfect 0..1 match — making that segment think it had
+    // no overlap at all (and only a single color), even though the geometry was identical.
+    const adx = (a.wx2-a.wx1)/aLen, ady = (a.wy2-a.wy1)/aLen;
+    const minOverlapFrac = BREAKPOINT_SNAP_WORLD_PX / aLen; // convert the world-px snap distance into this segment's own t-fraction
+
+    // Collect breakpoints (t values 0..1 along segment i) where coverage changes
+    let breakpoints = [0,1];
+    const overlappers = []; // {j, t0, t1} in segment i's param space, for segments overlapping i
+
+    for(let j=0;j<n;j++){
+      if(j===i || !visible[j]) continue;
+      const b = segments[j];
+      const db = segDirCanonical(b);
+      const dot = Math.abs(da.dx*db.dx + da.dy*db.dy);
+      const angDeg = Math.acos(Math.min(dot,1))*180/Math.PI;
+      if(angDeg > COLLINEAR_ANG_TOL) continue;
+
+      // perpendicular distance from b's points to a's axis (line through a.wx1,a.wy1 dir da)
+      function perpDist(px,py){ const relX=px-a.wx1, relY=py-a.wy1; return Math.abs(relX*da.dy - relY*da.dx); }
+      if(perpDist(b.wx1,b.wy1) > COLLINEAR_PERP_TOL || perpDist(b.wx2,b.wy2) > COLLINEAR_PERP_TOL) continue;
+
+      // project b's endpoints onto a's ACTUAL param space (t=0 at a.wx1,wy1; t=1 at a.wx2,wy2)
+      function paramOf(px,py){
+        const relX=px-a.wx1, relY=py-a.wy1;
+        return (relX*adx + relY*ady) / aLen;
+      }
+      let t0 = paramOf(b.wx1,b.wy1), t1 = paramOf(b.wx2,b.wy2);
+      if(t0>t1){ const tmp=t0; t0=t1; t1=tmp; }
+      // clip to [0,1] (segment i's own extent)
+      t0 = Math.max(0, t0); t1 = Math.min(1, t1);
+      if((t1 - t0)*aLen < BREAKPOINT_SNAP_WORLD_PX) continue; // overlap shorter than the snap tolerance in actual world-px — not meaningful
+
+      overlappers.push({j,t0,t1});
+      breakpoints.push(t0, t1);
     }
-  }
 
-  // Build groups
-  const groups={};
-  for(let i=0;i<n;i++){
-    const root=find(i);
-    if(!groups[root]) groups[root]=[];
-    groups[root].push(i);
+    if(!overlappers.length){ result[i]=[{t0:0,t1:1,colors:[a.color]}]; continue; }
+
+    // Sort, then merge breakpoints that are closer than the snap tolerance — this is
+    // what prevents manual-drawing imprecision (lines that are "almost" the same length)
+    // from fragmenting a clean overlap into a flickering mess of micro-segments.
+    breakpoints.sort((x,y)=>x-y);
+    const mergedBp = [breakpoints[0]];
+    for(let k=1;k<breakpoints.length;k++){
+      if(breakpoints[k] - mergedBp[mergedBp.length-1] >= minOverlapFrac) mergedBp.push(breakpoints[k]);
+    }
+    if(mergedBp[mergedBp.length-1] < 1) mergedBp.push(1);
+
+    const intervals = [];
+    for(let k=0;k<mergedBp.length-1;k++){
+      const segT0=mergedBp[k], segT1=mergedBp[k+1];
+      if((segT1-segT0)*aLen < 0.5) continue; // skip negligible slivers (sub-half-world-px)
+      const mid = (segT0+segT1)/2;
+      const colors = [a.color];
+      overlappers.forEach(ov=>{ if(mid>=ov.t0-0.0001 && mid<=ov.t1+0.0001) colors.push(segments[ov.j].color); });
+      intervals.push({t0:segT0, t1:segT1, colors});
+    }
+    result[i] = intervals.length ? intervals : [{t0:0,t1:1,colors:[a.color]}];
   }
-  Object.values(groups).forEach(g=>{
-    g.forEach((idx,pos)=>{
-      result[idx]={groupSize:g.length,posInGroup:pos};
-    });
-  });
   return result;
 }
 
-function parallelOffset(segIdx, overlapData){
-  const {groupSize,posInGroup}=overlapData[segIdx];
-  if(groupSize<=1) return 0;
-  return (posInGroup-(groupSize-1)/2)*PARALLEL_GAP;
+// Draws a single elementary interval [t0,t1] of segment `seg` (world param space) as a
+// dashed line cycling through `colors`. If colors.length<=1, draws a plain solid line.
+// Line width grows with the number of overlapping colors (capped at MAX_OVERLAP_COLORS)
+// so the viewer can tell at a glance that several lines run through that stretch.
+function strokeIntervalMultiColor(ctx, seg, t0, t1, colors, baseWidth){
+  const p1=w2c(seg.wx1,seg.wy1), p2=w2c(seg.wx2,seg.wy2);
+  const ax = p1.cx + (p2.cx-p1.cx)*t0, ay = p1.cy + (p2.cy-p1.cy)*t0;
+  const bx = p1.cx + (p2.cx-p1.cx)*t1, by = p1.cy + (p2.cy-p1.cy)*t1;
+  const safeColors = (colors && colors.length) ? colors : [seg.color]; // defensive: never let an empty colors array hide the line
+  const cappedColors = safeColors.slice(0, MAX_OVERLAP_COLORS);
+  const lineWidth = baseWidth + (cappedColors.length-1)*OVERLAP_WIDTH_STEP;
+
+  if(cappedColors.length<=1){
+    ctx.lineWidth=lineWidth; ctx.strokeStyle=cappedColors[0]||seg.color;
+    ctx.setLineDash([]);
+    ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.stroke();
+    return;
+  }
+
+  const dx=bx-ax, dy=by-ay, len=Math.hypot(dx,dy);
+  if(len<0.5) return;
+  const ux=dx/len, uy=dy/len;
+  const dashLen = Math.max(6, lineWidth*2.5);
+  let dist = 0, ci = 0;
+  ctx.lineWidth = lineWidth;
+  ctx.setLineDash([]);
+  while(dist < len){
+    const segLen = Math.min(dashLen, len-dist);
+    const x1=ax+ux*dist, y1=ay+uy*dist;
+    const x2=ax+ux*(dist+segLen), y2=ay+uy*(dist+segLen);
+    ctx.strokeStyle = cappedColors[ci % cappedColors.length];
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    dist += dashLen;
+    ci++;
+  }
 }
 
 function redraw(){
@@ -828,26 +905,46 @@ function redraw(){
   ctx.lineCap = 'butt'; // reset for everything else
 
   // ── Segments ──
-  const overlapData = segments.length ? buildOverlapGroups() : [];
+  const overlapIntervals = segments.length ? buildOverlapIntervals() : [];
+  // Track which (segment, t-range) stretches have already been physically painted on screen
+  // this frame, keyed by world-space endpoints rounded to avoid float-precision duplicates.
+  // This is essential: every segment in an overlapping group independently computes the
+  // SAME set of intervals (e.g. both a red and green coincident line both compute
+  // "this whole path is [red,green]") — drawing it once per segment caused each one's
+  // dash phase to fight the other's, which could visually cancel out to a solid single
+  // color instead of the intended alternating pattern.
+  const paintedWorldRanges = [];
+  function worldRangeAlreadyPainted(seg, t0, t1){
+    const wx1=seg.wx1+(seg.wx2-seg.wx1)*t0, wy1=seg.wy1+(seg.wy2-seg.wy1)*t0;
+    const wx2=seg.wx1+(seg.wx2-seg.wx1)*t1, wy2=seg.wy1+(seg.wy2-seg.wy1)*t1;
+    for(const r of paintedWorldRanges){
+      const sameDir = pointsNear(r.x1,r.y1,wx1,wy1) && pointsNear(r.x2,r.y2,wx2,wy2);
+      const oppDir  = pointsNear(r.x1,r.y1,wx2,wy2) && pointsNear(r.x2,r.y2,wx1,wy1);
+      if(sameDir||oppDir) return true;
+    }
+    paintedWorldRanges.push({x1:wx1,y1:wy1,x2:wx2,y2:wy2});
+    return false;
+  }
+
   segments.forEach((seg,i)=>{
     if(hiddenColors.has(seg.color)) return; // visibility toggle
     const p1=w2c(seg.wx1,seg.wy1),p2=w2c(seg.wx2,seg.wy2);
     const isSel=selType==='segment'&&selIdx===i;
+    const ax=p1.cx,ay=p1.cy,bx=p2.cx,by=p2.cy; // no offset — draw at true geometric position
 
-    // Compute perpendicular offset in canvas px
-    const offset=parallelOffset(i, overlapData);
-    let ox=0,oy=0;
-    if(offset!==0){
-      const dx=p2.cx-p1.cx,dy=p2.cy-p1.cy,len=Math.hypot(dx,dy)||1;
-      ox=(-dy/len)*offset; oy=(dx/len)*offset;
+    // Draw this segment's path as a series of elementary intervals, each showing
+    // exactly which colors overlap that specific stretch (handles partial overlaps
+    // where a shorter line only covers part of a longer one's path). Each world-space
+    // stretch is painted only once even though every overlapping segment computes it.
+    const intervals = overlapIntervals[i] || [{t0:0,t1:1,colors:[seg.color]}];
+    intervals.forEach(iv=>{
+      if(worldRangeAlreadyPainted(seg, iv.t0, iv.t1)) return;
+      strokeIntervalMultiColor(ctx, seg, iv.t0, iv.t1, iv.colors, isSel?4:2.5);
+    });
+    if(isSel){ctx.shadowColor=seg.color;ctx.shadowBlur=8;
+      ctx.lineWidth=4;ctx.strokeStyle=seg.color;ctx.setLineDash([]);
+      ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.stroke();ctx.shadowBlur=0;
     }
-    const ax=p1.cx+ox,ay=p1.cy+oy,bx=p2.cx+ox,by=p2.cy+oy;
-
-    ctx.lineWidth=isSel?4:2.5;
-    ctx.strokeStyle=seg.color;
-    if(isSel){ctx.shadowColor=seg.color;ctx.shadowBlur=8;}
-    ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);
-    ctx.setLineDash([]);ctx.stroke();ctx.shadowBlur=0;
 
     // Label at midpoint
     if(scale!==null){
@@ -1028,11 +1125,25 @@ function redraw(){
     if(mode==='line'){
       const s=orthoSnap(spDraw.cx,spDraw.cy,mousePos.x,mousePos.y);
       ex=s.x;ey=s.y;snapped=s.snapped;snapAxis=s.axis;
+
+      // Marker H/V alignment snap — same mechanism used when placing markers,
+      // so the endpoint can be dropped exactly level with a marker for clean right angles.
+      const mSnap=markerAlignSnap(ex,ey,-1);
+      if(mSnap.hLine!==null){
+        ctx.strokeStyle='rgba(255,200,80,0.55)'; ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(0,mSnap.hLine);ctx.lineTo(drC.width,mSnap.hLine);ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+        ey=mSnap.hLine; snapped=true;
+      }
+      if(mSnap.vLine!==null){
+        ctx.strokeStyle='rgba(255,200,80,0.55)'; ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(mSnap.vLine,0);ctx.lineTo(mSnap.vLine,drC.height);ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+        ex=mSnap.vLine; snapped=true;
+      }
     }
     ctx.beginPath();ctx.moveTo(spDraw.cx,spDraw.cy);ctx.lineTo(ex,ey);
     ctx.strokeStyle=mode==='scale'?'#aaa':currentColor;
     ctx.lineWidth=mode==='scale'?1.5:2.5;ctx.setLineDash([6,5]);ctx.stroke();ctx.setLineDash([]);
-    if(snapped){
+    if(snapped&&snapAxis){
       ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1;
       if(snapAxis==='h'){ctx.beginPath();ctx.moveTo(0,ey);ctx.lineTo(drC.width,ey);ctx.setLineDash([3,6]);ctx.stroke();ctx.setLineDash([]);}
       else{ctx.beginPath();ctx.moveTo(ex,0);ctx.lineTo(ex,drC.height);ctx.setLineDash([3,6]);ctx.stroke();ctx.setLineDash([]);}
@@ -1048,6 +1159,20 @@ function redraw(){
       const p=w2c(markers[nearMk].wx,markers[nearMk].wy);
       ctx.beginPath();ctx.arc(p.cx,p.cy,MK_R+4,0,Math.PI*2);
       ctx.strokeStyle='#4a9eff';ctx.lineWidth=1.5;ctx.setLineDash([3,4]);ctx.stroke();ctx.setLineDash([]);
+    } else {
+      // Highlight nearest OTHER LINE endpoint if within snap range — purely visual
+      // (joining to a line endpoint doesn't trigger the connect/transit popup, only markers do).
+      for(const seg of segments){
+        const sp1=w2c(seg.wx1,seg.wy1), sp2=w2c(seg.wx2,seg.wy2);
+        let hit=null;
+        if(Math.hypot(sp1.cx-ex,sp1.cy-ey)<SNAP_PX) hit=sp1;
+        else if(Math.hypot(sp2.cx-ex,sp2.cy-ey)<SNAP_PX) hit=sp2;
+        if(hit){
+          ctx.beginPath();ctx.arc(hit.cx,hit.cy,9,0,Math.PI*2);
+          ctx.strokeStyle='#6dca5a';ctx.lineWidth=1.5;ctx.setLineDash([3,4]);ctx.stroke();ctx.setLineDash([]);
+          break;
+        }
+      }
     }
   }
   // ── Custom crosshair cursor ──
@@ -1231,10 +1356,6 @@ drC.addEventListener('mousedown',e=>{
     drC.style.cursor='grabbing';return;
   }
   if(e.button!==0) return;
-  if(mode==='pan'){
-    isPanning=true;panStart={...p};panOrigin={bgX,bgY};
-    drC.style.cursor='grabbing';return;
-  }
   if(mode==='select'&&selType!==null&&selIdx!==null){
     const obj=selType==='segment'?segments[selIdx]:selType==='wall'?walls[selIdx]:markers[selIdx];
     if(selType==='segment'||selType==='wall'){
@@ -1253,10 +1374,6 @@ drC.addEventListener('mousemove',e=>{
   const p=getPos(e); mousePos=p;
   if(isMidPan){
     bgX=midOrigin.bgX+(p.x-midStart.x);bgY=midOrigin.bgY+(p.y-midStart.y);
-    redrawBg();redraw();return;
-  }
-  if(isPanning&&mode==='pan'){
-    bgX=panOrigin.bgX+(p.x-panStart.x);bgY=panOrigin.bgY+(p.y-panStart.y);
     redrawBg();redraw();return;
   }
   if(isDragging&&dragObj){
@@ -1299,8 +1416,7 @@ drC.addEventListener('mousemove',e=>{
 });
 
 drC.addEventListener('mouseup',e=>{
-  if(isMidPan){isMidPan=false;drC.style.cursor=mode==='pan'?'grab':'crosshair';return;}
-  if(isPanning){isPanning=false;drC.style.cursor='grab';return;}
+  if(isMidPan){isMidPan=false;drC.style.cursor='crosshair';return;}
   if(isDragging){
     saveHistory();isDragging=false;dragObj=null;
     drC.style.cursor=mode==='select'?'pointer':'default';
@@ -1308,7 +1424,7 @@ drC.addEventListener('mouseup',e=>{
   }
 });
 drC.addEventListener('mouseleave',()=>{
-  isMidPan=false;isPanning=false;
+  isMidPan=false;
   if(isDragging){isDragging=false;dragObj=null;}
   mousePos=null; // clear crosshair when cursor leaves canvas
   if(cursorSize>0) redraw();
@@ -1317,7 +1433,6 @@ drC.addEventListener('mouseleave',()=>{
 drC.addEventListener('click',e=>{
   if(e.button!==0||isDragging) return;
   const p=getPos(e);
-  if(mode==='pan') return;
 
   if(mode==='line'){
     if(!startPt){
@@ -1345,7 +1460,18 @@ drC.addEventListener('click',e=>{
     } else {
       const spC=w2c(startPt.wx,startPt.wy);
       const snap=orthoSnap(spC.cx,spC.cy,p.x,p.y);
-      const ex=snap.snapped?snap.x:p.x, ey=snap.snapped?snap.y:p.y;
+      let ex=snap.snapped?snap.x:p.x, ey=snap.snapped?snap.y:p.y;
+      // Marker H/V alignment snap — same as preview, so click lands exactly where the guide showed
+      const mSnap=markerAlignSnap(ex,ey,-1);
+      if(mSnap.sy!==null) ey=mSnap.sy;
+      if(mSnap.sx!==null) ex=mSnap.sx;
+      // Snap to another line's endpoint too (visual joint only — no connect/transit popup,
+      // that mechanism is reserved for markers).
+      for(const seg of segments){
+        const sp1=w2c(seg.wx1,seg.wy1), sp2=w2c(seg.wx2,seg.wy2);
+        if(Math.hypot(sp1.cx-ex,sp1.cy-ey)<SNAP_PX){ ex=sp1.cx; ey=sp1.cy; break; }
+        if(Math.hypot(sp2.cx-ex,sp2.cy-ey)<SNAP_PX){ ex=sp2.cx; ey=sp2.cy; break; }
+      }
       if(Math.hypot(ex-spC.cx,ey-spC.cy)<3){startPt=null;startMarkerIdx=null;return;}
 
       const w1={wx:startPt.wx,wy:startPt.wy},w2=c2w(ex,ey);
@@ -1382,32 +1508,55 @@ drC.addEventListener('click',e=>{
         startMarkerIdx=mkIdxEnd; // next segment can continue from this marker
         redraw();
 
-        // If also started from a marker, show start popup first, then chain end popup
+        // If also started from a marker, decide whether to ask or auto-apply for the start end
         if(savedStartMkIdx!==null){
-          showConnPopup(
-            w2c(markers[savedStartMkIdx].wx,markers[savedStartMkIdx].wy).cx+rect.left,
-            w2c(markers[savedStartMkIdx].wx,markers[savedStartMkIdx].wy).cy+rect.top,
-            newSegIdx,'start',savedStartMkIdx,
-            // callback: after start choice, show end popup
-            ()=>showConnPopup(mp.cx+rect.left,mp.cy+rect.top,newSegIdx,'end',mkIdxEnd)
-          );
+          const startMk=markers[savedStartMkIdx];
+          const priorConns=getMarkerConnections(startMk.id);
+          const hasPriorConnected=priorConns.some(c=>c.type==='connected');
+          if(hasPriorConnected){
+            // Auto-apply connected to the start end, only ask about the end-marker
+            newSeg.connStart={markerId:startMk.id,type:'connected'};
+            redraw();
+            showConnPopup(mp.cx+rect.left,mp.cy+rect.top,newSegIdx,'end',mkIdxEnd);
+            setInfo('Начало автоматически подключено. Выберите тип подключения для конца.');
+          } else {
+            showConnPopup(
+              w2c(startMk.wx,startMk.wy).cx+rect.left,
+              w2c(startMk.wx,startMk.wy).cy+rect.top,
+              newSegIdx,'start',savedStartMkIdx,
+              // callback: after start choice, show end popup
+              ()=>showConnPopup(mp.cx+rect.left,mp.cy+rect.top,newSegIdx,'end',mkIdxEnd)
+            );
+            setInfo('Выберите тип подключения к значку.');
+          }
         } else {
           showConnPopup(mp.cx+rect.left,mp.cy+rect.top,newSegIdx,'end',mkIdxEnd);
+          setInfo('Выберите тип подключения к значку.');
         }
-        setInfo('Выберите тип подключения к значку.');
         return;
       }
 
       // End not on marker — but start was on a marker → show start popup
+      // UNLESS this marker already has a prior "connected" line — then auto-apply
+      // connected without asking again (per user request: subsequent lines from
+      // an already-connected marker should default to connected silently).
       startPt={wx:w2.wx,wy:w2.wy};
       redraw();
       if(startMarkerIdx!==null){
         const mk=markers[startMarkerIdx];
-        const mp=w2c(mk.wx,mk.wy);
+        const mkIdx=markers.indexOf(mk);
+        const priorConns=getMarkerConnections(mk.id);
+        const hasPriorConnected=priorConns.some(c=>c.type==='connected');
         startMarkerIdx=null;
-        showConnPopup(mp.cx+rect.left,mp.cy+rect.top,newSegIdx,'start',
-          markers.indexOf(mk));
-        setInfo('Выберите тип подключения к значку.');
+        if(hasPriorConnected){
+          newSeg.connStart={markerId:mk.id,type:'connected'};
+          redraw();
+          setInfo('Автоматически подключено (значок уже подключён). Продолжайте от конца или кликните новую точку.');
+        } else {
+          const mp=w2c(mk.wx,mk.wy);
+          showConnPopup(mp.cx+rect.left,mp.cy+rect.top,newSegIdx,'start',mkIdx);
+          setInfo('Выберите тип подключения к значку.');
+        }
         return;
       }
       startMarkerIdx=null;
@@ -1533,7 +1682,7 @@ document.addEventListener('keydown',e=>{
   if((e.key==='Delete'||e.key==='Backspace')&&selType!==null) deleteSelected();
   if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();undo();}
   if((e.ctrlKey||e.metaKey)&&(e.key==='y'||(e.shiftKey&&e.key==='z'))){e.preventDefault();redo();}
-  if(e.key==='Escape'){startPt=null;startMarkerIdx=null;wallStartPt=null;wallLenInput='';selType=null;selIdx=null;isPanning=false;isDragging=false;hideConnPopup();redraw();}
+  if(e.key==='Escape'){startPt=null;startMarkerIdx=null;wallStartPt=null;wallLenInput='';selType=null;selIdx=null;isDragging=false;hideConnPopup();redraw();}
 });
 
 // ═══════════════════════════════════════════════════════
@@ -1707,9 +1856,17 @@ function showPropsTab(){
 function updatePropsPanel(){
   const noSel=document.getElementById('no-selection');
   const content=document.getElementById('props-content');
-  if(selType===null){noSel.style.display='block';content.style.display='none';return;}
+  if(selType===null){
+    noSel.style.display='block';content.style.display='none';
+    updateCurrentColorCableUI(); // no object selected — show cable for the currently active drawing color
+    return;
+  }
   noSel.style.display='none';content.style.display='block';
   const obj=selType==='segment'?segments[selIdx]:markers[selIdx];
+
+  // When a segment is selected, the standalone cable block follows ITS color
+  // (so editing cable type there clearly applies to what you're looking at).
+  if(selType==='segment') updateCurrentColorCableUI(obj.color);
 
   // Color (only for segments)
   document.getElementById('prop-colors').parentElement.style.display=selType==='segment'?'block':'none';
@@ -1772,7 +1929,8 @@ document.getElementById('prop-apply').addEventListener('click',()=>{
   const obj=selType==='segment'?segments[selIdx]:markers[selIdx];
   if(selType==='segment'){
     const ac=document.querySelector('#prop-colors .color-dot.active');
-    if(ac) obj.color=ac.dataset.hex;
+    const newColor = ac ? ac.dataset.hex : obj.color;
+    obj.color=newColor;
     const val=parseFloat(document.getElementById('prop-len').value);
     if(!isNaN(val)&&val>0){
       if(scale!==null){const dw=obj.wx2-obj.wx1,dh=obj.wy2-obj.wy1,cur=Math.hypot(dw,dh)||1,r=(val/scale)/cur;obj.wx2=obj.wx1+dw*r;obj.wy2=obj.wy1+dh*r;}
@@ -1783,6 +1941,7 @@ document.getElementById('prop-apply').addEventListener('click',()=>{
     obj.mtypeId=document.getElementById('prop-mtype').value;
   }
   redraw();
+  updateCurrentColorCableUI(); // segment color may have just changed — refresh the standalone cable block
 });
 document.getElementById('prop-delete').addEventListener('click',deleteSelected);
 
@@ -1837,6 +1996,7 @@ function snapshot(){
     walls:JSON.parse(JSON.stringify(walls)),
     markerTypes:JSON.parse(JSON.stringify(markerTypes)),
     colorLabels:JSON.parse(JSON.stringify(colorLabels)),
+    colorCableTypes:JSON.parse(JSON.stringify(colorCableTypes)),
     hiddenColors:[...hiddenColors],
     scale
   };
@@ -1847,7 +2007,7 @@ function saveHistory(){
   redoStack=[];
 }
 function applySnapshot(h){
-  segments=h.segments;markers=h.markers;walls=h.walls||walls;markerTypes=h.markerTypes||markerTypes;colorLabels=h.colorLabels||colorLabels;hiddenColors=new Set(h.hiddenColors||[]);scale=h.scale;
+  segments=h.segments;markers=h.markers;walls=h.walls||walls;markerTypes=h.markerTypes||markerTypes;colorLabels=h.colorLabels||colorLabels;colorCableTypes=h.colorCableTypes||colorCableTypes;hiddenColors=new Set(h.hiddenColors||[]);scale=h.scale;
   selType=null;selIdx=null;startPt=null;
   document.getElementById('scale-badge').style.display=scale!==null?'flex':'none';
   renderMarkerTypesList();updatePropsPanel();redraw();
@@ -1903,19 +2063,27 @@ async function loadPartnersConfig(){
 
 // Picks the next partner for a given region key, rotating through the list.
 // Falls back to FALLBACK_PARTNER if config didn't load or region list is empty.
+// Picks a partner for a given region key using WEIGHTED RANDOM selection.
+// Each partner has an optional "weight" field (default 1 if missing).
+// Probability of being picked = weight / sum(all weights in the list).
+// This lets you sell "placement tiers": higher weight = shown more often.
+// Falls back to FALLBACK_PARTNER if config didn't load or region list is empty.
 function pickPartner(regionKey){
   let list = null;
   if(partnersConfig){
     list = partnersConfig[regionKey] || partnersConfig['default'] || null;
   }
   if(!list || !list.length) return FALLBACK_PARTNER;
+  if(list.length===1) return list[0];
 
-  const storeKey = 'wiring_partner_rotation_' + regionKey;
-  let idx = 0;
-  try{ idx = parseInt(localStorage.getItem(storeKey)||'0') || 0; }catch(e){}
-  const partner = list[idx % list.length];
-  try{ localStorage.setItem(storeKey, String((idx+1) % list.length)); }catch(e){}
-  return partner;
+  const weights = list.map(p => (typeof p.weight==='number' && p.weight>0) ? p.weight : 1);
+  const totalWeight = weights.reduce((a,b)=>a+b, 0);
+  let roll = Math.random() * totalWeight;
+  for(let i=0;i<list.length;i++){
+    roll -= weights[i];
+    if(roll<=0) return list[i];
+  }
+  return list[list.length-1]; // fallback for floating point edge case
 }
 
 function buildPartnerActionButton(kind, p){
@@ -1943,7 +2111,10 @@ function buildPartnerActionButton(kind, p){
   a.href = d.href; a.target='_blank'; a.rel='noopener';
   a.style.cssText = `flex:1;min-width:90px;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 0;background:${d.bg};border:1px solid ${d.border};border-radius:7px;color:${d.color};font-size:12px;font-weight:600;text-decoration:none`;
   a.innerHTML = `<i class="ti ${d.icon}" style="font-size:15px"></i> ${d.label}`;
-  a.addEventListener('click', ()=>{ setTimeout(hidePartnerCardAndProceed, 400); });
+  a.addEventListener('click', ()=>{
+    if(typeof gtag==='function') gtag('event', 'partner_click', {partner_name:p.name||'unknown', kind});
+    setTimeout(hidePartnerCardAndProceed, 400);
+  });
   return a;
 }
 
@@ -1987,9 +2158,10 @@ loadPartnersConfig(); // kick off at startup, non-blocking
 // ═══════════════════════════════════════════════════════
 
 function doSaveProject(){
-  const data={version:9,scale,segments,markers,walls,markerTypes,colorLabels,hiddenColors:[...hiddenColors],bg:bgImgDataUrl,bgX,bgY,bgS,bgOpacity,markerSnapRadius};
+  const data={version:10,scale,segments,markers,walls,markerTypes,colorLabels,colorCableTypes,hiddenColors:[...hiddenColors],bg:bgImgDataUrl,bgX,bgY,bgS,bgOpacity,markerSnapRadius};
   const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='wiring-project.wiring';a.click();
+  if(typeof gtag==='function') gtag('event', 'save_project');
 }
 document.getElementById('btn-save').addEventListener('click',()=>{
   showPartnerCard(doSaveProject);
@@ -2007,6 +2179,7 @@ document.getElementById('project-in').addEventListener('change',e=>{
       markerTypes=d.markerTypes||markerTypes;
       scale=d.scale||null;
       colorLabels=d.colorLabels||{};
+      colorCableTypes=d.colorCableTypes||{};
       hiddenColors=new Set(d.hiddenColors||[]);
       if(d.bgOpacity!=null){
         bgOpacity=d.bgOpacity;
@@ -2037,33 +2210,58 @@ document.getElementById('project-in').addEventListener('change',e=>{
 // RESULTS
 // ═══════════════════════════════════════════════════════
 function updateResults(){
-  // Lines by color
+  // Lines grouped by color (cable type is set per-color in colorCableTypes)
   const linesByColor={};
   segments.forEach(s=>{linesByColor[s.color]=(linesByColor[s.color]||0)+(s.real||0);});
 
-  // Markers: group by type, sum base extra + connected lines
+  // Markers: group by type, sum ONLY the per-instance base norm (extra×count).
+  // Connected-line lengths are NOT added here anymore — that material is cable,
+  // already counted in full under "Линии" and broken out per marker type under
+  // "По маркам кабеля" below. A marker's own total here represents only the
+  // fixed installation allowance the user defined for that device type (box,
+  // clamps, termination work — not the cable run itself).
   const mkByType={};
-  markerTypes.forEach(mt=>{mkByType[mt.id]={mt,count:0,base:0,connected:0};});
+  markerTypes.forEach(mt=>{mkByType[mt.id]={mt,count:0,base:0}; });
   markers.forEach(mk=>{
     if(!mkByType[mk.mtypeId]) return;
     const g=mkByType[mk.mtypeId];
     g.count++;
     g.base+=g.mt.extra;
   });
-  // Connected lines contribution
+
+  // By cable mark: total length of each named cable type, broken down by WHERE it's used —
+  // plain line length vs each marker type's consumption. The marker-type contribution is
+  // NOT the physical length of the connected cable run — it's (number of connections of
+  // this cable mark to this marker type) × (that marker type's per-instance norm, mt.extra).
+  // E.g. norm=0.5m per socket connection, 3 sockets connected with this mark → 1.5m total,
+  // regardless of how long the actual cable runs to each socket are.
+  const cableMarkData={}; // cableLabel -> { lineTotal, byMarkerType: { mtId: {count, metres} } }
   segments.forEach(seg=>{
-    const real=seg.real||0;
+    const cable=colorCableTypes[seg.color];
+    if(!cable) return;
+    if(!cableMarkData[cable]) cableMarkData[cable]={lineTotal:0, byMarkerType:{}};
+    cableMarkData[cable].lineTotal += (seg.real||0);
+  });
+  segments.forEach(seg=>{
+    const cable=colorCableTypes[seg.color];
+    if(!cable) return;
     [seg.connStart,seg.connEnd].forEach(conn=>{
       if(!conn||conn.type!=='connected') return;
       const mk=markers.find(m=>m.id===conn.markerId);
-      if(!mk||!mkByType[mk.mtypeId]) return;
-      mkByType[mk.mtypeId].connected+=real;
+      if(!mk) return;
+      const mt=markerTypes.find(t=>t.id===mk.mtypeId);
+      if(!mt) return;
+      const g=cableMarkData[cable];
+      if(!g.byMarkerType[mt.id]) g.byMarkerType[mt.id]={count:0, metres:0};
+      g.byMarkerType[mt.id].count += 1;
+      g.byMarkerType[mt.id].metres += mt.extra;
     });
   });
 
   const el=document.getElementById('results-list');
   const lineKeys=Object.keys(linesByColor);
   const mkKeys=Object.keys(mkByType).filter(k=>mkByType[k].count>0);
+  const cableKeys=Object.keys(cableMarkData);
 
   if(!lineKeys.length&&!mkKeys.length){
     el.innerHTML='<p style="font-size:12px;color:#555">Нет данных</p>';
@@ -2071,9 +2269,33 @@ function updateResults(){
   }
 
   let html='';
+  if(cableKeys.length){
+    html+='<div class="res-section">По маркам кабеля</div>';
+    cableKeys.forEach(cable=>{
+      const g=cableMarkData[cable];
+      const markerContribTotal=Object.values(g.byMarkerType).reduce((a,b)=>a+b.metres,0);
+      // The marker contribution (norm × count of connections) is EXTRA material on top of
+      // the physical cable run — it's not a portion carved out of lineTotal, since it
+      // represents installation allowance (box, clamps, termination), not cable length.
+      const grandTotal = g.lineTotal + markerContribTotal;
+      html+=`<div class="res-row">
+        <i class="ti ti-cable" style="font-size:14px;color:#aaa;flex-shrink:0"></i>
+        <span class="res-name">${cable}</span>
+        <span class="res-val">${grandTotal.toFixed(2)} м</span>
+      </div>`;
+      if(g.lineTotal>0.001) html+=`<div class="res-sub">Линии: ${g.lineTotal.toFixed(2)} м</div>`;
+      Object.keys(g.byMarkerType).forEach(mtId=>{
+        const mt=markerTypes.find(t=>t.id===mtId);
+        if(!mt) return;
+        const entry=g.byMarkerType[mtId];
+        html+=`<div class="res-sub">${mt.desc} (${entry.count}×${mt.extra}м): ${entry.metres.toFixed(2)} м</div>`;
+      });
+    });
+  }
   if(lineKeys.length){
     html+='<div class="res-section">Линии</div>';
     lineKeys.forEach(hex=>{
+      const total=linesByColor[hex];
       const name=COLORS.find(c=>c.hex===hex)?.name||hex;
       const label=colorLabels[hex]?`<div style="font-size:10px;color:#888;margin-top:1px">${colorLabels[hex]}</div>`:'';
       const hidden=hiddenColors.has(hex);
@@ -2082,30 +2304,32 @@ function updateResults(){
       html+=`<div class="res-row" style="${rowStyle}">
         <div class="res-dot" style="background:${hex}"></div>
         <span class="res-name">${name}${label}</span>
-        <span class="res-val">${linesByColor[hex].toFixed(2)} м</span>
+        <span class="res-val">${total.toFixed(2)} м</span>
         <button class="vis-toggle" data-hex="${hex}" title="${hidden?'Показать':'Скрыть'} линии" style="background:none;border:none;cursor:pointer;color:${hidden?'#555':'#888'};padding:2px 4px;flex-shrink:0">
           <i class="ti ${eyeIcon}" style="font-size:13px"></i>
         </button>
       </div>`;
+      // Cable type for this color (set once in props panel, applies to all lines of this color)
+      if(colorCableTypes[hex] && !hidden){
+        html+=`<div class="res-sub">${colorCableTypes[hex]}</div>`;
+      }
     });
   }
   if(mkKeys.length){
     html+='<div class="res-section">Значки</div>';
     mkKeys.forEach(id=>{
       const g=mkByType[id];
-      const total=g.base+g.connected;
       html+=`<div class="res-row">
         <div class="mtype-badge" style="width:20px;height:20px;font-size:8px;border-radius:50%;background:#1a2a3a;border:1px solid #4a9eff;display:inline-flex;align-items:center;justify-content:center;color:#7dc4ff;font-weight:700;flex-shrink:0">${g.mt.abbr}</div>
         <span class="res-name">${g.mt.desc} ×${g.count}</span>
-        <span class="res-val">${total.toFixed(2)} м</span>
-      </div>
-      ${g.base>0||g.connected>0?`<div class="res-sub">База: ${g.base.toFixed(2)}м · Подкл: ${g.connected.toFixed(2)}м</div>`:''}`;
+        <span class="res-val">${g.base.toFixed(2)} м</span>
+      </div>`;
     });
   }
   el.innerHTML=html;
 
-  const totalLines=Object.values(linesByColor).reduce((a,b)=>a+b,0);
-  const totalMk=mkKeys.reduce((a,k)=>a+mkByType[k].base+mkByType[k].connected,0);
+  const totalLines=lineKeys.reduce((a,k)=>a+linesByColor[k],0);
+  const totalMk=mkKeys.reduce((a,k)=>a+mkByType[k].base,0);
   document.getElementById('total-val').textContent=(totalLines+totalMk).toFixed(2)+' м';
 
   // Wire visibility toggle buttons (freshly rendered each call)
@@ -2129,16 +2353,15 @@ const modeInfo={
   scale:'Нарисуйте линию известной длины → введите длину в метрах.',
   marker:'Кликните для установки значка. Активный тип выбирается на вкладке «Значки».',
   select:'Клик — выбор. Тяните объект или концы линий. ПКМ — меню. Del — удалить.',
-  pan:'Тяните фон. Колесо — масштаб. Средняя кнопка работает в любом режиме.',
 };
 function setMode(m){
-  mode=m;startPt=null;isPanning=false;
+  mode=m;startPt=null;
   if(m!=='wall'){ wallStartPt=null; wallLenInput=''; }
   if(m!=='select'){selType=null;selIdx=null;}
-  ['btn-wall','btn-line','btn-scale','btn-marker','btn-select','btn-pan'].forEach(id=>{
+  ['btn-wall','btn-line','btn-scale','btn-marker','btn-select'].forEach(id=>{
     document.getElementById(id)?.classList.toggle('active',id==='btn-'+m);
   });
-  drC.style.cursor=cursorSize>0?'none':m==='select'?'pointer':m==='pan'?'grab':'crosshair';
+  drC.style.cursor=cursorSize>0?'none':m==='select'?'pointer':'crosshair';
   setInfo(modeInfo[m]||'');redraw();
 }
 document.getElementById('btn-show-all').addEventListener('click',()=>{
@@ -2164,17 +2387,22 @@ function buildColorPicker(){
     wrap.className='color-dot-wrap';
     const d=document.createElement('div');
     d.className='color-dot'+(c.hex===currentColor?' active':'');
-    d.style.background=c.hex;d.title=c.name+' (ПКМ — подпись)';d.dataset.hex=c.hex;
+    d.style.background=c.hex;d.title=c.name+' (ПКМ — подпись, 2×клик — марка кабеля)';d.dataset.hex=c.hex;
     // Short label under dot if set
     const lbl=document.createElement('div');
     lbl.style.cssText='font-size:8px;color:#888;max-width:22px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;line-height:1';
     lbl.textContent=colorLabels[c.hex]||'';
     lbl.className='cdot-lbl';
+    if(colorCableTypes[c.hex]){
+      d.style.boxShadow='0 0 0 2px #f0c040 inset';
+      d.title=c.name+(colorLabels[c.hex]?` (${colorLabels[c.hex]})`:'')+` — кабель: ${colorCableTypes[c.hex]}\n(ПКМ — подпись цвета)`;
+    }
     d.addEventListener('click',ev=>{
       ev.stopPropagation();
       currentColor=c.hex;
       colorRow.querySelectorAll('.color-dot').forEach(x=>x.classList.remove('active'));
       d.classList.add('active');
+      updateCurrentColorCableUI();
     });
     d.addEventListener('contextmenu',ev=>{
       ev.preventDefault();ev.stopPropagation();
@@ -2192,6 +2420,29 @@ function buildColorPicker(){
 buildColorPicker();
 
 // ═══════════════════════════════════════════════════════
+// CURRENT-COLOR CABLE BLOCK (standalone, in Properties tab — always reflects currentColor)
+// ═══════════════════════════════════════════════════════
+function updateCurrentColorCableUI(overrideColor){
+  const dot=document.getElementById('current-color-dot');
+  const input=document.getElementById('current-color-cable');
+  if(!dot||!input) return;
+  const hex = overrideColor || currentColor;
+  input.dataset.activeHex = hex; // remember which color this input is currently editing
+  dot.style.background=hex;
+  input.value=colorCableTypes[hex]||'';
+}
+document.getElementById('current-color-cable').addEventListener('input',()=>{
+  const input=document.getElementById('current-color-cable');
+  const hex = input.dataset.activeHex || currentColor;
+  const val=input.value.trim();
+  if(val) colorCableTypes[hex]=val;
+  else delete colorCableTypes[hex];
+  buildColorPicker(); // refresh the gold-ring indicator on the toolbar dot
+  redraw(); // refresh the cable-type line shown in the results panel
+});
+updateCurrentColorCableUI();
+
+// ═══════════════════════════════════════════════════════
 // TOOLBAR CONTROLS: opacity, cursor size, ortho-only
 // ═══════════════════════════════════════════════════════
 const bgOpacitySlider = document.getElementById('bg-opacity');
@@ -2206,7 +2457,7 @@ const cursorSlider = document.getElementById('cursor-size');
 cursorSlider.addEventListener('input',()=>{
   cursorSize = parseInt(cursorSlider.value);
   // Hide system cursor when custom crosshair is active
-  drC.style.cursor = cursorSize > 0 ? 'none' : (mode==='select'?'pointer':mode==='pan'?'grab':'crosshair');
+  drC.style.cursor = cursorSize > 0 ? 'none' : (mode==='select'?'pointer':'crosshair');
   redraw();
 });
 
@@ -2314,6 +2565,7 @@ function doExport(){
       a.href=URL.createObjectURL(blob);
       a.download=`wiring-plan-full-${dpr}x.png`;
       a.click();
+      if(typeof gtag==='function') gtag('event', 'export_png', {scope:'full', quality:dpr+'x'});
     },'image/png');
 
   } else {
@@ -2331,6 +2583,7 @@ function doExport(){
       a.href=URL.createObjectURL(blob);
       a.download=`wiring-plan-${dpr}x.png`;
       a.click();
+      if(typeof gtag==='function') gtag('event', 'export_png', {scope:'viewport', quality:dpr+'x'});
     },'image/png');
   }
 }
@@ -2361,16 +2614,30 @@ function renderToCtx(octx,W,H,dpr){
     octx.beginPath();octx.moveTo(p1.cx,p1.cy);octx.lineTo(p2.cx,p2.cy);octx.setLineDash([]);octx.stroke();
   });
   octx.lineCap='butt';
-  const overlapData=segments.length?buildOverlapGroups():[];
+  const overlapIntervalsExp=segments.length?buildOverlapIntervals():[];
+  const paintedWorldRangesExp = [];
+  function worldRangeAlreadyPaintedExp(seg, t0, t1){
+    const wx1=seg.wx1+(seg.wx2-seg.wx1)*t0, wy1=seg.wy1+(seg.wy2-seg.wy1)*t0;
+    const wx2=seg.wx1+(seg.wx2-seg.wx1)*t1, wy2=seg.wy1+(seg.wy2-seg.wy1)*t1;
+    for(const r of paintedWorldRangesExp){
+      const sameDir = pointsNear(r.x1,r.y1,wx1,wy1) && pointsNear(r.x2,r.y2,wx2,wy2);
+      const oppDir  = pointsNear(r.x1,r.y1,wx2,wy2) && pointsNear(r.x2,r.y2,wx1,wy1);
+      if(sameDir||oppDir) return true;
+    }
+    paintedWorldRangesExp.push({x1:wx1,y1:wy1,x2:wx2,y2:wy2});
+    return false;
+  }
   segments.forEach((seg,i)=>{
     if(hiddenColors.has(seg.color)) return;
     const p1=w2c(seg.wx1,seg.wy1),p2=w2c(seg.wx2,seg.wy2);
-    const offset=parallelOffset(i,overlapData);
-    let ox=0,oy=0;
-    if(offset!==0){const dx=p2.cx-p1.cx,dy=p2.cy-p1.cy,len=Math.hypot(dx,dy)||1;ox=(-dy/len)*offset;oy=(dx/len)*offset;}
-    const ax=p1.cx+ox,ay=p1.cy+oy,bx=p2.cx+ox,by=p2.cy+oy;
-    octx.lineWidth=2.5;octx.strokeStyle=seg.color;
-    octx.beginPath();octx.moveTo(ax,ay);octx.lineTo(bx,by);octx.setLineDash([]);octx.stroke();
+    const ax=p1.cx,ay=p1.cy,bx=p2.cx,by=p2.cy; // true geometric position, no offset
+
+    const intervalsExp = overlapIntervalsExp[i] || [{t0:0,t1:1,colors:[seg.color]}];
+    intervalsExp.forEach(iv=>{
+      if(worldRangeAlreadyPaintedExp(seg, iv.t0, iv.t1)) return;
+      strokeIntervalMultiColor(octx, seg, iv.t0, iv.t1, iv.colors, 2.5);
+    });
+
     if(scale!==null){
       const m=(seg.real||0).toFixed(2),mx=(ax+bx)/2,my=(ay+by)/2;
       octx.font=`bold ${Math.round(12*fScale)}px sans-serif`;

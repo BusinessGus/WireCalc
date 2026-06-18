@@ -2060,6 +2060,8 @@ async function loadPartnersConfig(){
     partnersConfig = null;
   }
 }
+const partnersConfigReady = loadPartnersConfig(); // kick off immediately, store the promise so other
+                                                    // code (e.g. city detection) can reliably wait for it
 
 // ═══════════════════════════════════════════════════════
 // GEOLOCATION — detect visitor's city via ipapi.is, used to pick region-specific
@@ -2072,29 +2074,29 @@ async function loadPartnersConfig(){
 
 // ipapi.is returns city names in English/Latin script (e.g. "Oskemen" or
 // "Ust-Kamenogorsk"), while partners.json keys are in Russian Cyrillic
-// ("Усть-Каменогорск") to match how the user administers that file. This map
-// bridges the two. Add an entry here whenever a new city's partners are added
-// to partners.json — without an entry, detection still works but falls back
-// to 'default' for that city (safe, just not personalized).
-const CITY_NAME_MAP = {
-  'oskemen': 'Усть-Каменогорск',
-  'ust-kamenogorsk': 'Усть-Каменогорск',
-  'ust kamenogorsk': 'Усть-Каменогорск',
-  'öskemen': 'Усть-Каменогорск',
-};
+// ("Усть-Каменогорск"). The mapping between the two now lives in partners.json
+// itself, under the "_city_aliases" key — so the user can add new cities
+// themselves directly on GitHub, without needing a code change. If that key
+// is missing (e.g. partners.json failed to load) we fall back to an empty
+// map, which just means every city falls back to 'default' (safe).
+function getCityAliases(){
+  return (partnersConfig && partnersConfig._city_aliases) || {};
+}
 
 let userCity = null;          // resolved Cyrillic city key, or null if unknown/undetected
 let cityDetectionDone = false; // ensures the API is called at most once per page visit
 
 async function detectUserCity(){
   try{
+    await partnersConfigReady; // make sure partners.json (and its _city_aliases) has finished loading first
     const res = await fetch('https://api.ipapi.is', {cache:'no-store'});
     if(!res.ok) throw new Error('HTTP '+res.status);
     const data = await res.json();
     if(data.error) return null; // ipapi.is signals failure via an "error" field, not HTTP status
     const rawCity = data.location && data.location.city;
     if(!rawCity) return null;
-    const mapped = CITY_NAME_MAP[rawCity.trim().toLowerCase()];
+    const aliases = getCityAliases();
+    const mapped = aliases[rawCity.trim().toLowerCase()];
     return mapped || null; // unmapped city → null → pickPartner falls back to 'default'
   }catch(err){
     return null; // network unavailable, blocked by browser/extension, rate limit exceeded, etc.
@@ -2209,8 +2211,10 @@ document.getElementById('partner-modal').addEventListener('click', e=>{
   if(e.target===e.currentTarget) hidePartnerCardAndProceed();
 });
 
-loadPartnersConfig(); // kick off at startup, non-blocking
-ensureCityDetected(); // warm up geolocation too, so it's likely cached by the time the user saves/exports
+// partnersConfigReady (declared above) already kicked off loadPartnersConfig() at module
+// load time. Warming up geolocation here is safe even before it resolves — detectUserCity()
+// internally awaits partnersConfigReady itself before reading _city_aliases.
+ensureCityDetected();
 
 // ═══════════════════════════════════════════════════════
 // SAVE / OPEN

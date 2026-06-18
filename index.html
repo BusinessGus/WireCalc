@@ -2061,6 +2061,55 @@ async function loadPartnersConfig(){
   }
 }
 
+// ═══════════════════════════════════════════════════════
+// GEOLOCATION — detect visitor's city via ipapi.is, used to pick region-specific
+// partner ads from partners.json (falls back to 'default' on any failure).
+// Provider: ipapi.is — free anonymous tier, 1000 requests/day, HTTPS supported.
+// If this limit becomes a problem, switch providers (e.g. ipapi.is paid tier,
+// or another service) — pickPartner() already accepts any region key, so only
+// detectUserCity()'s fetch URL/response parsing would need to change.
+// ═══════════════════════════════════════════════════════
+
+// ipapi.is returns city names in English/Latin script (e.g. "Oskemen" or
+// "Ust-Kamenogorsk"), while partners.json keys are in Russian Cyrillic
+// ("Усть-Каменогорск") to match how the user administers that file. This map
+// bridges the two. Add an entry here whenever a new city's partners are added
+// to partners.json — without an entry, detection still works but falls back
+// to 'default' for that city (safe, just not personalized).
+const CITY_NAME_MAP = {
+  'oskemen': 'Усть-Каменогорск',
+  'ust-kamenogorsk': 'Усть-Каменогорск',
+  'ust kamenogorsk': 'Усть-Каменогорск',
+  'öskemen': 'Усть-Каменогорск',
+};
+
+let userCity = null;          // resolved Cyrillic city key, or null if unknown/undetected
+let cityDetectionDone = false; // ensures the API is called at most once per page visit
+
+async function detectUserCity(){
+  try{
+    const res = await fetch('https://api.ipapi.is', {cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    if(data.error) return null; // ipapi.is signals failure via an "error" field, not HTTP status
+    const rawCity = data.location && data.location.city;
+    if(!rawCity) return null;
+    const mapped = CITY_NAME_MAP[rawCity.trim().toLowerCase()];
+    return mapped || null; // unmapped city → null → pickPartner falls back to 'default'
+  }catch(err){
+    return null; // network unavailable, blocked by browser/extension, rate limit exceeded, etc.
+  }
+}
+
+// Call this before pickPartner() — runs the actual lookup only once per visit,
+// every subsequent call reuses the cached result instantly.
+async function ensureCityDetected(){
+  if(cityDetectionDone) return userCity;
+  userCity = await detectUserCity();
+  cityDetectionDone = true;
+  return userCity;
+}
+
 // Picks the next partner for a given region key, rotating through the list.
 // Falls back to FALLBACK_PARTNER if config didn't load or region list is empty.
 // Picks a partner for a given region key using WEIGHTED RANDOM selection.
@@ -2088,6 +2137,14 @@ function pickPartner(regionKey){
 
 function buildPartnerActionButton(kind, p){
   // Returns an <a> element, or null if the partner has no data for this kind.
+  // normalizeUrl: defends against partners.json entries written without a schema
+  // (e.g. "sdelai.kz" instead of "https://sdelai.kz") — without this, the browser
+  // treats it as a RELATIVE link and silently navigates to provodka.org/sdelai.kz
+  // instead of the real external site.
+  function normalizeUrl(u){
+    if(!u) return u;
+    return /^https?:\/\//i.test(u) ? u : `https://${u}`;
+  }
   const defs = {
     whatsapp: {
       cond: !!p.whatsapp,
@@ -2096,12 +2153,12 @@ function buildPartnerActionButton(kind, p){
     },
     gis2: {
       cond: !!p.gis2,
-      href: p.gis2,
+      href: normalizeUrl(p.gis2),
       bg:'#1a2a3a', border:'#2a4a6a', color:'#7dc4ff', icon:'ti-map-2', label:'2ГИС'
     },
     website: {
       cond: !!p.website,
-      href: p.website,
+      href: normalizeUrl(p.website),
       bg:'#2a241a', border:'#5a4a2a', color:'#e0b86a', icon:'ti-world', label:'Сайт'
     },
   };
@@ -2118,8 +2175,9 @@ function buildPartnerActionButton(kind, p){
   return a;
 }
 
-function showPartnerCard(onContinue){
-  const p = pickPartner('default'); // region key fixed to 'default' until geolocation is added
+async function showPartnerCard(onContinue){
+  const city = await ensureCityDetected(); // cached after first call — instant on repeat saves/exports
+  const p = pickPartner(city || 'default');
 
   document.getElementById('partner-name').textContent = p.name || 'Партнёр';
 
@@ -2152,6 +2210,7 @@ document.getElementById('partner-modal').addEventListener('click', e=>{
 });
 
 loadPartnersConfig(); // kick off at startup, non-blocking
+ensureCityDetected(); // warm up geolocation too, so it's likely cached by the time the user saves/exports
 
 // ═══════════════════════════════════════════════════════
 // SAVE / OPEN

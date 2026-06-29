@@ -889,17 +889,28 @@ function strokeIntervalMultiColor(ctx, seg, t0, t1, colors, baseWidth){
   const p1=w2c(seg.wx1,seg.wy1), p2=w2c(seg.wx2,seg.wy2);
   const ax = p1.cx + (p2.cx-p1.cx)*t0, ay = p1.cy + (p2.cy-p1.cy)*t0;
   const bx = p1.cx + (p2.cx-p1.cx)*t1, by = p1.cy + (p2.cy-p1.cy)*t1;
-  const safeColors = (colors && colors.length) ? colors : [seg.color]; // defensive: never let an empty colors array hide the line
+  const safeColors = (colors && colors.length) ? colors : [seg.color];
   const cappedColors = safeColors.slice(0, MAX_OVERLAP_COLORS);
+
+  // Width grows by total number of overlapping lines (including same-color duplicates),
+  // so 2 red lines on the same path look visibly thicker than 1 red line.
   const lineWidth = baseWidth + (cappedColors.length-1)*OVERLAP_WIDTH_STEP;
 
-  if(cappedColors.length<=1){
-    ctx.lineWidth=lineWidth; ctx.strokeStyle=cappedColors[0]||seg.color;
+  // Deduplicate colors for rendering — if all lines sharing this path are the same
+  // color (e.g. 3 red lines), draw a solid line of that color at the increased width.
+  // A dashed pattern with identical colors is indistinguishable from a solid line,
+  // so we'd just be wasting draw calls for no visual benefit.
+  const uniqueColors = [...new Set(cappedColors)];
+
+  if(uniqueColors.length<=1){
+    // Single color (possibly multiple overlapping lines of that color) — solid, thicker
+    ctx.lineWidth=lineWidth; ctx.strokeStyle=uniqueColors[0]||seg.color;
     ctx.setLineDash([]);
     ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.stroke();
     return;
   }
 
+  // Multiple different colors — dashed, cycling through each color in turn
   const dx=bx-ax, dy=by-ay, len=Math.hypot(dx,dy);
   if(len<0.5) return;
   const ux=dx/len, uy=dy/len;
@@ -911,7 +922,7 @@ function strokeIntervalMultiColor(ctx, seg, t0, t1, colors, baseWidth){
     const segLen = Math.min(dashLen, len-dist);
     const x1=ax+ux*dist, y1=ay+uy*dist;
     const x2=ax+ux*(dist+segLen), y2=ay+uy*(dist+segLen);
-    ctx.strokeStyle = cappedColors[ci % cappedColors.length];
+    ctx.strokeStyle = uniqueColors[ci % uniqueColors.length];
     ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
     dist += dashLen;
     ci++;
@@ -1166,9 +1177,10 @@ function redraw(){
       const s=orthoSnap(spDraw.cx,spDraw.cy,mousePos.x,mousePos.y);
       ex=s.x;ey=s.y;snapped=s.snapped;snapAxis=s.axis;
 
-      // Marker H/V alignment snap — same mechanism used when placing markers,
-      // so the endpoint can be dropped exactly level with a marker for clean right angles.
-      const mSnap=markerAlignSnap(ex,ey,-1);
+      // H/V alignment snap — works against markers AND all segment endpoints,
+      // so the line tip can be aligned with any existing point on the drawing.
+      // startPt is excluded so the line doesn't try to align with its own origin.
+      const mSnap=markerAlignSnap(ex,ey,-1,startPt);
       if(mSnap.hLine!==null){
         ctx.strokeStyle='rgba(255,200,80,0.55)'; ctx.lineWidth=1;
         ctx.beginPath();ctx.moveTo(0,mSnap.hLine);ctx.lineTo(drC.width,mSnap.hLine);ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
@@ -1307,15 +1319,31 @@ function nearestMarker(p){
 // or vertically with any OTHER marker (excluding excludeIdx, used while dragging).
 // Returns {sx, sy, hLine, vLine} — sx/sy are snapped coords (or null if no match),
 // hLine/vLine are the canvas coordinate of the matched guide line (for drawing).
-function markerAlignSnap(cx, cy, excludeIdx){
+function markerAlignSnap(cx, cy, excludeMarkerIdx, excludeWorldPt){
   if(markerSnapRadius<=0) return {sx:null,sy:null,hLine:null,vLine:null};
   let sx=null, sy=null, hLine=null, vLine=null;
+
+  // Snap to markers
   markers.forEach((mk,i)=>{
-    if(i===excludeIdx) return;
+    if(i===excludeMarkerIdx) return;
     const mp=w2c(mk.wx,mk.wy);
     if(hLine===null && Math.abs(mp.cy-cy)<markerSnapRadius){ hLine=mp.cy; sy=mp.cy; }
     if(vLine===null && Math.abs(mp.cx-cx)<markerSnapRadius){ vLine=mp.cx; sx=mp.cx; }
   });
+
+  // Snap to segment endpoints (both ends of every segment, any color)
+  // This lets lines align horizontally/vertically with any existing line endpoint,
+  // not just markers — regardless of color or whether they're connected.
+  segments.forEach(seg=>{
+    [[seg.wx1,seg.wy1],[seg.wx2,seg.wy2]].forEach(([wx,wy])=>{
+      // Skip the point we're currently drawing FROM so it doesn't snap to itself
+      if(excludeWorldPt && pointsNear(wx,wy,excludeWorldPt.wx,excludeWorldPt.wy)) return;
+      const sp=w2c(wx,wy);
+      if(hLine===null && Math.abs(sp.cy-cy)<markerSnapRadius){ hLine=sp.cy; sy=sp.cy; }
+      if(vLine===null && Math.abs(sp.cx-cx)<markerSnapRadius){ vLine=sp.cx; sx=sp.cx; }
+    });
+  });
+
   return {sx,sy,hLine,vLine};
 }
 
@@ -1501,8 +1529,9 @@ drC.addEventListener('click',e=>{
       const spC=w2c(startPt.wx,startPt.wy);
       const snap=orthoSnap(spC.cx,spC.cy,p.x,p.y);
       let ex=snap.snapped?snap.x:p.x, ey=snap.snapped?snap.y:p.y;
-      // Marker H/V alignment snap — same as preview, so click lands exactly where the guide showed
-      const mSnap=markerAlignSnap(ex,ey,-1);
+      // Marker H/V alignment snap — same as preview, so click lands exactly where the guide showed.
+      // startPt excluded so the line doesn't align with its own origin point.
+      const mSnap=markerAlignSnap(ex,ey,-1,startPt);
       if(mSnap.sy!==null) ey=mSnap.sy;
       if(mSnap.sx!==null) ex=mSnap.sx;
       // Snap to another line's endpoint too (visual joint only — no connect/transit popup,

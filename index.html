@@ -189,6 +189,9 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
       <i class="ti ti-photo-up"></i> Загрузить фон
       <input type="file" accept="image/*" id="file-in" style="display:none">
     </label>
+    <input type="text" id="project-name" placeholder="Название проекта" title="Название проекта — используется как имя файла при сохранении и экспорте"
+      style="background:#1a2535;border:1px solid #2a3a4a;border-radius:6px;color:#ccc;padding:5px 10px;font-size:13px;width:180px;outline:none"
+      maxlength="60">
     <button class="tb-btn success" id="btn-save"><i class="ti ti-device-floppy"></i> Сохранить</button>
     <button class="tb-btn" id="btn-export-img" title="Экспорт в PNG высокого качества"><i class="ti ti-photo-down"></i> PNG</button>
     <label class="tb-btn" style="cursor:pointer">
@@ -656,9 +659,10 @@ let markers = [];
 // desc: full name e.g. "Розетка"
 // extra: metres of material per instance (base cost just for placing the device)
 let markerTypes = [
-  {id:uid(), abbr:'Рз', desc:'Розетка', extra:0.5},
-  {id:uid(), abbr:'Вк', desc:'Выключатель', extra:0.3},
-  {id:uid(), abbr:'Кр', desc:'Распредкоробка', extra:0.0},
+  {id:uid(), abbr:'Рз', desc:'Розетка',           extra:0.5, size:12},
+  {id:uid(), abbr:'Вк', desc:'Выключатель',        extra:0.3, size:12},
+  {id:uid(), abbr:'Кр', desc:'Распредкоробка',     extra:0.4, size:14},
+  {id:uid(), abbr:'ЩР', desc:'Щит распределит.',  extra:2.0, size:18},
 ];
 
 let selectedMarkerTypeId = markerTypes[0].id;
@@ -1047,7 +1051,7 @@ function redraw(){
     const mt=markerTypes.find(t=>t.id===mk.mtypeId);
     const isSel=selType==='marker'&&selIdx===i;
     const abbr=mt?mt.abbr:'?';
-    const r=MK_R;
+    const r=mt?.size||MK_R; // use per-type size if set, fall back to global default
 
     ctx.beginPath();ctx.arc(p.cx,p.cy,r,0,Math.PI*2);
     const mkBg=mk.color||'#1a2a3a';
@@ -1855,6 +1859,10 @@ function openMarkerTypeModal(existing){
       <input type="text" id="mt-abbr" maxlength="2" value="${existing?existing.abbr:''}" placeholder="Рз"></div>
     <div class="mfield"><label>Расшифровка (полное название)</label>
       <input type="text" id="mt-desc" value="${existing?existing.desc:''}" placeholder="Розетка"></div>
+    <div class="mfield"><label>Размер значка (радиус, px)</label>
+      <input type="number" id="mt-size" min="8" max="32" step="1" value="${existing?existing.size||14:14}">
+      <div style="font-size:10px;color:#555;margin-top:3px">Розетки/выключатели ~12, коробки ~14, щиты ~18-22</div>
+    </div>
     <div class="mfield"><label>Базовый расход материала на 1 шт (м)</label>
       <input type="number" id="mt-extra" min="0" step="0.1" value="${existing?existing.extra:0}">
       <div style="font-size:10px;color:#555;margin-top:3px">Расход за сам прибор (монтаж, подключение). Плюс длины подключённых линий считаются отдельно.</div>
@@ -1864,13 +1872,13 @@ function openMarkerTypeModal(existing){
     const desc=document.getElementById('mt-desc').value.trim();
     if(!abbr){alert('Введите аббревиатуру');return;}
     const extra=parseFloat(document.getElementById('mt-extra').value)||0;
+    const size=parseInt(document.getElementById('mt-size').value)||14;
     if(isNew){
       const id=uid();
-      markerTypes.push({id,abbr,desc,extra});
+      markerTypes.push({id,abbr,desc,extra,size});
       selectedMarkerTypeId=id;
     } else {
-      existing.abbr=abbr;existing.desc=desc;existing.extra=extra;
-      // Update placed markers label cache (not needed since we look up by mtypeId, but good practice)
+      existing.abbr=abbr;existing.desc=desc;existing.extra=extra;existing.size=size;
     }
     renderMarkerTypesList();redraw();
     modal.classList.remove('show');modalCb=null;
@@ -2303,10 +2311,19 @@ ensureCityDetected();
 // SAVE / OPEN
 // ═══════════════════════════════════════════════════════
 
+function getProjectName(){
+  return (document.getElementById('project-name').value.trim()) || 'wiring-project';
+}
+function safeFileName(name){
+  // Strip characters that are invalid in filenames across Windows/Mac/Linux
+  return name.replace(/[\\/:*?"<>|]/g,'_').replace(/\s+/g,' ').trim() || 'wiring-project';
+}
 function doSaveProject(){
-  const data={version:10,scale,segments,markers,walls,markerTypes,colorLabels,colorCableTypes,hiddenColors:[...hiddenColors],bg:bgImgDataUrl,bgX,bgY,bgS,bgOpacity,markerSnapRadius};
+  const name=getProjectName();
+  const data={version:10,projectName:name,scale,segments,markers,walls,markerTypes,colorLabels,colorCableTypes,hiddenColors:[...hiddenColors],bg:bgImgDataUrl,bgX,bgY,bgS,bgOpacity,markerSnapRadius};
   const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='wiring-project.wiring';a.click();
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=safeFileName(name)+'.wiring';a.click();
   if(typeof gtag==='function') gtag('event', 'save_project');
 }
 document.getElementById('btn-save').addEventListener('click',()=>{
@@ -2327,6 +2344,8 @@ document.getElementById('project-in').addEventListener('change',e=>{
       colorLabels=d.colorLabels||{};
       colorCableTypes=d.colorCableTypes||{};
       hiddenColors=new Set(d.hiddenColors||[]);
+      // Restore project name if present in the file
+      if(d.projectName) document.getElementById('project-name').value=d.projectName;
       if(d.bgOpacity!=null){
         bgOpacity=d.bgOpacity;
         bgOpacitySlider.value=Math.round(bgOpacity*100);
@@ -2639,8 +2658,10 @@ function getBoundingBox(margin=60){
   });
   markers.forEach(mk=>{
     const p=w2c(mk.wx,mk.wy);
-    minX=Math.min(minX,p.cx-MK_R); minY=Math.min(minY,p.cy-MK_R);
-    maxX=Math.max(maxX,p.cx+MK_R); maxY=Math.max(maxY,p.cy+MK_R);
+    const mt=markerTypes.find(t=>t.id===mk.mtypeId);
+    const r=mt?.size||MK_R;
+    minX=Math.min(minX,p.cx-r); minY=Math.min(minY,p.cy-r);
+    maxX=Math.max(maxX,p.cx+r); maxY=Math.max(maxY,p.cy+r);
   });
   return {
     x: Math.max(0, minX-margin),
@@ -2701,15 +2722,16 @@ function doExport(){
     off.width=sceneW*dpr; off.height=totalH*dpr;
     const octx=off.getContext('2d');
     octx.scale(dpr,dpr);
-    renderToCtx(octx,sceneW,sceneH,dpr);
+    renderToCtx(octx,sceneW,sceneH,dpr,false); // full drawing — no per-segment labels, info is in legend
     if(legendH>0) drawLegendStrip(octx, sceneW, sceneH, legendH, usedColors);
+    drawWatermark(octx, sceneW, totalH);
 
     bgX=savedBgX; bgY=savedBgY; bgS=savedBgS;
     document.getElementById('export-modal').style.display='none';
     off.toBlob(blob=>{
       const a=document.createElement('a');
       a.href=URL.createObjectURL(blob);
-      a.download=`wiring-plan-full-${dpr}x.png`;
+      a.download=safeFileName(getProjectName())+`-full-${dpr}x.png`;
       a.click();
       if(typeof gtag==='function') gtag('event', 'export_png', {scope:'full', quality:dpr+'x'});
     },'image/png');
@@ -2723,18 +2745,19 @@ function doExport(){
     octx.scale(dpr,dpr);
     renderToCtx(octx,sceneW,sceneH,dpr);
     if(legendH>0) drawLegendStrip(octx, sceneW, sceneH, legendH, usedColors);
+    drawWatermark(octx, sceneW, totalH);
     document.getElementById('export-modal').style.display='none';
     off.toBlob(blob=>{
       const a=document.createElement('a');
       a.href=URL.createObjectURL(blob);
-      a.download=`wiring-plan-${dpr}x.png`;
+      a.download=safeFileName(getProjectName())+`-${dpr}x.png`;
       a.click();
       if(typeof gtag==='function') gtag('event', 'export_png', {scope:'viewport', quality:dpr+'x'});
     },'image/png');
   }
 }
 
-function renderToCtx(octx,W,H,dpr){
+function renderToCtx(octx,W,H,dpr,showLabels=true){
   const fScale=Math.min(dpr,2);
   if(bgImg){
     octx.fillStyle='#111'; octx.fillRect(0,0,W,H);
@@ -2784,13 +2807,13 @@ function renderToCtx(octx,W,H,dpr){
       strokeIntervalMultiColor(octx, seg, iv.t0, iv.t1, iv.colors, 2.5);
     });
 
-    if(scale!==null){
+    if(showLabels && scale!==null){
       const m=(seg.real||0).toFixed(2),mx=(ax+bx)/2,my=(ay+by)/2;
       octx.font=`bold ${Math.round(12*fScale)}px sans-serif`;
       octx.fillStyle='rgba(0,0,0,0.7)';octx.fillText(m+'м',mx+5,my-3);
       octx.fillStyle=seg.color;octx.fillText(m+'м',mx+4,my-4);
     }
-    if(colorLabels[seg.color]){
+    if(showLabels && colorLabels[seg.color]){
       const mx=(ax+bx)/2,my=(ay+by)/2;
       octx.font=`${Math.round(10*fScale)}px sans-serif`;
       octx.fillStyle='rgba(0,0,0,0.6)';octx.fillText(colorLabels[seg.color],mx+5,my+11);
@@ -2804,7 +2827,8 @@ function renderToCtx(octx,W,H,dpr){
     });
   });
   markers.forEach(mk=>{
-    const p=w2c(mk.wx,mk.wy),mt=markerTypes.find(t=>t.id===mk.mtypeId),r=MK_R;
+    const p=w2c(mk.wx,mk.wy),mt=markerTypes.find(t=>t.id===mk.mtypeId);
+    const r=mt?.size||MK_R; // per-type size, same as canvas render
     const mkBg=mk.color||'#1a2a3a';
     octx.beginPath();octx.arc(p.cx,p.cy,r,0,Math.PI*2);
     octx.fillStyle=mkBg==='#ffffff'?'#cccccc':mkBg;octx.fill();
@@ -2830,6 +2854,23 @@ function getLegendStripHeight(usedColors){
 
 // Draws the legend as its own horizontal strip below the scene, starting at y=stripY.
 // W is the full output width (CSS px); the strip spans the full width.
+function drawWatermark(octx, W, H){
+  const text = 'provodka.org';
+  const fontSize = Math.max(11, Math.min(16, W/60));
+  octx.font = `${fontSize}px sans-serif`;
+  const tw = octx.measureText(text).width;
+  const pad = 8;
+  const x = W - tw - pad;
+  const y = H - pad;
+  // Subtle semi-transparent label, not intrusive
+  octx.fillStyle = 'rgba(0,0,0,0.45)';
+  octx.fillRect(x-4, y-fontSize-2, tw+8, fontSize+6);
+  octx.fillStyle = 'rgba(255,255,255,0.55)';
+  octx.textBaseline = 'bottom';
+  octx.fillText(text, x, y);
+  octx.textBaseline = 'alphabetic';
+}
+
 function drawLegendStrip(octx, W, stripY, stripH, usedColors){
   if(!usedColors.length) return;
   octx.fillStyle='#181818';
@@ -2838,9 +2879,13 @@ function drawLegendStrip(octx, W, stripY, stripH, usedColors){
   octx.beginPath(); octx.moveTo(0,stripY); octx.lineTo(W,stripY); octx.stroke();
 
   const padH=18, lineH=22, padV=14;
-  const colW = Math.min(260, (W-padH*2) / Math.max(1, Math.ceil(usedColors.length/Math.max(1,Math.floor((stripH-padV*2)/lineH)))));
-  // Simple layout: wrap into columns if many colors, else single column list
+  const colW = Math.min(340, (W-padH*2) / Math.max(1, Math.ceil(usedColors.length/Math.max(1,Math.floor((stripH-padV*2)/lineH)))));
   const maxRowsPerCol = Math.max(1, Math.floor((stripH-padV*2)/lineH));
+
+  // Compute per-color totals for the legend (same logic as updateResults)
+  const colorTotals={};
+  segments.forEach(s=>{ colorTotals[s.color]=(colorTotals[s.color]||0)+(s.real||0); });
+
   octx.font='bold 13px sans-serif';
   usedColors.forEach((hex,idx)=>{
     const col = Math.floor(idx/maxRowsPerCol);
@@ -2852,8 +2897,10 @@ function drawLegendStrip(octx, W, stripY, stripH, usedColors){
     octx.strokeStyle='rgba(255,255,255,0.2)';octx.lineWidth=1;octx.stroke();
     const name=COLORS.find(c=>c.hex===hex)?.name||hex;
     const lbl=colorLabels[hex]?` — ${colorLabels[hex]}`:'';
+    const cable=colorCableTypes[hex]?` · ${colorCableTypes[hex]}`:'';
+    const total=colorTotals[hex]!=null?` · ${colorTotals[hex].toFixed(2)} м`:'';
     octx.fillStyle='#eee';octx.textBaseline='middle';
-    octx.fillText(name+lbl, cx+18, cy);
+    octx.fillText(name+lbl+cable+total, cx+18, cy);
   });
   octx.textBaseline='alphabetic';
 }

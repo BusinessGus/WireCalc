@@ -1,0 +1,32 @@
+<svg viewBox="0 0 640 240" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1a3a5c"/>
+      <stop offset="100%" stop-color="#16314d"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ffffff" stroke-opacity="0.05" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="640" height="240" fill="url(#bg)"/>
+  <rect width="640" height="240" fill="url(#grid)"/>
+
+  <!-- wire trace decoration, echoes the app's own orthogonal-line aesthetic -->
+  <g stroke="#4a9eff" stroke-opacity="0.35" stroke-width="3" fill="none" stroke-linecap="round">
+    <path d="M 0 190 H 120 V 130 H 200"/>
+    <path d="M 640 60 H 520 V 100 H 460"/>
+    <circle cx="200" cy="130" r="5" fill="#4a9eff" fill-opacity="0.5" stroke="none"/>
+    <circle cx="460" cy="100" r="5" fill="#4a9eff" fill-opacity="0.5" stroke="none"/>
+  </g>
+
+  <!-- plug icon -->
+  <g transform="translate(90,88)" stroke="#f0c040" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="0" y="16" width="52" height="36" rx="8"/>
+    <line x1="14" y1="16" x2="14" y2="0"/>
+    <line x1="38" y1="16" x2="38" y2="0"/>
+  </g>
+
+  <text x="180" y="112" font-family="Arial, sans-serif" font-size="30" font-weight="700" fill="#ffffff">Место для вашей рекламы</text>
+  <text x="180" y="146" font-family="Arial, sans-serif" font-size="17" fill="#8fb8dd">Ваш магазин электрики — здесь, перед скачиванием у каждого клиента</text>
+</svg>

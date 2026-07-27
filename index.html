@@ -345,6 +345,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 <!-- Partner shop card (shown before save/export) -->
 <div id="partner-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:550;align-items:center;justify-content:center">
   <div style="background:#1e1e1e;border:1px solid #444;border-radius:14px;width:320px;padding:0;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.6)">
+    <img id="partner-banner" style="display:none;width:100%;height:120px;object-fit:cover">
     <div style="background:linear-gradient(135deg,#1a3a5c,#16314d);padding:18px 20px 14px">
       <div data-i18n="partner_kicker" style="font-size:10px;color:#7dc4ff;text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-bottom:4px">Материалы для вашего проекта</div>
       <div style="font-size:16px;font-weight:700;color:#fff" id="partner-name">Электро-Маркет</div>
@@ -5449,6 +5450,16 @@ async function showPartnerCard(onContinue){
   const p = pickPartner(city || 'default');
 
   document.getElementById('partner-name').textContent = p.name || t('partner_fallback');
+
+  const banner = document.getElementById('partner-banner');
+  if(p.image){
+    banner.onerror = ()=>{ banner.style.display='none'; }; // broken/missing file — just hide, no broken-image icon
+    banner.onload = ()=>{ banner.style.display='block'; };
+    banner.src = p.image;
+  } else {
+    banner.removeAttribute('src');
+    banner.style.display='none';
+  }
 
   const addrRow = document.getElementById('partner-address-row');
   if(p.address){ addrRow.style.display='flex'; document.getElementById('partner-address').textContent = p.address; }

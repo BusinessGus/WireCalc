@@ -213,6 +213,9 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     <button class="tb-btn" id="btn-select"><i class="ti ti-pointer"></i> <span data-i18n="select">Выбор</span></button>
     <button class="tb-btn" id="btn-zones" data-i18n-title="tt_zones" title="Отметить зоны произвольной формы, где разрешено вести линии (ПКМ — начать, клик — точки, двойной клик — замкнуть)"><i class="ti ti-map-2"></i> <span data-i18n="zones">Места прокладки</span></button>
     <div class="sep"></div>
+    <button class="tb-btn" id="btn-dim" data-i18n-title="tt_dim" title="Выноска: отрезок + расстояние/направление офсета мышкой, без ввода чисел"><i class="ti ti-ruler-measure"></i> <span data-i18n="dim_tool">Выноска</span></button>
+    <button class="tb-btn" id="btn-measure" data-i18n-title="tt_measure" title="Измерение: россыпь независимых отрезков с бегущей суммой длины"><i class="ti ti-sum"></i> <span data-i18n="measure_tool">Измерение</span></button>
+    <div class="sep"></div>
     <div id="color-picker-row"><span data-i18n="color_label" style="font-size:11px;color:#555;margin-right:2px">Цвет:</span></div>
     <div class="sep"></div>
     <button class="tb-btn" id="btn-undo"><i class="ti ti-arrow-back-up"></i></button>
@@ -974,6 +977,17 @@ const translations = {
     color_dot_tt2:'(ПКМ — подпись цвета)', cable_label_prefix:'кабель',
     color_label_prompt_title:'Подпись для цвета', color_label_prompt_hint:'(например: Детская, Кухня, Силовая)',
     mt_abbr_ph:'Рз', mt_desc_ph:'Розетка',
+    dim_tool:'Выноска', tt_dim:'Выноска: отрезок + расстояние/направление офсета мышкой, без ввода чисел',
+    measure_tool:'Измерение', tt_measure:'Измерение: россыпь независимых отрезков с бегущей суммой длины',
+    mode_info_dim:'Клик — начало, клик — конец отрезка, третий клик — выберите расстояние и сторону выноски мышкой и кликните. Esc — отмена. Прилипает к значкам, стенам (включая середину — для Т-образных) и концам линий.',
+    mode_info_measure:'Клик — начало, клик — конец отрезка. Отрезки независимы — следующий необязательно продолжает предыдущий. Сумма длины — в панели «Итого». Esc — отмена текущего отрезка.',
+    msg_dim_next_point:'Кликните конец отрезка.',
+    msg_dim_pick_offset:'Выберите расстояние и направление выноски мышкой и кликните.',
+    msg_dim_done:'Выноска добавлена.',
+    msg_measure_next_point:'Кликните конец отрезка.',
+    msg_measure_added:'Отрезок добавлен. Следующий может быть где угодно — не обязательно отсюда.',
+    res_section_measure:'Выноски (измерения)',
+    res_measure_count:'{n} отрезк(ов)',
     tourpro_0_title:'Добро пожаловать в PRO!',
     tourpro_0_text:'Здесь то же самое рисование линий, что и в базовом режиме, плюс коробки/щиты с несколькими портами, зоны прокладки и автоматическая оптимизация всего чертежа. Пройдёмся по новому.',
     tourpro_1_title:'Коробки и щиты с портами',
@@ -1174,6 +1188,17 @@ const translations = {
     color_dot_tt2:'(right-click — color label)', cable_label_prefix:'cable',
     color_label_prompt_title:'Label for color', color_label_prompt_hint:'(e.g.: Nursery, Kitchen, Power)',
     mt_abbr_ph:'Ou', mt_desc_ph:'Outlet',
+    dim_tool:'Dimension', tt_dim:'Dimension line: span + offset distance/side picked entirely by mouse, no typed numbers',
+    measure_tool:'Measure', tt_measure:'Measure: a scatter of independent segments with a running length total',
+    mode_info_dim:'Click — start, click — end of the span, third click — pick the offset distance/side with the mouse and click. Esc — cancel. Snaps to markers, walls (including mid-span, for T-junctions) and line endpoints.',
+    mode_info_measure:'Click — start, click — end of a segment. Segments are independent — the next one doesn\'t have to continue the previous one. Running total is in the "Totals" panel. Esc — cancel the current segment.',
+    msg_dim_next_point:'Click the end of the span.',
+    msg_dim_pick_offset:'Pick the offset distance and side with the mouse, then click.',
+    msg_dim_done:'Dimension added.',
+    msg_measure_next_point:'Click the end of the segment.',
+    msg_measure_added:'Segment added. The next one can start anywhere — not necessarily from here.',
+    res_section_measure:'Measurements',
+    res_measure_count:'{n} segment(s)',
     tourpro_0_title:'Welcome to PRO!',
     tourpro_0_text:"It's the same line-drawing as base mode, plus multi-port boxes/panels, routing zones, and automatic optimization of the whole drawing. Let's walk through what's new.",
     tourpro_1_title:'Boxes and panels with ports',
@@ -1374,6 +1399,17 @@ const translations = {
     color_dot_tt2:'(clic derecho — etiqueta de color)', cable_label_prefix:'cable',
     color_label_prompt_title:'Etiqueta para el color', color_label_prompt_hint:'(p. ej.: Dormitorio infantil, Cocina, Fuerza)',
     mt_abbr_ph:'To', mt_desc_ph:'Toma',
+    dim_tool:'Acotación', tt_dim:'Línea de cota: tramo + distancia/lado del desplazamiento elegidos solo con el ratón, sin escribir números',
+    measure_tool:'Medir', tt_measure:'Medir: una serie de segmentos independientes con un total de longitud acumulado',
+    mode_info_dim:'Clic — inicio, clic — final del tramo, tercer clic — elija la distancia/lado del desplazamiento con el ratón y haga clic. Esc — cancelar. Se ajusta a marcadores, paredes (incluido el punto medio, para uniones en T) y extremos de líneas.',
+    mode_info_measure:'Clic — inicio, clic — final de un segmento. Los segmentos son independientes — el siguiente no tiene que continuar el anterior. El total acumulado está en el panel «Totales». Esc — cancela el segmento actual.',
+    msg_dim_next_point:'Haga clic en el final del tramo.',
+    msg_dim_pick_offset:'Elija la distancia y el lado del desplazamiento con el ratón y haga clic.',
+    msg_dim_done:'Acotación añadida.',
+    msg_measure_next_point:'Haga clic en el final del segmento.',
+    msg_measure_added:'Segmento añadido. El siguiente puede empezar en cualquier sitio — no necesariamente aquí.',
+    res_section_measure:'Mediciones',
+    res_measure_count:'{n} segmento(s)',
     tourpro_0_title:'¡Bienvenido a PRO!',
     tourpro_0_text:'Aquí se traza igual que en el modo básico, más cajas/paneles con varios puertos, zonas de tendido y optimización automática de todo el plano. Repasemos las novedades.',
     tourpro_1_title:'Cajas y paneles con puertos',
@@ -1574,8 +1610,18 @@ const translations = {
     color_dot_tt2:'(оң жақ түйме — түс жазбасы)', cable_label_prefix:'кабель',
     color_label_prompt_title:'Түс үшін жазба', color_label_prompt_hint:'(мысалы: Балалар бөлмесі, Ас үй, Қуат)',
     mt_abbr_ph:'Рз', mt_desc_ph:'Розетка',
+    dim_tool:'Өлшем сызығы', tt_dim:'Өлшем сызығы: кесінді + тінтуірмен таңдалатын ығысу қашықтығы/бағыты, сандарды енгізусіз',
+    measure_tool:'Өлшеу', tt_measure:'Өлшеу: тәуелсіз кесінділер жиынтығы, жүгіретін жалпы ұзындықпен',
+    mode_info_dim:'Шерту — бастау, шерту — кесінді соңы, үшінші шерту — ығысу қашықтығы мен бағытын тінтуірмен таңдап шертіңіз. Esc — болдырмау. Белгішелерге, қабырғаларға (Т-тәрізді қосылыс үшін ортасын қоса) және сызық ұштарына тартылады.',
+    mode_info_measure:'Шерту — бастау, шерту — кесінді соңы. Кесінділер тәуелсіз — келесісі алдыңғысын жалғастыруы міндетті емес. Жалпы сома «Қорытынды» панелінде. Esc — ағымдағы кесіндіні болдырмау.',
+    msg_dim_next_point:'Кесінді соңын шертіңіз.',
+    msg_dim_pick_offset:'Ығысу қашықтығы мен бағытын тінтуірмен таңдап, шертіңіз.',
+    msg_dim_done:'Өлшем сызығы қосылды.',
+    msg_measure_next_point:'Кесінді соңын шертіңіз.',
+    msg_measure_added:'Кесінді қосылды. Келесісі кез келген жерден басталуы мүмкін — міндетті түрде осыдан емес.',
+    res_section_measure:'Өлшем сызықтары (өлшеулер)',
+    res_measure_count:'{n} кесінді',
     tourpro_0_title:'PRO-ға қош келдіңіз!',
-    tourpro_0_text:'Мұнда негізгі режимдегідей сызық сызу, оған қоса көп порттары бар қораптар/щиттер, төсеу аймақтары және бүкіл сызбаны автоматты оңтайландыру бар. Жаңалықтарды қарастырайық.',
     tourpro_1_title:'Порттары бар қораптар мен щиттер',
     tourpro_1_text:'«Белгішелер» қойындысында Кр және ЩР түрлері енді жай нүктелер емес — олардың әр жағында бірнеше порты бар. Өз түріңізді жасағанда «Қорап» немесе «Щит» таңдап, әр жақтағы порт санын орнатуға болады.',
     tourpro_2_title:'Қосылу порты автоматты түрде таңдалады',
@@ -1668,7 +1714,20 @@ let colorCableTypes = {}; // hex -> cable type string (e.g. "ВВГ 3×2.5"), se
 let hiddenColors = new Set(); // colors whose segments are hidden
 // walls: {id, wx1,wy1,wx2,wy2} — visual room outline, no metres calculation
 let walls = [];
-const WALL_WIDTH = 8;   // canvas px (constant, not affected by zoom... actually let's scale with bgS for realism)
+
+// measurements: {id, kind:'dim'|'tally', wx1,wy1,wx2,wy2, offset?}
+// 'dim'   — a single measured span with an offset dimension-line callout
+//           (offset = signed world-unit perpendicular distance, picked by mouse only)
+// 'tally' — one independent measured segment among possibly many, not
+//           necessarily touching each other; their lengths sum into a
+//           running total (штробление and similar tallying use-cases)
+let measurements = [];
+let dimStartPt = null;      // first click of a 'dim' span
+let dimPendingSeg = null;   // {wx1,wy1,wx2,wy2} once span is placed, awaiting the offset click
+let measureStartPt = null;  // first click of the current 'tally' segment
+const PHYS_WALL_THICKNESS = 0.15; // meters — one brick + plaster, fixed for all walls
+const WALL_WIDTH = 8;   // canvas px fallback, used only before scale is known / as a floor at extreme zoom-out
+function wallScreenWidth(){ return Math.max(3, mToW(PHYS_WALL_THICKNESS)*bgS); }
 const WALL_SNAP_ANGLE = 15; // degrees — angle grid step
 let mode = 'line';
 // ═══════════════════════════════════════════════════════
@@ -3184,8 +3243,7 @@ function redraw(){
   walls.forEach((w,i)=>{
     const p1=w2c(w.wx1,w.wy1), p2=w2c(w.wx2,w.wy2);
     const isSel = selType==='wall' && selIdx===i;
-    ctx.lineWidth = WALL_WIDTH * bgS / (bgS||1); // visually constant-ish; scale a bit with zoom
-    ctx.lineWidth = Math.max(4, WALL_WIDTH); // keep simple: fixed canvas px width
+    ctx.lineWidth = wallScreenWidth();
     ctx.strokeStyle = isSel ? '#7a8a9a' : '#5a6472';
     ctx.lineCap = 'square';
     ctx.beginPath(); ctx.moveTo(p1.cx,p1.cy); ctx.lineTo(p2.cx,p2.cy);
@@ -3198,6 +3256,44 @@ function redraw(){
     }
   });
   ctx.lineCap = 'butt'; // reset for everything else
+
+  // ── Measurements (выноски / измерения) ──
+  measurements.forEach((m,i)=>{
+    const isSel = selType==='measurement' && selIdx===i;
+    const lenM = scale!=null ? Math.hypot(m.wx2-m.wx1,m.wy2-m.wy1)*scale : null;
+    const lenLabel = lenM!=null ? lenM.toFixed(2)+' '+t('unit_m') : '?';
+    if(m.kind==='dim'){
+      const {p1,p2,o1,o2}=dimGeometry(m,m.offset);
+      const col=isSel?'#fff':'#e8c968';
+      haloLine(ctx,p1.cx,p1.cy,o1.cx,o1.cy,isSel?'#fff':'#8a8f78',1,[3,3]);
+      haloLine(ctx,p2.cx,p2.cy,o2.cx,o2.cy,isSel?'#fff':'#8a8f78',1,[3,3]);
+      haloLine(ctx,o1.cx,o1.cy,o2.cx,o2.cy,col,isSel?2.5:1.6);
+      const ang=Math.atan2(o2.cy-o1.cy,o2.cx-o1.cx);
+      [o1,o2].forEach(pt=>{
+        haloLine(ctx,
+          pt.cx-Math.cos(ang-Math.PI/4)*5, pt.cy-Math.sin(ang-Math.PI/4)*5,
+          pt.cx+Math.cos(ang-Math.PI/4)*5, pt.cy+Math.sin(ang-Math.PI/4)*5,
+          col,1.6);
+      });
+      const mx=(o1.cx+o2.cx)/2, my=(o1.cy+o2.cy)/2;
+      ctx.font='bold 12px sans-serif'; ctx.textAlign='center';
+      const tw=ctx.measureText(lenLabel).width;
+      ctx.fillStyle='rgba(20,20,20,0.85)'; ctx.fillRect(mx-tw/2-4,my-17,tw+8,15);
+      ctx.fillStyle=col; ctx.fillText(lenLabel,mx,my-6);
+      ctx.textAlign='left';
+    } else if(m.kind==='tally'){
+      const p1=w2c(m.wx1,m.wy1), p2=w2c(m.wx2,m.wy2);
+      const col=isSel?'#fff':'#b06fd1';
+      haloLine(ctx,p1.cx,p1.cy,p2.cx,p2.cy,col,isSel?3:2.2,[6,4]);
+      [p1,p2].forEach(pt=>{ haloDot(ctx,pt.cx,pt.cy,3,col); });
+      const mx=(p1.cx+p2.cx)/2, my=(p1.cy+p2.cy)/2;
+      ctx.font='11px sans-serif'; ctx.textAlign='center';
+      const tw=ctx.measureText(lenLabel).width;
+      ctx.fillStyle='rgba(20,20,20,0.8)'; ctx.fillRect(mx-tw/2-3,my-15,tw+6,13);
+      ctx.fillStyle=isSel?'#fff':'#d9a8ec'; ctx.fillText(lenLabel,mx,my-5);
+      ctx.textAlign='left';
+    }
+  });
 
   // ── Segments ──
   const overlapIntervals = segments.length ? buildOverlapIntervals() : [];
@@ -3527,8 +3623,16 @@ function redraw(){
   // ── Wall preview ──
   if(wallStartPt && mousePos && mode==='wall'){
     const spC=w2c(wallStartPt.wx,wallStartPt.wy);
-    const snapped=angleSnap15(spC.cx,spC.cy,mousePos.x,mousePos.y);
-    let ex=snapped.x, ey=snapped.y;
+    let ex, ey, attachPt=null;
+
+    const attach=findWallAttachPoint(mousePos.x,mousePos.y);
+    if(attach && wallLenInput.length===0){
+      const ac=w2c(attach.wx,attach.wy);
+      ex=ac.cx; ey=ac.cy; attachPt=ac;
+    } else {
+      const snapped=angleSnap15(spC.cx,spC.cy,mousePos.x,mousePos.y);
+      ex=snapped.x; ey=snapped.y;
+    }
 
     // Compute angle for this preview (used for typed-length commit on Enter)
     let angRaw=Math.atan2(ey-spC.cy,ex-spC.cx)*180/Math.PI;
@@ -3545,32 +3649,40 @@ function redraw(){
       }
     }
 
-    // ── Alignment guides: highlight when ex/ey aligns with any other wall endpoint ──
-    const ALIGN_TOL=4; // canvas px tolerance
-    let alignH=null, alignV=null; // matched canvas coordinate, if any
-    walls.forEach(w=>{
-      [[w.wx1,w.wy1],[w.wx2,w.wy2]].forEach(([wx,wy])=>{
-        const pc=w2c(wx,wy);
-        if(Math.abs(pc.cy-ey)<ALIGN_TOL) alignH=pc.cy;
-        if(Math.abs(pc.cx-ex)<ALIGN_TOL) alignV=pc.cx;
+    // ── Alignment guides (only when not already attaching to a real wall feature) ──
+    if(!attachPt){
+      const ALIGN_TOL=4; // canvas px tolerance
+      let alignH=null, alignV=null; // matched canvas coordinate, if any
+      walls.forEach(w=>{
+        [[w.wx1,w.wy1],[w.wx2,w.wy2]].forEach(([wx,wy])=>{
+          const pc=w2c(wx,wy);
+          if(Math.abs(pc.cy-ey)<ALIGN_TOL) alignH=pc.cy;
+          if(Math.abs(pc.cx-ex)<ALIGN_TOL) alignV=pc.cx;
+        });
       });
-    });
-    if(alignH!==null){
-      ctx.strokeStyle='rgba(255,200,80,0.55)'; ctx.lineWidth=1;
-      ctx.beginPath();ctx.moveTo(0,alignH);ctx.lineTo(drC.width,alignH);ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
-      ey=alignH; // snap to alignment
-    }
-    if(alignV!==null){
-      ctx.strokeStyle='rgba(255,200,80,0.55)'; ctx.lineWidth=1;
-      ctx.beginPath();ctx.moveTo(alignV,0);ctx.lineTo(alignV,drC.height);ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
-      ex=alignV;
+      if(alignH!==null){
+        ctx.strokeStyle='rgba(255,200,80,0.55)'; ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(0,alignH);ctx.lineTo(drC.width,alignH);ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+        ey=alignH; // snap to alignment
+      }
+      if(alignV!==null){
+        ctx.strokeStyle='rgba(255,200,80,0.55)'; ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(alignV,0);ctx.lineTo(alignV,drC.height);ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+        ex=alignV;
+      }
     }
 
     // Main preview line
-    ctx.lineWidth=Math.max(4,WALL_WIDTH); ctx.strokeStyle='rgba(122,138,154,0.8)'; ctx.lineCap='square';
+    ctx.lineWidth=wallScreenWidth(); ctx.strokeStyle='rgba(122,138,154,0.8)'; ctx.lineCap='square';
     ctx.beginPath();ctx.moveTo(spC.cx,spC.cy);ctx.lineTo(ex,ey);
     ctx.setLineDash([8,4]);ctx.stroke();ctx.setLineDash([]);
     ctx.lineCap='butt';
+
+    // Highlight where this segment will attach — endpoint or mid-span (T-junction)
+    if(attachPt){
+      ctx.strokeStyle='#7dc4ff'; ctx.lineWidth=2; ctx.setLineDash([]);
+      ctx.beginPath();ctx.arc(attachPt.cx,attachPt.cy,7,0,Math.PI*2);ctx.stroke();
+    }
 
     // Length readout (instead of angle)
     const w2=c2w(ex,ey);
@@ -3584,6 +3696,68 @@ function redraw(){
     if(wallLenInput.length>0){
       ctx.font='11px sans-serif'; ctx.fillStyle='#7dc4ff';
       ctx.fillText('Ввод: '+wallLenInput+'м (Enter — применить)', ex+8, ey+14);
+    }
+  } else if(mousePos && mode==='wall' && !wallStartPt){
+    // Before the first click: just show where a click would attach, if anywhere
+    const attach=findWallAttachPoint(mousePos.x,mousePos.y);
+    if(attach){
+      const ac=w2c(attach.wx,attach.wy);
+      ctx.strokeStyle='#7dc4ff'; ctx.lineWidth=2; ctx.setLineDash([]);
+      ctx.beginPath();ctx.arc(ac.cx,ac.cy,7,0,Math.PI*2);ctx.stroke();
+    }
+  }
+
+  // ── Dimension (Выноска) preview ──
+  if(mode==='dim' && mousePos){
+    if(dimPendingSeg){
+      // Third stage: offset follows the mouse, purely by position
+      const offset=computeDimOffset(dimPendingSeg,mousePos);
+      const {p1,p2,o1,o2}=dimGeometry(dimPendingSeg,offset);
+      haloLine(ctx,p1.cx,p1.cy,o1.cx,o1.cy,'rgba(232,201,104,0.8)',1,[3,3]);
+      haloLine(ctx,p2.cx,p2.cy,o2.cx,o2.cy,'rgba(232,201,104,0.8)',1,[3,3]);
+      haloLine(ctx,o1.cx,o1.cy,o2.cx,o2.cy,'#e8c968',1.6);
+      const mx=(o1.cx+o2.cx)/2, my=(o1.cy+o2.cy)/2;
+      const lenM=scale!=null?Math.hypot(dimPendingSeg.wx2-dimPendingSeg.wx1,dimPendingSeg.wy2-dimPendingSeg.wy1)*scale:null;
+      const lenLabel=lenM!=null?lenM.toFixed(2)+' '+t('unit_m'):'?';
+      ctx.font='bold 12px sans-serif'; ctx.textAlign='center';
+      const tw=ctx.measureText(lenLabel).width;
+      ctx.fillStyle='rgba(20,20,20,0.85)'; ctx.fillRect(mx-tw/2-4,my-17,tw+8,15);
+      ctx.fillStyle='#e8c968'; ctx.fillText(lenLabel,mx,my-6);
+      ctx.textAlign='left';
+    } else if(dimStartPt){
+      const spC=w2c(dimStartPt.wx,dimStartPt.wy);
+      const snap=findMeasureSnapPoint(mousePos.x,mousePos.y);
+      let ex,ey;
+      if(snap){ const sc=w2c(snap.wx,snap.wy); ex=sc.cx; ey=sc.cy; }
+      else { const a=angleSnap15(spC.cx,spC.cy,mousePos.x,mousePos.y); ex=a.x; ey=a.y; }
+      haloLine(ctx,spC.cx,spC.cy,ex,ey,'#e8c968',1.8,[6,4]);
+      if(snap) haloArc(ctx,ex,ey,7,'#7dc4ff',2);
+    } else {
+      const snap=findMeasureSnapPoint(mousePos.x,mousePos.y);
+      if(snap){ const sc=w2c(snap.wx,snap.wy); haloArc(ctx,sc.cx,sc.cy,7,'#7dc4ff',2); }
+    }
+  }
+
+  // ── Measure (Измерение) preview ──
+  if(mode==='measure' && mousePos){
+    if(measureStartPt){
+      const spC=w2c(measureStartPt.wx,measureStartPt.wy);
+      const snap=findMeasureSnapPoint(mousePos.x,mousePos.y);
+      let ex,ey;
+      if(snap){ const sc=w2c(snap.wx,snap.wy); ex=sc.cx; ey=sc.cy; }
+      else { const a=angleSnap15(spC.cx,spC.cy,mousePos.x,mousePos.y); ex=a.x; ey=a.y; }
+      haloLine(ctx,spC.cx,spC.cy,ex,ey,'#b06fd1',2.4,[6,4]);
+      if(snap) haloArc(ctx,ex,ey,7,'#7dc4ff',2);
+      const w2=c2w(ex,ey);
+      const distWorld=Math.hypot(w2.wx-measureStartPt.wx,w2.wy-measureStartPt.wy);
+      const lenLabel=scale!==null?(distWorld*scale).toFixed(2)+' '+t('unit_m'):'?';
+      ctx.font='bold 11px sans-serif'; ctx.textAlign='left';
+      const tw2=ctx.measureText(lenLabel).width;
+      ctx.fillStyle='rgba(20,20,20,0.8)'; ctx.fillRect(ex+5,ey-19,tw2+6,14);
+      ctx.fillStyle='#d9a8ec'; ctx.fillText(lenLabel, ex+8, ey-8);
+    } else {
+      const snap=findMeasureSnapPoint(mousePos.x,mousePos.y);
+      if(snap){ const sc=w2c(snap.wx,snap.wy); haloArc(ctx,sc.cx,sc.cy,7,'#7dc4ff',2); }
     }
   }
 
@@ -3712,6 +3886,108 @@ function distToSegC(p,seg){
   const t=Math.max(0,Math.min(1,((p.x-p1.cx)*dx+(p.y-p1.cy)*dy)/l2));
   return Math.hypot(p.x-(p1.cx+t*dx),p.y-(p1.cy+t*dy));
 }
+
+// Closest point on a wall segment to a screen point, clamped to the segment
+// (t in [0,1]). Used both for hit-testing and for T-junction snapping.
+function projectPointOnSegC(cx,cy,seg){
+  const p1=w2c(seg.wx1,seg.wy1),p2=w2c(seg.wx2,seg.wy2);
+  const dx=p2.cx-p1.cx,dy=p2.cy-p1.cy,l2=dx*dx+dy*dy;
+  if(l2===0) return {cx:p1.cx,cy:p1.cy,t:0,dist:Math.hypot(cx-p1.cx,cy-p1.cy)};
+  const t=Math.max(0,Math.min(1,((cx-p1.cx)*dx+(cy-p1.cy)*dy)/l2));
+  const px=p1.cx+t*dx, py=p1.cy+t*dy;
+  return {cx:px, cy:py, t, dist:Math.hypot(cx-px,cy-py)};
+}
+
+// Single point of truth for "where would a click near existing walls attach".
+// Priority 1: an existing wall's ENDPOINT (exact match, to continue/close a
+// contour). Priority 2: a point ALONG an existing wall's length (T-junction —
+// starting or ending a new wall branching off the middle of another).
+// Returns {wx,wy} in world coords, or null if nothing nearby.
+function findWallAttachPoint(cx,cy){
+  for(const w of walls){
+    const p1=w2c(w.wx1,w.wy1), p2=w2c(w.wx2,w.wy2);
+    if(Math.hypot(p1.cx-cx,p1.cy-cy)<SNAP_PX) return {wx:w.wx1,wy:w.wy1};
+    if(Math.hypot(p2.cx-cx,p2.cy-cy)<SNAP_PX) return {wx:w.wx2,wy:w.wy2};
+  }
+  for(const w of walls){
+    const proj=projectPointOnSegC(cx,cy,w);
+    if(proj.t>0.015 && proj.t<0.985 && proj.dist<SNAP_PX) return c2w(proj.cx,proj.cy);
+  }
+  return null;
+}
+
+// Snap target for the measuring tools (Выноска / Измерение) — measuring is
+// only useful if it locks onto REAL features of the drawing: significant
+// snapping to markers, wall points (incl. mid-span), and segment/line ends.
+function findMeasureSnapPoint(cx,cy){
+  const mkIdx=nearestMarker({x:cx,y:cy});
+  if(mkIdx!==null){ const mk=markers[mkIdx]; return {wx:mk.wx,wy:mk.wy}; }
+  const wallPt=findWallAttachPoint(cx,cy);
+  if(wallPt) return wallPt;
+  for(const seg of segments){
+    const p1=w2c(seg.wx1,seg.wy1), p2=w2c(seg.wx2,seg.wy2);
+    if(Math.hypot(p1.cx-cx,p1.cy-cy)<SNAP_PX) return {wx:seg.wx1,wy:seg.wy1};
+    if(Math.hypot(p2.cx-cx,p2.cy-cy)<SNAP_PX) return {wx:seg.wx2,wy:seg.wy2};
+  }
+  for(const line of lines){
+    if(!line.pts||!line.pts.length) continue;
+    const a=line.pts[0], b=line.pts[line.pts.length-1];
+    const pa=w2c(a.wx,a.wy), pb=w2c(b.wx,b.wy);
+    if(Math.hypot(pa.cx-cx,pa.cy-cy)<SNAP_PX) return {wx:a.wx,wy:a.wy};
+    if(Math.hypot(pb.cx-cx,pb.cy-cy)<SNAP_PX) return {wx:b.wx,wy:b.wy};
+  }
+  return null;
+}
+
+// Signed perpendicular offset (world units) of a screen point from a world
+// segment — used to let the dimension-line offset be picked purely by mouse
+// position, no typed numbers.
+function computeDimOffset(seg, mouseScreenPos){
+  const p1=w2c(seg.wx1,seg.wy1), p2=w2c(seg.wx2,seg.wy2);
+  const dx=p2.cx-p1.cx, dy=p2.cy-p1.cy, len=Math.hypot(dx,dy)||1;
+  const nx=-dy/len, ny=dx/len;
+  const midCx=(p1.cx+p2.cx)/2, midCy=(p1.cy+p2.cy)/2;
+  const relX=mouseScreenPos.x-midCx, relY=mouseScreenPos.y-midCy;
+  const screenOffset=relX*nx+relY*ny;
+  return screenOffset/bgS;
+}
+
+// Screen-space geometry for a 'dim' measurement's offset callout line —
+// shared by the live preview and the committed-object renderer.
+function dimGeometry(seg, offset){
+  const p1=w2c(seg.wx1,seg.wy1), p2=w2c(seg.wx2,seg.wy2);
+  const dx=p2.cx-p1.cx, dy=p2.cy-p1.cy, len=Math.hypot(dx,dy)||1;
+  const nx=-dy/len, ny=dx/len;
+  const offPx=offset*bgS;
+  const o1={cx:p1.cx+nx*offPx, cy:p1.cy+ny*offPx};
+  const o2={cx:p2.cx+nx*offPx, cy:p2.cy+ny*offPx};
+  return {p1,p2,o1,o2};
+}
+
+// Dark outline drawn under a colored line, so it reads clearly against ANY
+// background — including the near-white "clean canvas" mode used for
+// tracing walls without a photo, where light colors (yellow, light blue,
+// pale purple) would otherwise nearly disappear.
+function haloLine(cx,x1,y1,x2,y2,color,width,dash){
+  cx.setLineDash(dash||[]);
+  cx.strokeStyle='rgba(0,0,0,0.55)'; cx.lineWidth=width+2.2;
+  cx.beginPath();cx.moveTo(x1,y1);cx.lineTo(x2,y2);cx.stroke();
+  cx.strokeStyle=color; cx.lineWidth=width;
+  cx.beginPath();cx.moveTo(x1,y1);cx.lineTo(x2,y2);cx.stroke();
+  cx.setLineDash([]);
+}
+function haloArc(cx,x,y,r,color,width){
+  cx.setLineDash([]);
+  cx.strokeStyle='rgba(0,0,0,0.55)'; cx.lineWidth=width+2.2;
+  cx.beginPath();cx.arc(x,y,r,0,Math.PI*2);cx.stroke();
+  cx.strokeStyle=color; cx.lineWidth=width;
+  cx.beginPath();cx.arc(x,y,r,0,Math.PI*2);cx.stroke();
+}
+function haloDot(cx,x,y,r,color){
+  cx.beginPath();cx.arc(x,y,r+1.5,0,Math.PI*2);cx.fillStyle='rgba(0,0,0,0.55)';cx.fill();
+  cx.beginPath();cx.arc(x,y,r,0,Math.PI*2);cx.fillStyle=color;cx.fill();
+}
+
 function hitTest(p){
   for(let i=markers.length-1;i>=0;i--){
     const mp=w2c(markers[i].wx,markers[i].wy);
@@ -3743,7 +4019,18 @@ function hitTest(p){
     if(distToSegC(p,segments[i])<HIT_SEG) return{type:'segment',idx:i};
   }
   for(let i=walls.length-1;i>=0;i--){
-    if(distToSegC(p,walls[i])<WALL_WIDTH) return{type:'wall',idx:i};
+    if(distToSegC(p,walls[i])<wallScreenWidth()/2+4) return{type:'wall',idx:i};
+  }
+  for(let i=measurements.length-1;i>=0;i--){
+    const m=measurements[i];
+    if(distToSegC(p,m)<HIT_SEG) return{type:'measurement',idx:i};
+    if(m.kind==='dim'){
+      const {o1,o2}=dimGeometry(m,m.offset);
+      const dx=o2.cx-o1.cx,dy=o2.cy-o1.cy,l2=dx*dx+dy*dy;
+      const tt=l2? Math.max(0,Math.min(1,((p.x-o1.cx)*dx+(p.y-o1.cy)*dy)/l2)) : 0;
+      const dist=Math.hypot(p.x-(o1.cx+tt*dx), p.y-(o1.cy+tt*dy));
+      if(dist<HIT_SEG) return{type:'measurement',idx:i};
+    }
   }
   return null;
 }
@@ -4288,7 +4575,7 @@ drC.addEventListener('mousemove',e=>{
     }
     redraw();return;
   }
-  if(mode==='line'||mode==='scale'||mode==='wall'||mode==='marker') redraw();
+  if(mode==='line'||mode==='scale'||mode==='wall'||mode==='marker'||mode==='dim'||mode==='measure') redraw();
   if(mode==='select'){ drC.style.cursor=cursorSize>0?'none':hitTest(p)?'pointer':'default'; }
   // Redraw crosshair on every mousemove when custom cursor active
   if(cursorSize>0) redraw();
@@ -4647,30 +4934,35 @@ drC.addEventListener('click',e=>{
   } else if(mode==='wall'){
     const p=getPos(e);
     if(!wallStartPt){
-      // Snap to existing wall endpoints first
-      let snapped=null;
-      for(const w of walls){
-        const p1=w2c(w.wx1,w.wy1), p2=w2c(w.wx2,w.wy2);
-        if(Math.hypot(p1.cx-p.x,p1.cy-p.y)<SNAP_PX){snapped={wx:w.wx1,wy:w.wy1};break;}
-        if(Math.hypot(p2.cx-p.x,p2.cy-p.y)<SNAP_PX){snapped={wx:w.wx2,wy:w.wy2};break;}
-      }
+      const snapped=findWallAttachPoint(p.x,p.y);
       const pw=c2w(p.x,p.y);
       wallStartPt = snapped || {wx:pw.wx, wy:pw.wy};
       wallLenInput='';
       setInfo(t('msg_wall_next_point'));
     } else {
       const spC=w2c(wallStartPt.wx, wallStartPt.wy);
-      const snapped=angleSnap15(spC.cx,spC.cy,p.x,p.y);
-      let ex=snapped.x, ey=snapped.y;
-      // Alignment snap to other wall endpoints (same as preview)
-      const ALIGN_TOL=4;
-      walls.forEach(w=>{
-        [[w.wx1,w.wy1],[w.wx2,w.wy2]].forEach(([wx,wy])=>{
-          const pc=w2c(wx,wy);
-          if(Math.abs(pc.cy-ey)<ALIGN_TOL) ey=pc.cy;
-          if(Math.abs(pc.cx-ex)<ALIGN_TOL) ex=pc.cx;
+      let ex, ey;
+      // Attach directly onto an existing wall (endpoint or mid-span T-junction)
+      // takes priority over the 15° angle snap — if you're clearly aiming at
+      // an existing wall feature, that's a stronger signal than the angle.
+      const attach=findWallAttachPoint(p.x,p.y);
+      if(attach){
+        const ac=w2c(attach.wx,attach.wy);
+        ex=ac.cx; ey=ac.cy;
+      } else {
+        const snapped=angleSnap15(spC.cx,spC.cy,p.x,p.y);
+        ex=snapped.x; ey=snapped.y;
+        // Alignment snap to other wall endpoints (same as preview) — only
+        // applies when NOT already attaching to a real wall feature above.
+        const ALIGN_TOL=4;
+        walls.forEach(w=>{
+          [[w.wx1,w.wy1],[w.wx2,w.wy2]].forEach(([wx,wy])=>{
+            const pc=w2c(wx,wy);
+            if(Math.abs(pc.cy-ey)<ALIGN_TOL) ey=pc.cy;
+            if(Math.abs(pc.cx-ex)<ALIGN_TOL) ex=pc.cx;
+          });
         });
-      });
+      }
       if(Math.hypot(ex-spC.cx,ey-spC.cy)<3){ wallStartPt=null; wallLenInput=''; return; }
       const w2=c2w(ex,ey);
       saveHistory();
@@ -4679,6 +4971,55 @@ drC.addEventListener('click',e=>{
       wallLenInput='';
       redraw();
       setInfo(t('msg_wall_continue'));
+    }
+  } else if(mode==='dim'){
+    const p=getPos(e);
+    if(!dimPendingSeg){
+      if(!dimStartPt){
+        const snap=findMeasureSnapPoint(p.x,p.y);
+        const pw=c2w(p.x,p.y);
+        dimStartPt = snap || {wx:pw.wx, wy:pw.wy};
+        setInfo(t('msg_dim_next_point'));
+      } else {
+        const spC=w2c(dimStartPt.wx,dimStartPt.wy);
+        const snap=findMeasureSnapPoint(p.x,p.y);
+        let ex,ey;
+        if(snap){ const sc=w2c(snap.wx,snap.wy); ex=sc.cx; ey=sc.cy; }
+        else { const a=angleSnap15(spC.cx,spC.cy,p.x,p.y); ex=a.x; ey=a.y; }
+        if(Math.hypot(ex-spC.cx,ey-spC.cy)<3){ dimStartPt=null; return; }
+        const w2=c2w(ex,ey);
+        dimPendingSeg={wx1:dimStartPt.wx,wy1:dimStartPt.wy,wx2:w2.wx,wy2:w2.wy};
+        dimStartPt=null;
+        setInfo(t('msg_dim_pick_offset'));
+      }
+    } else {
+      const offset=computeDimOffset(dimPendingSeg,p);
+      saveHistory();
+      measurements.push({id:uid(), kind:'dim', ...dimPendingSeg, offset});
+      dimPendingSeg=null;
+      redraw(); updateResults();
+      setInfo(t('msg_dim_done'));
+    }
+  } else if(mode==='measure'){
+    const p=getPos(e);
+    if(!measureStartPt){
+      const snap=findMeasureSnapPoint(p.x,p.y);
+      const pw=c2w(p.x,p.y);
+      measureStartPt = snap || {wx:pw.wx, wy:pw.wy};
+      setInfo(t('msg_measure_next_point'));
+    } else {
+      const spC=w2c(measureStartPt.wx,measureStartPt.wy);
+      const snap=findMeasureSnapPoint(p.x,p.y);
+      let ex,ey;
+      if(snap){ const sc=w2c(snap.wx,snap.wy); ex=sc.cx; ey=sc.cy; }
+      else { const a=angleSnap15(spC.cx,spC.cy,p.x,p.y); ex=a.x; ey=a.y; }
+      if(Math.hypot(ex-spC.cx,ey-spC.cy)<3){ measureStartPt=null; return; }
+      const w2=c2w(ex,ey);
+      saveHistory();
+      measurements.push({id:uid(), kind:'tally', wx1:measureStartPt.wx,wy1:measureStartPt.wy,wx2:w2.wx,wy2:w2.wy});
+      measureStartPt=null;
+      redraw(); updateResults();
+      setInfo(t('msg_measure_added'));
     }
   } else if(mode==='marker'){
     const mt=markerTypes.find(t=>t.id===selectedMarkerTypeId);
@@ -4766,7 +5107,7 @@ document.addEventListener('keydown',e=>{
   if((e.key==='Delete'||e.key==='Backspace')&&selType!==null) deleteSelected();
   if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();undo();}
   if((e.ctrlKey||e.metaKey)&&(e.key==='y'||(e.shiftKey&&e.key==='z'))){e.preventDefault();redo();}
-  if(e.key==='Escape'){startPt=null;startMarkerIdx=null;startPortKey=null;currentLine=null;wallStartPt=null;wallLenInput='';selType=null;selIdx=null;isDragging=false;selectedZoneIdx=null;zoneDraftPts=null;zoneDragMode=null;zoneDragInfo=null;hideConnPopup();redraw();}
+  if(e.key==='Escape'){startPt=null;startMarkerIdx=null;startPortKey=null;currentLine=null;wallStartPt=null;wallLenInput='';selType=null;selIdx=null;isDragging=false;selectedZoneIdx=null;zoneDraftPts=null;zoneDragMode=null;zoneDragInfo=null;dimStartPt=null;dimPendingSeg=null;measureStartPt=null;hideConnPopup();redraw();}
 });
 
 // ═══════════════════════════════════════════════════════
@@ -5233,6 +5574,8 @@ function deleteSelected(){
     segments.splice(selIdx,1);
   } else if(selType==='wall'){
     walls.splice(selIdx,1);
+  } else if(selType==='measurement'){
+    measurements.splice(selIdx,1);
   } else if(selType==='line'){
     lines.splice(selIdx,1);
   } else {
@@ -5256,6 +5599,7 @@ function snapshot(){
     lines:JSON.parse(JSON.stringify(lines)),
     markers:JSON.parse(JSON.stringify(markers)),
     walls:JSON.parse(JSON.stringify(walls)),
+    measurements:JSON.parse(JSON.stringify(measurements)),
     markerTypes:JSON.parse(JSON.stringify(markerTypes)),
     colorLabels:JSON.parse(JSON.stringify(colorLabels)),
     colorCableTypes:JSON.parse(JSON.stringify(colorCableTypes)),
@@ -5269,7 +5613,7 @@ function saveHistory(){
   redoStack=[];
 }
 function applySnapshot(h){
-  segments=h.segments;lines=h.lines||[];markers=h.markers;walls=h.walls||walls;markerTypes=h.markerTypes||markerTypes;colorLabels=h.colorLabels||colorLabels;colorCableTypes=h.colorCableTypes||colorCableTypes;hiddenColors=new Set(h.hiddenColors||[]);scale=h.scale;
+  segments=h.segments;lines=h.lines||[];markers=h.markers;walls=h.walls||walls;measurements=h.measurements||[];markerTypes=h.markerTypes||markerTypes;colorLabels=h.colorLabels||colorLabels;colorCableTypes=h.colorCableTypes||colorCableTypes;hiddenColors=new Set(h.hiddenColors||[]);scale=h.scale;
   selType=null;selIdx=null;startPt=null;currentLine=null;
   document.getElementById('scale-badge').style.display=scale!==null?'flex':'none';
   renderMarkerTypesList();updatePropsPanel();redraw();
@@ -5284,13 +5628,13 @@ document.getElementById('btn-redo').addEventListener('click',redo);
 // ═══════════════════════════════════════════════════════
 function clearWholeDrawing(){
   saveHistory();
-  segments=[];markers=[];walls=[];zones=[];lines=[];
-  selType=null;selIdx=null;startPt=null;startMarkerIdx=null;wallStartPt=null;selectedZoneIdx=null;
+  segments=[];markers=[];walls=[];zones=[];lines=[];measurements=[];
+  selType=null;selIdx=null;startPt=null;startMarkerIdx=null;wallStartPt=null;selectedZoneIdx=null;dimStartPt=null;dimPendingSeg=null;measureStartPt=null;
   // NOTE: scale and the background photo are intentionally kept — they belong to the floor plan, not the drawing
 }
 
 document.getElementById('btn-clear').addEventListener('click',()=>{
-  if(!segments.length&&!markers.length&&!walls.length&&!lines.length&&!zones.length) return;
+  if(!segments.length&&!markers.length&&!walls.length&&!lines.length&&!zones.length&&!measurements.length) return;
   if(!confirm(t('confirm_clear_drawing'))) return;
   clearWholeDrawing();
   updatePropsPanel();redraw();setInfo(t('msg_drawing_cleared'));
@@ -5521,7 +5865,7 @@ function safeFileName(name){
 }
 function doSaveProject(){
   const name=getProjectName();
-  const data={version:10,pro:true,projectName:name,scale,segments,lines,markers,walls,markerTypes,colorLabels,colorCableTypes,hiddenColors:[...hiddenColors],bg:bgImgDataUrl,bgX,bgY,bgS,bgOpacity,markerSnapRadius,crossingPenaltyCm,autoFixupEnabled,zones};
+  const data={version:10,pro:true,projectName:name,scale,segments,lines,markers,walls,measurements,markerTypes,colorLabels,colorCableTypes,hiddenColors:[...hiddenColors],bg:bgImgDataUrl,bgX,bgY,bgS,bgOpacity,markerSnapRadius,crossingPenaltyCm,autoFixupEnabled,zones};
   const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download=safeFileName(name)+'.wiring';a.click();
@@ -5541,6 +5885,7 @@ document.getElementById('project-in').addEventListener('change',e=>{
       lines=d.lines||[];
       markers=d.markers||[];
       walls=d.walls||[];
+      measurements=d.measurements||[];
       zones=d.zones||[];
       markerTypes=d.markerTypes||markerTypes;
       scale=d.scale||null;
@@ -5679,7 +6024,9 @@ function updateResults(){
   const mkKeys=Object.keys(mkByType).filter(k=>mkByType[k].count>0);
   const cableKeys=Object.keys(cableMarkData);
 
-  if(!lineKeys.length&&!mkKeys.length){
+  const tallyList=measurements.filter(m=>m.kind==='tally');
+
+  if(!lineKeys.length&&!mkKeys.length&&!tallyList.length){
     el.innerHTML=`<p style="font-size:12px;color:#555">${t('no_data')}</p>`;
     document.getElementById('total-val').textContent='0.00 '+t('unit_m');return;
   }
@@ -5742,6 +6089,15 @@ function updateResults(){
       </div>`;
     });
   }
+  if(tallyList.length){
+    const tallyTotal=tallyList.reduce((a,m)=>a+(scale!=null?Math.hypot(m.wx2-m.wx1,m.wy2-m.wy1)*scale:0),0);
+    html+=`<div class="res-section">${t('res_section_measure')}</div>
+    <div class="res-row">
+      <i class="ti ti-sum" style="font-size:14px;color:#d9a8ec;flex-shrink:0"></i>
+      <span class="res-name">${t('res_measure_count').replace('{n}',tallyList.length)}</span>
+      <span class="res-val">${tallyTotal.toFixed(2)} ${t('unit_m')}</span>
+    </div>`;
+  }
   el.innerHTML=html;
 
   const totalLines=lineKeys.reduce((a,k)=>a+linesByColor[k],0);
@@ -5769,7 +6125,9 @@ function setMode(m){
   if(m!=='wall'){ wallStartPt=null; wallLenInput=''; }
   if(m!=='select'){selType=null;selIdx=null;}
   if(m!=='zones'){selectedZoneIdx=null;zoneDraftPts=null;zoneDragMode=null;zoneDragInfo=null;}
-  ['btn-wall','btn-line','btn-scale','btn-marker','btn-select','btn-zones'].forEach(id=>{
+  if(m!=='dim'){ dimStartPt=null; dimPendingSeg=null; }
+  if(m!=='measure'){ measureStartPt=null; }
+  ['btn-wall','btn-line','btn-scale','btn-marker','btn-select','btn-zones','btn-dim','btn-measure'].forEach(id=>{
     document.getElementById(id)?.classList.toggle('active',id==='btn-'+m);
   });
   drC.style.cursor=cursorSize>0?'none':m==='select'?'pointer':m==='zones'?'crosshair':'crosshair';
@@ -5779,7 +6137,7 @@ document.getElementById('btn-show-all').addEventListener('click',()=>{
   hiddenColors.clear(); redraw();
 });
 
-['wall','line','scale','marker','select','pan','zones'].forEach(m=>
+['wall','line','scale','marker','select','pan','zones','dim','measure'].forEach(m=>
   document.getElementById('btn-'+m)?.addEventListener('click',()=>setMode(m))
 );
 
@@ -5894,7 +6252,7 @@ document.getElementById('btn-ortho').addEventListener('click',()=>{
 });
 
 document.getElementById('btn-site-mode').addEventListener('click',()=>{
-  const hasContent = markers.length||segments.length||lines.length||walls.length||zones.length;
+  const hasContent = markers.length||segments.length||lines.length||walls.length||zones.length||measurements.length;
   if(hasContent){
     if(!confirm(siteMode==='pro'? t('confirm_switch_to_base') : t('confirm_switch_to_pro'))) return;
     clearWholeDrawing();
@@ -5974,6 +6332,10 @@ function getFullSceneWorldBounds(){
     minWx=Math.min(minWx,w.wx1,w.wx2); maxWx=Math.max(maxWx,w.wx1,w.wx2);
     minWy=Math.min(minWy,w.wy1,w.wy2); maxWy=Math.max(maxWy,w.wy1,w.wy2);
   });
+  measurements.forEach(m=>{
+    minWx=Math.min(minWx,m.wx1,m.wx2); maxWx=Math.max(maxWx,m.wx1,m.wx2);
+    minWy=Math.min(minWy,m.wy1,m.wy2); maxWy=Math.max(maxWy,m.wy1,m.wy2);
+  });
   if(!isFinite(minWx)) return null; // nothing at all
   return {minWx,minWy,maxWx,maxWy};
 }
@@ -6001,6 +6363,10 @@ function getContentWorldBounds(){
   walls.forEach(w=>{
     minWx=Math.min(minWx,w.wx1,w.wx2); maxWx=Math.max(maxWx,w.wx1,w.wx2);
     minWy=Math.min(minWy,w.wy1,w.wy2); maxWy=Math.max(maxWy,w.wy1,w.wy2);
+  });
+  measurements.forEach(m=>{
+    minWx=Math.min(minWx,m.wx1,m.wx2); maxWx=Math.max(maxWx,m.wx1,m.wx2);
+    minWy=Math.min(minWy,m.wy1,m.wy2); maxWy=Math.max(maxWy,m.wy1,m.wy2);
   });
   if(!isFinite(minWx)) return null;
   return {minWx,minWy,maxWx,maxWy};
@@ -6740,7 +7106,7 @@ function doExportForTheme(theme){
   const usedColors=[...colorSet];
   const legendH = getLegendStripHeight(usedColors);
 
-  const hasContent = segments.length||lines.length||markers.length||walls.length;
+  const hasContent = segments.length||lines.length||markers.length||walls.length||measurements.length;
 
   if(scope==='full' && (hasContent||bgImg)){
     const b=getFullSceneWorldBounds();
@@ -6831,10 +7197,46 @@ function renderToCtx(octx,W,H,dpr,showLabels=true){
   // Walls (beneath segments)
   walls.forEach(w=>{
     const p1=w2c(w.wx1,w.wy1), p2=w2c(w.wx2,w.wy2);
-    octx.lineWidth=Math.max(4,WALL_WIDTH); octx.strokeStyle='#5a6472'; octx.lineCap='square';
+    octx.lineWidth=wallScreenWidth(); octx.strokeStyle='#5a6472'; octx.lineCap='square';
     octx.beginPath();octx.moveTo(p1.cx,p1.cy);octx.lineTo(p2.cx,p2.cy);octx.setLineDash([]);octx.stroke();
   });
   octx.lineCap='butt';
+
+  // Measurements (Выноски / Измерения)
+  measurements.forEach(m=>{
+    const lenM = scale!=null ? Math.hypot(m.wx2-m.wx1,m.wy2-m.wy1)*scale : null;
+    const lenLabel = lenM!=null ? lenM.toFixed(2)+' '+t('unit_m') : '?';
+    if(m.kind==='dim'){
+      const {p1,p2,o1,o2}=dimGeometry(m,m.offset);
+      haloLine(octx,p1.cx,p1.cy,o1.cx,o1.cy,'#8a8f78',1,[3,3]);
+      haloLine(octx,p2.cx,p2.cy,o2.cx,o2.cy,'#8a8f78',1,[3,3]);
+      haloLine(octx,o1.cx,o1.cy,o2.cx,o2.cy,'#e8c968',1.6);
+      const ang=Math.atan2(o2.cy-o1.cy,o2.cx-o1.cx);
+      [o1,o2].forEach(pt=>{
+        haloLine(octx,
+          pt.cx-Math.cos(ang-Math.PI/4)*5, pt.cy-Math.sin(ang-Math.PI/4)*5,
+          pt.cx+Math.cos(ang-Math.PI/4)*5, pt.cy+Math.sin(ang-Math.PI/4)*5,
+          '#e8c968',1.6);
+      });
+      const mx=(o1.cx+o2.cx)/2, my=(o1.cy+o2.cy)/2;
+      octx.font='bold 12px sans-serif'; octx.textAlign='center';
+      const tw=octx.measureText(lenLabel).width;
+      octx.fillStyle='rgba(20,20,20,0.85)'; octx.fillRect(mx-tw/2-4,my-17,tw+8,15);
+      octx.fillStyle='#e8c968'; octx.fillText(lenLabel,mx,my-6);
+      octx.textAlign='left';
+    } else if(m.kind==='tally'){
+      const p1=w2c(m.wx1,m.wy1), p2=w2c(m.wx2,m.wy2);
+      haloLine(octx,p1.cx,p1.cy,p2.cx,p2.cy,'#b06fd1',2.2,[6,4]);
+      [p1,p2].forEach(pt=>{ haloDot(octx,pt.cx,pt.cy,3,'#b06fd1'); });
+      const mx=(p1.cx+p2.cx)/2, my=(p1.cy+p2.cy)/2;
+      octx.font='11px sans-serif'; octx.textAlign='center';
+      const tw=octx.measureText(lenLabel).width;
+      octx.fillStyle='rgba(20,20,20,0.8)'; octx.fillRect(mx-tw/2-3,my-15,tw+6,13);
+      octx.fillStyle='#d9a8ec'; octx.fillText(lenLabel,mx,my-5);
+      octx.textAlign='left';
+    }
+  });
+
   const overlapIntervalsExp=segments.length?buildOverlapIntervals():[];
   const paintedWorldRangesExp = [];
   function worldRangeAlreadyPaintedExp(seg, t0, t1){

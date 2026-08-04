@@ -988,6 +988,12 @@ const translations = {
     msg_measure_added:'Отрезок добавлен. Следующий может быть где угодно — не обязательно отсюда.',
     res_section_measure:'Выноски (измерения)',
     res_measure_count:'{n} отрезк(ов)',
+    declutter_line_btn:'Убрать лишние точки',
+    port_side_top:'Верх', port_side_right:'Право', port_side_bottom:'Низ', port_side_left:'Лево',
+    ports_all_free:'Все порты свободны.',
+    ports_more_hidden:'+{n} ещё',
+    msg_declutter_done:'Мелкие зигзаги убраны.',
+    msg_declutter_nothing:'Убирать нечего — лишних точек не найдено (или они все рядом с коробками, в пределах 30см).',
     tourpro_0_title:'Добро пожаловать в PRO!',
     tourpro_0_text:'Здесь то же самое рисование линий, что и в базовом режиме, плюс коробки/щиты с несколькими портами, зоны прокладки и автоматическая оптимизация всего чертежа. Пройдёмся по новому.',
     tourpro_1_title:'Коробки и щиты с портами',
@@ -1199,6 +1205,12 @@ const translations = {
     msg_measure_added:'Segment added. The next one can start anywhere — not necessarily from here.',
     res_section_measure:'Measurements',
     res_measure_count:'{n} segment(s)',
+    declutter_line_btn:'Remove extra points',
+    port_side_top:'Top', port_side_right:'Right', port_side_bottom:'Bottom', port_side_left:'Left',
+    ports_all_free:'All ports are free.',
+    ports_more_hidden:'+{n} more',
+    msg_declutter_done:'Small zigzags removed.',
+    msg_declutter_nothing:'Nothing to remove — no extra points found (or they\'re all near boxes, within 30cm).',
     tourpro_0_title:'Welcome to PRO!',
     tourpro_0_text:"It's the same line-drawing as base mode, plus multi-port boxes/panels, routing zones, and automatic optimization of the whole drawing. Let's walk through what's new.",
     tourpro_1_title:'Boxes and panels with ports',
@@ -1410,6 +1422,12 @@ const translations = {
     msg_measure_added:'Segmento añadido. El siguiente puede empezar en cualquier sitio — no necesariamente aquí.',
     res_section_measure:'Mediciones',
     res_measure_count:'{n} segmento(s)',
+    declutter_line_btn:'Quitar puntos sobrantes',
+    port_side_top:'Arriba', port_side_right:'Derecha', port_side_bottom:'Abajo', port_side_left:'Izquierda',
+    ports_all_free:'Todos los puertos están libres.',
+    ports_more_hidden:'+{n} más',
+    msg_declutter_done:'Zigzags pequeños eliminados.',
+    msg_declutter_nothing:'Nada que quitar — no se encontraron puntos sobrantes (o están todos cerca de cajas, a menos de 30cm).',
     tourpro_0_title:'¡Bienvenido a PRO!',
     tourpro_0_text:'Aquí se traza igual que en el modo básico, más cajas/paneles con varios puertos, zonas de tendido y optimización automática de todo el plano. Repasemos las novedades.',
     tourpro_1_title:'Cajas y paneles con puertos',
@@ -1621,6 +1639,12 @@ const translations = {
     msg_measure_added:'Кесінді қосылды. Келесісі кез келген жерден басталуы мүмкін — міндетті түрде осыдан емес.',
     res_section_measure:'Өлшем сызықтары (өлшеулер)',
     res_measure_count:'{n} кесінді',
+    declutter_line_btn:'Артық нүктелерді жою',
+    port_side_top:'Жоғары', port_side_right:'Оң', port_side_bottom:'Төмен', port_side_left:'Сол',
+    ports_all_free:'Барлық порттар бос.',
+    ports_more_hidden:'+{n} тағы',
+    msg_declutter_done:'Кішкентай зигзагтар жойылды.',
+    msg_declutter_nothing:'Жоятын ешнәрсе жоқ — артық нүктелер табылмады (немесе олардың барлығы қораптарға 30см жақын).',
     tourpro_0_title:'PRO-ға қош келдіңіз!',
     tourpro_1_title:'Порттары бар қораптар мен щиттер',
     tourpro_1_text:'«Белгішелер» қойындысында Кр және ЩР түрлері енді жай нүктелер емес — олардың әр жағында бірнеше порты бар. Өз түріңізді жасағанда «Қорап» немесе «Щит» таңдап, әр жақтағы порт санын орнатуға болады.',
@@ -2213,19 +2237,30 @@ function simplifyLine(line){
   const pts=line.pts;
   if(!pts||pts.length<3) return;
   const TOL=noiseTol();
+  const EXACT=0.01; // for "does a-c end up truly orthogonal", not the looser noise tolerance
   let changed=true, guard=0;
   while(changed&&guard<50){
     changed=false; guard++;
     for(let i=1;i<pts.length-1;i++){
       const a=pts[i-1], b=pts[i], c=pts[i+1];
-      // Zero-length neighbour segment → drop b
-      if(Math.hypot(b.wx-a.wx,b.wy-a.wy)<TOL){ pts.splice(i,1); changed=true; break; }
-      if(Math.hypot(c.wx-b.wx,c.wy-b.wy)<TOL){ pts.splice(i,1); changed=true; break; }
-      // a-b and b-c collinear (both horizontal at same Y, or both vertical at same X)
+      // Zero-length neighbour segment → drop b. But only if a-c stays
+      // properly orthogonal afterward (same X or same Y) — otherwise a tiny
+      // but real corner (below noise tolerance in just ONE of its two
+      // segments) would silently collapse into a diagonal line. This check
+      // needs to be near-exact (not noiseTol, which is far looser) — a 0.4
+      // unit mismatch is well inside noiseTol's "negligible" band but is
+      // still a real diagonal once drawn.
+      const acOrtho=Math.abs(a.wx-c.wx)<EXACT || Math.abs(a.wy-c.wy)<EXACT;
+      if(Math.hypot(b.wx-a.wx,b.wy-a.wy)<TOL && acOrtho){ pts.splice(i,1); changed=true; break; }
+      if(Math.hypot(c.wx-b.wx,c.wy-b.wy)<TOL && acOrtho){ pts.splice(i,1); changed=true; break; }
+      // a-b and b-c collinear (both horizontal at same Y, or both vertical at same X).
+      // Same reasoning as above: use noiseTol to decide whether a-b/b-c COUNT as
+      // horizontal/vertical, but require the resulting a-c match to be exact,
+      // or a small real offset would silently become a diagonal.
       const abH=Math.abs(a.wy-b.wy)<TOL, bcH=Math.abs(b.wy-c.wy)<TOL;
       const abV=Math.abs(a.wx-b.wx)<TOL, bcV=Math.abs(b.wx-c.wx)<TOL;
-      if(abH&&bcH&&Math.abs(a.wy-c.wy)<TOL){ pts.splice(i,1); changed=true; break; }
-      if(abV&&bcV&&Math.abs(a.wx-c.wx)<TOL){ pts.splice(i,1); changed=true; break; }
+      if(abH&&bcH&&Math.abs(a.wy-c.wy)<EXACT){ pts.splice(i,1); changed=true; break; }
+      if(abV&&bcV&&Math.abs(a.wx-c.wx)<EXACT){ pts.splice(i,1); changed=true; break; }
     }
   }
 }
@@ -2247,9 +2282,12 @@ function orthogonalizeLine(line){
     // oscillation where fixing one diagonal segment re-breaks its neighbour
     // and vice versa forever: if the point in the middle isn't structurally
     // needed, remove it instead of fighting over where it should sit.
+    // Must require a near-EXACT match here, not noiseTol — that tolerance is
+    // loose enough to call two coordinates "the same" when they're actually
+    // a small but real 0.5-unit apart, which would turn this into a diagonal.
     for(let i=1;i<pts.length-1;i++){
       const p=pts[i-1], n=pts[i+1];
-      if(Math.abs(p.wx-n.wx)<TOL || Math.abs(p.wy-n.wy)<TOL){
+      if(Math.abs(p.wx-n.wx)<0.01 || Math.abs(p.wy-n.wy)<0.01){
         pts.splice(i,1);
         changed=true; break;
       }
@@ -2390,6 +2428,40 @@ function routeAroundMarkers(line){
   // whatever back-and-forth points it left behind — orthogonalizeLine's
   // redundant-point pass collapses these reliably.
   orthogonalizeLine(line);
+}
+
+// Removes small leftover zigzag jogs (a short detour under ~15cm, sandwiched
+// between two longer runs on the same axis) — the kind of clutter that
+// accumulates when a marker used to need dodging and has since moved away,
+// but nothing ever re-simplified the line. Unlike routeAroundMarkers, this
+// NEVER inserts anything and never moves a genuinely necessary detour — each
+// candidate collapse is safety-checked against every box marker's footprint
+// before being applied, using the same check the real router uses. Runs
+// regardless of "Авто-оптимизация": that toggle guards broader re-fitting,
+// not this narrow, always-safe cleanup.
+function declutterLine(line){
+  if(!line.pts||line.pts.length<4) return false;
+  const JOG_LIMIT=mToW(0.15);
+  let anyChange=false, changed=true, guard=0;
+  while(changed&&guard<40){
+    changed=false; guard++;
+    for(let i=1;i<line.pts.length-2;i++){
+      const a=line.pts[i-1], b=line.pts[i], c=line.pts[i+1], d=line.pts[i+2];
+      const abVert=Math.abs(a.wx-b.wx)<0.01, cdVert=Math.abs(c.wx-d.wx)<0.01;
+      const bcLen=Math.hypot(c.wx-b.wx,c.wy-b.wy);
+      if(bcLen>=JOG_LIMIT || abVert!==cdVert) continue;
+      const candidate=abVert?{wx:a.wx,wy:d.wy}:{wx:d.wx,wy:a.wy};
+      const exA=(i-1===0 && line.connStart?.markerId)?line.connStart.markerId:null;
+      if(routeSegmentAroundBoxes([{...a},{...candidate}],0,exA)) continue;
+      const exD=(i+2===line.pts.length-1 && line.connEnd?.markerId)?line.connEnd.markerId:null;
+      if(routeSegmentAroundBoxes([{...candidate},{...d}],0,exD)) continue;
+      line.pts.splice(i-1,4,a,candidate,d);
+      changed=true; anyChange=true;
+      break;
+    }
+  }
+  if(anyChange){ simplifyLine(line); orthogonalizeLine(line); }
+  return anyChange;
 }
 
 // Check if a line passes through the bounding box of a marker
@@ -2604,7 +2676,7 @@ function boxHalfWidthAlong(mk, vertical){
 
 function alignPointMarkersToBoxPorts(mk){
   const mt=markerTypes.find(t=>t.id===mk.mtypeId);
-  if(!mt||(mt.kind!=='multi'&&mt.kind!=='bus')) return;
+  if(!mt||mt.kind!=='multi') return; // only Кр — a ЩР's dozens of ports make coaxial alignment to one of them meaningless
   const ports=getMarkerPorts(mk);
 
   lines.forEach(line=>{
@@ -2961,6 +3033,21 @@ function lineLength(line){
   // Add stub lengths from metadata
   if(line.connStart?.stubLen) l+=line.connStart.stubLen;
   if(line.connEnd?.stubLen)   l+=line.connEnd.stubLen;
+  return l;
+}
+
+// Same as lineLength (in metres), but also adds each end's marker-type
+// installation allowance (mt.extra) — same rule as the "Итого" panel: only
+// for connStart/connEnd of type 'connected', never 'transit'.
+function lineFullLengthM(line){
+  if(scale==null) return null;
+  let l=lineLength(line)*scale;
+  [line.connStart, line.connEnd].forEach(conn=>{
+    if(!conn || conn.type==='transit') return;
+    const mk=markers.find(m=>m.id===conn.markerId);
+    const mt=mk && markerTypes.find(t=>t.id===mk.mtypeId);
+    if(mt) l+=mt.extra;
+  });
   return l;
 }
 
@@ -3578,17 +3665,12 @@ function redraw(){
       ctx.fillText(mt.desc,p.cx,p.cy+r+9);ctx.textAlign='left';
     }
 
-    // Port dots for multi/bus
-    if(kind!=='point'){
-      const ports=getMarkerPorts(mk);
-      ports.forEach(port=>{
-        const pp=w2c(port.wx,port.wy);
-        const taken=lines.some(l=>(l.connStart?.markerId===mk.id&&l.connStart?.side===port.side&&l.connStart?.portIdx===port.idx)||(l.connEnd?.markerId===mk.id&&l.connEnd?.side===port.side&&l.connEnd?.portIdx===port.idx));
-        ctx.beginPath();ctx.arc(pp.cx,pp.cy,taken?4:3,0,Math.PI*2);
-        ctx.fillStyle=taken?mkColor:'rgba(255,255,255,0.3)';ctx.fill();
-        ctx.strokeStyle=mkColor;ctx.lineWidth=1;ctx.stroke();
-      });
-    }
+    // Port dots for multi/bus intentionally removed — just the box and the
+    // lines, no extra markers at each connection point.
+
+    // Box numbers intentionally NOT shown here — not useful while actively
+    // drawing/editing, only in the exported PNG (see renderToCtx / the
+    // watermark pass), which is where they're actually needed.
   });
 
   // ── Marker placement preview (alignment guides) ──
@@ -3885,6 +3967,39 @@ function distToSegC(p,seg){
   if(l2===0) return Math.hypot(p.x-p1.cx,p.y-p1.cy);
   const t=Math.max(0,Math.min(1,((p.x-p1.cx)*dx+(p.y-p1.cy)*dy)/l2));
   return Math.hypot(p.x-(p1.cx+t*dx),p.y-(p1.cy+t*dy));
+}
+
+// Finds a screen position near a box that's clear of other markers/lines,
+// for the number-badge leader. Tries 8 compass directions at a fixed
+// distance; falls back to the first candidate if none are fully clear.
+// Top-level (not nested in redraw()) — used by both the live canvas and the
+// export renderer.
+function findClearLabelSpot(center, boxR, excludeId){
+  const dist=boxR+22, badgeR=10;
+  const candidates=[];
+  for(let angDeg=-45; angDeg<315; angDeg+=45){
+    const ang=angDeg*Math.PI/180;
+    candidates.push({cx:center.cx+Math.cos(ang)*dist, cy:center.cy+Math.sin(ang)*dist});
+  }
+  for(const c of candidates){
+    let clear=true;
+    for(const other of markers){
+      if(other.id===excludeId) continue;
+      const op=w2c(other.wx,other.wy);
+      const otherR=mToW(PHYS_MARKER_R)*bgS;
+      if(Math.hypot(c.cx-op.cx,c.cy-op.cy)<badgeR+otherR+4){ clear=false; break; }
+    }
+    if(clear){
+      outer: for(const line of lines){
+        if(!line.pts) continue;
+        for(let i=0;i<line.pts.length-1;i++){
+          if(distToSegC({x:c.cx,y:c.cy},{wx1:line.pts[i].wx,wy1:line.pts[i].wy,wx2:line.pts[i+1].wx,wy2:line.pts[i+1].wy})<badgeR+8){ clear=false; break outer; }
+        }
+      }
+    }
+    if(clear) return c;
+  }
+  return candidates[0];
 }
 
 // Closest point on a wall segment to a screen point, clamped to the segment
@@ -4592,10 +4707,6 @@ drC.addEventListener('mouseup',e=>{
     return;
   }
   if(isDragging){
-    if(dragObj?.type==='line-seg'){
-      // Commit: the pts array already has the correct shape (with any inserted intermediate
-      // points from the anchored-end handling in mousemove). Just save history.
-    }
     if(dragObj?.type==='marker' && autoFixupEnabled){
       // A moved marker may now block lines it isn't even connected to (or an old
       // detour may no longer be needed). Clean up every line once the drag settles.
@@ -4790,10 +4901,21 @@ drC.addEventListener('click',e=>{
           [currentLine.connStart, currentLine.connEnd].forEach(c=>{
             if(c?.markerId){
               const cmk=markers.find(m=>m.id===c.markerId);
-              if(cmk){ resolveBoxStubDepths(cmk); alignPointMarkersToBoxPorts(cmk); }
+              if(cmk) resolveBoxStubDepths(cmk);
             }
           });
         }
+        // Coaxial alignment of a point marker (socket/switch) to the box port
+        // it just got connected to — this always runs on a brand-new
+        // connection, regardless of "Авто-оптимизация". That toggle is meant
+        // for skipping cleanup on later manual drags, not for blocking the
+        // very first time a connection is made.
+        [currentLine.connStart, currentLine.connEnd].forEach(c=>{
+          if(c?.markerId){
+            const cmk=markers.find(m=>m.id===c.markerId);
+            if(cmk) alignPointMarkersToBoxPorts(cmk);
+          }
+        });
         // Don't call updateLinesForMarker here - it overrides port selection
         // User can manually optimise via "Оптимизировать порты" button
         currentLine=null;
@@ -5385,7 +5507,19 @@ function updatePropsPanel(){
       <div class="prop-group" style="margin-top:6px">
         ${portSelectorHtml(obj.connStart,'start')}
         ${portSelectorHtml(obj.connEnd,  'end')}
+      </div>
+      <div class="prop-group" style="margin-top:6px">
+        <button id="btn-declutter-line" class="prop-btn" style="background:#1a2a3a;border-color:#2a4a6a;color:#7dc4ff">
+          <i class="ti ti-wand" style="font-size:11px"></i> ${t('declutter_line_btn')}
+        </button>
       </div>`;
+
+    document.getElementById('btn-declutter-line')?.addEventListener('click',()=>{
+      saveHistory();
+      const changed=declutterLine(obj);
+      redraw(); updatePropsPanel();
+      setInfo(changed ? t('msg_declutter_done') : t('msg_declutter_nothing'));
+    });
 
     // Wire up port selectors
     lineEl.querySelectorAll('.line-port-sel').forEach(sel=>{
@@ -5923,9 +6057,16 @@ document.getElementById('project-in').addEventListener('change',e=>{
       document.getElementById('scale-badge').style.display=scale!==null?'flex':'none';
       // Snap all line endpoints to current port positions after load
       updateAllConnectedEndpoints();
-      // Repair any non-orthogonal segments left over from older versions/edits
-      lines.forEach(line=>{ simplifyLine(line); orthogonalizeLine(line); routeAroundMarkers(line); });
-      markers.forEach(m=>{ if(isBoxKind(m)){ resolveBoxStubDepths(m); alignPointMarkersToBoxPorts(m); } });
+      // Clean up float noise / non-orthogonal segments — safe and
+      // non-destructive, never changes where a line intentionally goes.
+      lines.forEach(line=>{ simplifyLine(line); orthogonalizeLine(line); });
+      if(autoFixupEnabled){
+        // Broader re-fitting — same thing this toggle guards everywhere
+        // else. A saved file should reopen exactly as it was saved unless
+        // you've opted into this.
+        lines.forEach(line=>{ routeAroundMarkers(line); });
+        markers.forEach(m=>{ if(isBoxKind(m)){ resolveBoxStubDepths(m); alignPointMarkersToBoxPorts(m); } });
+      }
       repairAnyCollapsedLines();
       if(d.bg){
         bgImgDataUrl=d.bg;
@@ -5934,7 +6075,7 @@ document.getElementById('project-in').addEventListener('change',e=>{
         img.src=d.bg;
       } else {bgImg=null;redrawBg();redraw();}
       selType=null;selIdx=null;
-      renderMarkerTypesList();updatePropsPanel();setInfo(t('msg_project_loaded'));
+      renderMarkerTypesList();updatePropsPanel();buildColorPicker();updateResults();setInfo(t('msg_project_loaded'));
     }catch(err){alert(t('alert_open_error_prefix')+err.message);}
   };
   r.readAsText(f);
@@ -7081,7 +7222,9 @@ function updateExpSizeInfo(){
     `Размер изображения: ${pw} × ${ph} px (~${mb} МБ в памяти)${usedColors.length?' — включает полосу легенды':''}`;
 }
 
+let __downloadStaggerIndex=0; // shared across ports-diagram pages AND the main drawing export — every triggered download in one export run gets its own slot, so a browser's multi-download-spam guard never sees them arrive in a tight burst
 function doExport(){
+  __downloadStaggerIndex=0;
   if(document.getElementById('exp-ports-diagram')?.checked){
     exportPortsDiagram();
   }
@@ -7122,18 +7265,21 @@ function doExportForTheme(theme){
     off.width=sceneW*dpr; off.height=totalH*dpr;
     const octx=off.getContext('2d');
     octx.scale(dpr,dpr);
-    renderToCtx(octx,sceneW,sceneH,dpr,false);
+    renderToCtx(octx,sceneW,sceneH,dpr,false,true);
     if(legendH>0) drawLegendStrip(octx, sceneW, sceneH, legendH, usedColors);
     drawWatermark(octx, sceneW, totalH);
 
     bgX=savedBgX; bgY=savedBgY; bgS=savedBgS;
-    off.toBlob(blob=>{
-      const a=document.createElement('a');
-      a.href=URL.createObjectURL(blob);
-      a.download=safeFileName(getProjectName())+`-full-${dpr}x-${theme}.png`;
-      a.click();
-      if(typeof gtag==='function') gtag('event', 'export_png', {scope:'full', quality:dpr+'x', theme});
-    },'image/png');
+    const fullDelay=(__downloadStaggerIndex++)*300;
+    setTimeout(()=>{
+      off.toBlob(blob=>{
+        const a=document.createElement('a');
+        a.href=URL.createObjectURL(blob);
+        a.download=safeFileName(getProjectName())+`-full-${dpr}x-${theme}.png`;
+        a.click();
+        if(typeof gtag==='function') gtag('event', 'export_png', {scope:'full', quality:dpr+'x', theme});
+      },'image/png');
+    }, fullDelay);
 
   } else {
     const sceneW=bgC.width, sceneH=bgC.height;
@@ -7145,13 +7291,16 @@ function doExportForTheme(theme){
     renderToCtx(octx,sceneW,sceneH,dpr);
     if(legendH>0) drawLegendStrip(octx, sceneW, sceneH, legendH, usedColors);
     drawWatermark(octx, sceneW, totalH);
-    off.toBlob(blob=>{
-      const a=document.createElement('a');
-      a.href=URL.createObjectURL(blob);
-      a.download=safeFileName(getProjectName())+`-${dpr}x-${theme}.png`;
-      a.click();
-      if(typeof gtag==='function') gtag('event', 'export_png', {scope:'viewport', quality:dpr+'x', theme});
-    },'image/png');
+    const viewportDelay=(__downloadStaggerIndex++)*300;
+    setTimeout(()=>{
+      off.toBlob(blob=>{
+        const a=document.createElement('a');
+        a.href=URL.createObjectURL(blob);
+        a.download=safeFileName(getProjectName())+`-${dpr}x-${theme}.png`;
+        a.click();
+        if(typeof gtag==='function') gtag('event', 'export_png', {scope:'viewport', quality:dpr+'x', theme});
+      },'image/png');
+    }, viewportDelay);
   }
 }
 
@@ -7173,7 +7322,7 @@ const EXPORT_THEMES = {
 };
 let exportTheme='dark';
 
-function renderToCtx(octx,W,H,dpr,showLabels=true){
+function renderToCtx(octx,W,H,dpr,showLabels=true,showBoxNumbers=true){
   const fScale=Math.min(dpr,2);
   const T=EXPORT_THEMES[exportTheme]||EXPORT_THEMES.dark;
   const isLight=exportTheme==='light';
@@ -7328,9 +7477,26 @@ function renderToCtx(octx,W,H,dpr,showLabels=true){
       const offset=segOffsetExp.get(`${li}_${si}`)||0;
       const dx=p2.cx-p1.cx,dy=p2.cy-p1.cy,len=Math.hypot(dx,dy)||1;
       const px=-dy/len,py=dx/len;
-      octx.beginPath();octx.moveTo(p1.cx+px*offset,p1.cy+py*offset);octx.lineTo(p2.cx+px*offset,p2.cy+py*offset);octx.stroke();
+      const sx2=p2.cx+px*offset, sy2=p2.cy+py*offset;
+      octx.beginPath();octx.moveTo(p1.cx+px*offset,p1.cy+py*offset);octx.lineTo(sx2,sy2);octx.stroke();
+
+      // Patch a corner gap: the NEXT segment is offset along ITS OWN
+      // perpendicular (different axis at a real corner, or just a different
+      // bundle slot) — its shifted start point generally won't land exactly
+      // on this segment's shifted end point, leaving a visible break.
+      if(si<line.pts.length-2){
+        const p3=w2c(line.pts[si+2].wx,line.pts[si+2].wy);
+        const nextOffset=segOffsetExp.get(`${li}_${si+1}`)||0;
+        const ndx=p3.cx-p2.cx,ndy=p3.cy-p2.cy,nlen=Math.hypot(ndx,ndy)||1;
+        const npx=-ndy/nlen,npy=ndx/nlen;
+        const nsx1=p2.cx+npx*nextOffset, nsy1=p2.cy+npy*nextOffset;
+        if(Math.hypot(nsx1-sx2,nsy1-sy2)>0.5){
+          octx.beginPath();octx.moveTo(sx2,sy2);octx.lineTo(nsx1,nsy1);octx.stroke();
+        }
+      }
     }
   });
+  const boxNumberMap=getBoxNumberMap();
   markers.forEach(mk=>{
     const p=w2c(mk.wx,mk.wy),mt=markerTypes.find(t=>t.id===mk.mtypeId);
     const abbr=mt?mt.abbr:'?';
@@ -7360,19 +7526,30 @@ function renderToCtx(octx,W,H,dpr,showLabels=true){
     octx.font=`bold ${abbr.length>1?9:11}px sans-serif`;
     octx.textAlign='center';octx.textBaseline='middle';
     octx.fillText(abbr,p.cx,p.cy);
-    if(mt?.desc){octx.font='9px sans-serif';octx.fillStyle='#667';octx.fillText(mt.desc,p.cx,p.cy+r+9);}
     octx.textAlign='left';octx.textBaseline='alphabetic';
 
-    // Port dots for multi/bus — filled+bigger if occupied, translucent if free
-    if(kind!=='point'){
-      const ports=getMarkerPorts(mk);
-      ports.forEach(port=>{
-        const pp=w2c(port.wx,port.wy);
-        const taken=lines.some(l=>(l.connStart?.markerId===mk.id&&l.connStart?.side===port.side&&l.connStart?.portIdx===port.idx)||(l.connEnd?.markerId===mk.id&&l.connEnd?.side===port.side&&l.connEnd?.portIdx===port.idx));
-        octx.beginPath();octx.arc(pp.cx,pp.cy,taken?4:3,0,Math.PI*2);
-        octx.fillStyle=taken?mkColor:'rgba(255,255,255,0.3)';octx.fill();
-        octx.strokeStyle=mkColor;octx.lineWidth=1;octx.stroke();
-      });
+    // Port dots for multi/bus intentionally removed — just the box and the
+    // lines, matching the live canvas.
+
+    // Number badge — this is the whole point of numbering boxes: identifying
+    // them on a printed/downloaded plan. Not shown on the live canvas while
+    // actively editing, only here — and not on the locator thumbnail either
+    // (also uses this renderer, with showLabels=false), which is too small
+    // for it and has its own arrow already doing the "where is it" job.
+    if(kind!=='point' && showBoxNumbers){
+      const num=boxNumberMap.get(mk.id);
+      if(num!=null){
+        const spot=findClearLabelSpot(p, r, mk.id);
+        octx.strokeStyle='rgba(255,255,255,0.45)'; octx.lineWidth=1; octx.setLineDash([]);
+        octx.beginPath(); octx.moveTo(p.cx,p.cy); octx.lineTo(spot.cx,spot.cy); octx.stroke();
+        octx.beginPath(); octx.arc(spot.cx,spot.cy,10,0,Math.PI*2);
+        octx.fillStyle='#1a1a1a'; octx.fill();
+        octx.strokeStyle='#f0c040'; octx.lineWidth=1.5; octx.stroke();
+        octx.fillStyle='#f0c040'; octx.font='bold 11px sans-serif';
+        octx.textAlign='center'; octx.textBaseline='middle';
+        octx.fillText(String(num), spot.cx, spot.cy);
+        octx.textAlign='left'; octx.textBaseline='alphabetic';
+      }
     }
   });
 }
@@ -7451,7 +7628,7 @@ function renderLocatorThumbnail(mk, size){
   bgS=s;
   bgX=margin-b.minWx*s+(size-margin*2-contentW*s)/2;
   bgY=margin-b.minWy*s+(size-margin*2-contentH*s)/2;
-  renderToCtx(octx, size, size, 1, false);
+  renderToCtx(octx, size, size, 1, false, false);
   const p=w2c(mk.wx, mk.wy);
   // Pick whichever corner is farthest from the target — gives the arrow the
   // most room and keeps it clear of the marker's own neighbours.
@@ -7495,122 +7672,314 @@ function getRealBoxSize(mk){
 // the box itself reads at a comfortable size — everything else (nearby
 // crossings, actual stub lengths, true relative positions) comes along for
 // free because this is the real geometry, not a reconstruction.
+const LINE_W_EXP_CROP=3; // slightly bolder than the whole-drawing export line width, for legibility at crop zoom
 function renderBoxCrop(mk, size, targetBoxPx){
   const off=document.createElement('canvas');
   off.width=size; off.height=size;
   const octx=off.getContext('2d');
+  const T=EXPORT_THEMES[exportTheme]||EXPORT_THEMES.dark;
   const rb=getRealBoxSize(mk);
   const s=targetBoxPx/Math.max(rb.w,rb.h);
   const savedBgX=bgX, savedBgY=bgY, savedBgS=bgS;
   bgS=s;
   bgX=size/2-mk.wx*s;
   bgY=size/2-mk.wy*s;
-  renderToCtx(octx, size, size, 1, false);
+
+  const mt=markerTypes.find(t=>t.id===mk.mtypeId);
+  const kind=mt?.kind||'point';
+  const p=w2c(mk.wx,mk.wy);
+  const r=mToW(PHYS_MARKER_R)*bgS;
+  const mkColor=mk.color||'#4a9eff';
+  const mkBg=mkColor==='#ffffff'?'#cccccc':mkColor;
+
+  // Each occupied port gets ONE short colored stub, straight out to the edge
+  // of the crop, in that port's own direction — enough to show "this side,
+  // this color" clearly. Deliberately NOT the real line geometry: showing
+  // where a wire actually goes elsewhere in the apartment isn't this crop's
+  // job, and at this zoom it's exactly what turns into visual noise.
+  const ports=getMarkerPorts(mk);
+  ports.forEach(port=>{
+    const conn=findPortConnection(mk,port.side,port.idx);
+    if(!conn) return;
+    const pp=w2c(port.wx,port.wy);
+    const dir=portSideDir(port.side);
+    octx.strokeStyle=conn.color; octx.lineWidth=LINE_W_EXP_CROP; octx.setLineDash([]);
+    octx.beginPath();octx.moveTo(pp.cx,pp.cy);octx.lineTo(pp.cx+dir.dx*size,pp.cy+dir.dy*size);octx.stroke();
+  });
+
+  octx.fillStyle=mkBg+'33';
+  octx.strokeStyle=mkColor;
+  octx.lineWidth=1.5;
+  octx.setLineDash([]);
+  if(kind==='point'){
+    octx.beginPath();octx.arc(p.cx,p.cy,r,0,Math.PI*2);octx.fill();octx.stroke();
+  } else if(kind==='multi'){
+    octx.beginPath();octx.rect(p.cx-r,p.cy-r,r*2,r*2);octx.fill();octx.stroke();
+  } else if(kind==='bus'){
+    const orient=mk.busOrientation||'horizontal';
+    const rw=orient==='vertical'?mToW(PHYS_MARKER_R)*bgS:mToW(PHYS_BUS_W)*bgS;
+    const rh=orient==='vertical'?mToW(PHYS_BUS_W)*bgS:mToW(PHYS_BUS_H)*bgS;
+    octx.beginPath();octx.rect(p.cx-rw,p.cy-rh,rw*2,rh*2);octx.fill();octx.stroke();
+  }
+
+  function lum(h){const rv=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return 0.299*rv+0.587*g+0.114*b;}
+  const abbr=mt?mt.abbr:'?';
+  octx.fillStyle=(mk.color&&lum(mk.color)>140)?'#111':'#fff';
+  octx.font=`bold ${abbr.length>1?13:16}px sans-serif`;
+  octx.textAlign='center';octx.textBaseline='middle';
+  octx.fillText(abbr,p.cx,p.cy);
+  octx.textAlign='left';octx.textBaseline='alphabetic';
+
+  if(kind!=='point'){
+    ports.forEach(port=>{
+      const pp=w2c(port.wx,port.wy);
+      const taken=!!findPortConnection(mk,port.side,port.idx);
+      octx.beginPath();octx.arc(pp.cx,pp.cy,taken?5:4,0,Math.PI*2);
+      octx.fillStyle=taken?mkColor:T.freeDot;octx.fill();
+      octx.strokeStyle=mkColor;octx.lineWidth=1.5;octx.stroke();
+      if(taken){
+        const dir=portSideDir(port.side);
+        const lx=pp.cx+dir.dx*16, ly=pp.cy+dir.dy*16;
+        octx.font='bold 11px sans-serif'; octx.textAlign='center'; octx.textBaseline='middle';
+        octx.fillStyle=T.pageBg; octx.fillRect(lx-7,ly-7,14,14);
+        octx.fillStyle=T.text; octx.fillText(String(port.idx), lx, ly);
+        octx.textAlign='left'; octx.textBaseline='alphabetic';
+      }
+    });
+  }
+
   bgX=savedBgX; bgY=savedBgY; bgS=savedBgS;
   return off;
 }
 
 // Plain text list of what's plugged into this box — side, colour/name/cable
 // — under the crop. No reconstruction, just reading off the real data.
-function drawPortList(ctx, mk, x, y, maxWidth){
+function otherEndDeviceLabel(mk, conn, boxNumberMap){
+  const otherId = conn.atEnd ? conn.line.connStart?.markerId : conn.line.connEnd?.markerId;
+  const otherMk = otherId && markers.find(m=>m.id===otherId);
+  if(!otherMk) return '';
+  const otherMt = markerTypes.find(t=>t.id===otherMk.mtypeId);
+  if(!otherMt) return '';
+  if(isBoxKind(otherMk)){
+    const num=boxNumberMap && boxNumberMap.get(otherMk.id);
+    return num!=null ? `${otherMt.abbr} №${num}` : otherMt.abbr;
+  }
+  return otherMt.desc || otherMt.abbr;
+}
+
+function drawPortList(ctx, mk, x, y, maxWidth, opts){
+  opts=opts||{};
+  const compact=!!opts.compact;
+  const maxRows=opts.maxRows||Infinity;
+  const boxNumberMap=opts.boxNumberMap;
   const T=EXPORT_THEMES[exportTheme]||EXPORT_THEMES.dark;
   const mt=markerTypes.find(t=>t.id===mk.mtypeId);
   const pps=mt.portsPerSide||2;
-  const rowH=24;
-  let row=0;
+  const rowH=compact?16:24;
+  const dotR=compact?4:6;
+  const font=compact?'10px sans-serif':'13px sans-serif';
+  let row=0, shown=0, totalOccupied=0;
   ctx.textAlign='left'; ctx.textBaseline='middle';
   ['top','right','bottom','left'].forEach(side=>{
     for(let idx=0; idx<pps; idx++){
       const conn=findPortConnection(mk, side, idx);
+      if(!conn) continue; // free ports aren't listed — nothing to say about them
+      totalOccupied++;
+      if(shown>=maxRows) continue;
       const cy=y+row*rowH+rowH/2;
-      if(conn){
-        ctx.beginPath(); ctx.arc(x+6, cy, 6, 0, Math.PI*2);
-        ctx.fillStyle=conn.color; ctx.fill();
-        ctx.strokeStyle=T.portDotStroke; ctx.lineWidth=1; ctx.stroke();
-        ctx.fillStyle=T.text; ctx.font='13px sans-serif';
-        ctx.fillText(`${SIDE_RU[side]} — ${buildColorLabel(conn.color)}`, x+18, cy);
-      } else {
-        ctx.beginPath(); ctx.arc(x+6, cy, 4, 0, Math.PI*2);
-        ctx.fillStyle=T.freeDot; ctx.fill();
-        ctx.fillStyle=T.freeText; ctx.font='13px sans-serif';
-        ctx.fillText(`${SIDE_RU[side]} — свободен`, x+18, cy);
+      ctx.beginPath(); ctx.arc(x+dotR, cy, dotR, 0, Math.PI*2);
+      ctx.fillStyle=conn.color; ctx.fill();
+      ctx.strokeStyle=T.portDotStroke; ctx.lineWidth=1; ctx.stroke();
+      ctx.fillStyle=T.text; ctx.font=font;
+      // Colour dot already shows the circuit visually — the text focuses
+      // on what a dot can't show: the circuit's own label (falling back
+      // to the colour name only if no label was set), the cable mark, what
+      // device sits at the other end, and the run length to get there.
+      const nameOrColor=colorLabels[conn.color]||colorName(conn.color);
+      let label=`${t('port_side_'+side)} [${idx}] — ${nameOrColor}`;
+      const otherDevice=otherEndDeviceLabel(mk, conn, boxNumberMap);
+      if(otherDevice) label+=` — ${otherDevice}`;
+      if(!compact && colorCableTypes[conn.color]) label+=` — ${colorCableTypes[conn.color]}`;
+      if(scale!=null){
+        const plain=lineLength(conn.line)*scale;
+        if(mt.kind==='bus' && !compact){
+          // The panel's own ports are the trunk runs to each box — the
+          // ones worth knowing the material allowance for too. Skipped in
+          // compact mode — there isn't room, and the plain grid view is
+          // about identifying ports, not the material takeoff.
+          label+=` — ${plain.toFixed(2)} ${t('unit_m')} (с расходом ${lineFullLengthM(conn.line).toFixed(2)} ${t('unit_m')})`;
+        } else {
+          label+=` — ${plain.toFixed(2)} ${t('unit_m')}`;
+        }
       }
-      row++;
+      ctx.fillText(label, x+dotR*2+6, cy);
+      row++; shown++;
     }
   });
+  if(totalOccupied===0){
+    ctx.fillStyle=T.freeText; ctx.font=font;
+    ctx.fillText(t('ports_all_free'), x+dotR*2+6, y+rowH/2);
+    row=1;
+  } else if(shown<totalOccupied){
+    ctx.fillStyle=T.textFaint; ctx.font=font;
+    ctx.fillText(t('ports_more_hidden').replace('{n}', totalOccupied-shown), x+dotR*2+6, y+row*rowH+rowH/2);
+    row++;
+  }
   ctx.textBaseline='alphabetic';
   return row*rowH;
 }
 
+// Orders box markers the way an installer reads a schematic: starting from
+// the panel, walk each circuit (colour) out to the boxes it reaches, in the
+// order that colour leaves the panel's own ports. Boxes not reachable this
+// way (disconnected topology) are appended at the end, untouched.
+// Sequential numbers for every box marker (Кр/ЩР), 1-indexed, in the same
+// order the ports-diagram export lists them (panel first, then each colour's
+// chain outward) — so "коробка №5" means the same box on the drawing and in
+// the printed diagram.
+function getBoxNumberMap(){
+  const allBoxes=markers.filter(isBoxKind);
+  const ordered=orderBoxesFromPanel(allBoxes);
+  const map=new Map();
+  ordered.forEach((mk,i)=>{ map.set(mk.id, i+1); });
+  return map;
+}
+
+function orderBoxesFromPanel(boxMarkers){
+  const panelMk=markers.find(m=>{
+    const mt=markerTypes.find(t=>t.id===m.mtypeId);
+    return mt?.kind==='bus';
+  });
+  if(!panelMk) return boxMarkers;
+
+  const boxIds=new Set(boxMarkers.map(m=>m.id));
+  const visited=new Set();
+  const ordered=[];
+  if(boxIds.has(panelMk.id)){ ordered.push(panelMk); visited.add(panelMk.id); }
+
+  const colorOrder=[];
+  const seenColors=new Set();
+  getMarkerPorts(panelMk).forEach(port=>{
+    const conn=findPortConnection(panelMk,port.side,port.idx);
+    if(conn && !seenColors.has(conn.color)){ seenColors.add(conn.color); colorOrder.push(conn.color); }
+  });
+
+  function chainFrom(boxId,color){
+    if(visited.has(boxId)) return;
+    visited.add(boxId);
+    if(boxIds.has(boxId)) ordered.push(markers.find(m=>m.id===boxId));
+    lines.forEach(line=>{
+      if(line.color!==color) return;
+      const other=line.connStart?.markerId===boxId?line.connEnd?.markerId:line.connEnd?.markerId===boxId?line.connStart?.markerId:null;
+      if(other && !visited.has(other)){
+        const otherMk=markers.find(m=>m.id===other);
+        if(otherMk && isBoxKind(otherMk)) chainFrom(other,color);
+      }
+    });
+  }
+
+  colorOrder.forEach(color=>{
+    lines.forEach(line=>{
+      if(line.color!==color) return;
+      const fromPanel=line.connStart?.markerId===panelMk.id?line.connEnd?.markerId:line.connEnd?.markerId===panelMk.id?line.connStart?.markerId:null;
+      if(fromPanel && !visited.has(fromPanel)) chainFrom(fromPanel,color);
+    });
+  });
+
+  boxMarkers.forEach(mk=>{ if(!visited.has(mk.id)) ordered.push(mk); });
+  return ordered;
+}
+
 function exportPortsDiagramForTheme(theme){
-  const boxMarkers=markers.filter(mk=>{
+  let boxMarkers=markers.filter(mk=>{
     if(!isBoxKind(mk)) return false;
     return lines.some(l=>l.connStart?.markerId===mk.id||l.connEnd?.markerId===mk.id);
   });
+  boxMarkers=orderBoxesFromPanel(boxMarkers);
   if(!boxMarkers.length){
     setInfo(t('msg_no_boxes_for_ports'));
     return;
   }
+  const boxNumberMap=getBoxNumberMap();
   exportTheme=theme;
   const T=EXPORT_THEMES[theme];
 
   const dpr=2;
-  const blockW=1150, locatorSize=190, cropSize=460, listW=340;
-  const headerH=36, blockPad=24, panelGap=36;
-  const blockH=Math.max(locatorSize, cropSize)+headerH+blockPad*2+18;
+  // 3 columns x 4 rows = 12 boxes per page, page proportioned close to A4
+  // portrait. Every page is rendered and downloaded as ITS OWN PNG file —
+  // separate printable sheets, rather than one continuously growing image.
+  // This also sidesteps a real hard limit: a single canvas can only be so
+  // many pixels tall/wide before the browser (or, here, node-canvas)
+  // silently fails to allocate it.
+  const COLS=3, ROWS=4, PER_PAGE=COLS*ROWS;
+  const margin=28, colGap=20, rowGap=20, headerH=22;
+  const cellW=460;
+  const locSize=64, cropH=210, listRowH=15;
+  const maxListRows=9;
+  const cellH=headerH+8+cropH+8+(maxListRows+1)*listRowH+10;
 
-  const totalH=blockPad + boxMarkers.length*(blockH+blockPad);
-  const off=document.createElement('canvas');
-  off.width=blockW*dpr; off.height=totalH*dpr;
-  const octx=off.getContext('2d');
-  octx.scale(dpr,dpr);
-  octx.fillStyle=T.pageBg; octx.fillRect(0,0,blockW,totalH);
+  const totalW=margin*2 + COLS*cellW + (COLS-1)*colGap;
+  const pageH=margin*2 + ROWS*cellH + (ROWS-1)*rowGap + 20;
+  const numPages=Math.ceil(boxMarkers.length/PER_PAGE);
 
-  boxMarkers.forEach((mk,i)=>{
-    const mt=markerTypes.find(t=>t.id===mk.mtypeId);
-    const y0=blockPad + i*(blockH+blockPad);
-    const panelsY0=y0+headerH;
-    const panelsCy=panelsY0 + (blockH-headerH-18)/2;
+  for(let page=0; page<numPages; page++){
+    const off=document.createElement('canvas');
+    off.width=totalW*dpr; off.height=pageH*dpr;
+    const octx=off.getContext('2d');
+    octx.scale(dpr,dpr);
+    octx.fillStyle=T.pageBg; octx.fillRect(0,0,totalW,pageH);
 
-    // Header: marker type description
-    octx.fillStyle=T.text; octx.font='bold 18px sans-serif'; octx.textAlign='left';
-    octx.fillText(`${mt?.desc||mt?.abbr||''}`, blockPad, y0+headerH-10);
-    if(i>0){ octx.strokeStyle=T.panelBorder; octx.lineWidth=1; octx.beginPath(); octx.moveTo(0,y0-blockPad/2); octx.lineTo(blockW,y0-blockPad/2); octx.stroke(); }
+    if(numPages>1){
+      octx.fillStyle=T.textFaint; octx.font='11px sans-serif'; octx.textAlign='right';
+      octx.fillText(`${page+1}/${numPages}`, totalW-margin, margin-8);
+    }
 
-    // Panel 1: locator (where on the drawing)
-    let x=blockPad;
-    const locY=panelsCy-locatorSize/2;
-    const thumb=renderLocatorThumbnail(mk, locatorSize);
-    octx.strokeStyle=T.panelBorder; octx.lineWidth=1;
-    octx.strokeRect(x, locY, locatorSize, locatorSize);
-    octx.drawImage(thumb, x, locY, locatorSize, locatorSize);
-    octx.fillStyle=T.textFaint; octx.font='11px sans-serif'; octx.textAlign='center';
-    octx.fillText('расположение на чертеже', x+locatorSize/2, locY+locatorSize+16);
-    x += locatorSize+panelGap;
+    const pageBoxes=boxMarkers.slice(page*PER_PAGE, (page+1)*PER_PAGE);
+    pageBoxes.forEach((mk,i)=>{
+      const col=i%COLS, row=Math.floor(i/COLS);
+      const cx0=margin + col*(cellW+colGap);
+      const cy0=margin + row*(cellH+rowGap);
+      const mt=markerTypes.find(t=>t.id===mk.mtypeId);
 
-    // Panel 2: faithful zoomed crop of the REAL drawing around the box —
-    // real crossings, real stub lengths, real relative positions, nothing
-    // reconstructed.
-    const cropY=panelsCy-cropSize/2;
-    const crop=renderBoxCrop(mk, cropSize, 110);
-    octx.strokeStyle=T.panelBorder; octx.lineWidth=1;
-    octx.strokeRect(x, cropY, cropSize, cropSize);
-    octx.drawImage(crop, x, cropY, cropSize, cropSize);
-    x += cropSize+panelGap;
+      // Header
+      octx.fillStyle=T.text; octx.font='bold 13px sans-serif'; octx.textAlign='left';
+      const numTag=boxNumberMap.has(mk.id)?`№${boxNumberMap.get(mk.id)} — `:'';
+      octx.fillText(`${numTag}${mt?.desc||mt?.abbr||''}`, cx0, cy0+headerH-6);
 
-    // Panel 3: plain text list of what's plugged into each port
-    drawPortList(octx, mk, x, panelsCy-((mt?.portsPerSide||2)*4*24)/2, listW);
-  });
+      // Crop, square, centered in the cell width, with a small locator
+      // thumbnail inset in its top-right corner (a mini-map, not a separate
+      // panel — there's no room for that at this size).
+      const cropY=cy0+headerH+8;
+      const cropSq=cropH; // keep it square so nothing radiating from the box gets clipped unevenly
+      const cropX=cx0+(cellW-cropSq)/2;
+      const crop=renderBoxCrop(mk, cropSq, 85);
+      octx.drawImage(crop, cropX, cropY, cropSq, cropSq);
+      octx.strokeStyle=T.panelBorder; octx.lineWidth=1;
+      octx.strokeRect(cropX, cropY, cropSq, cropSq);
 
-  drawWatermark(octx, blockW, totalH);
+      const thumb=renderLocatorThumbnail(mk, locSize);
+      octx.drawImage(thumb, cropX+cropSq-locSize-4, cropY+4, locSize, locSize);
+      octx.strokeRect(cropX+cropSq-locSize-4, cropY+4, locSize, locSize);
 
-  off.toBlob(blob=>{
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(blob);
-    a.download=safeFileName(getProjectName())+`-ports-${theme}.png`;
-    a.click();
-    if(typeof gtag==='function') gtag('event', 'export_png', {scope:'ports-diagram', theme});
-  },'image/png');
+      // Compact, capped port list
+      const listY=cropY+cropH+8;
+      drawPortList(octx, mk, cx0, listY, cellW, {compact:true, maxRows:maxListRows, boxNumberMap});
+    });
+
+    drawWatermark(octx, totalW, pageH);
+
+    const pageSuffix = numPages>1 ? `-стр${page+1}из${numPages}` : '';
+    const delay = (__downloadStaggerIndex++)*300; // shared slot — see doExport()
+    setTimeout(()=>{
+      off.toBlob(blob=>{
+        const a=document.createElement('a');
+        a.href=URL.createObjectURL(blob);
+        a.download=safeFileName(getProjectName())+`-ports-${theme}${pageSuffix}.png`;
+        a.click();
+        if(page===numPages-1 && typeof gtag==='function') gtag('event', 'export_png', {scope:'ports-diagram', theme, pages:numPages});
+      },'image/png');
+    }, delay);
+  }
 }
 
 function getSelectedExportThemes(){

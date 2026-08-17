@@ -256,6 +256,9 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     <button class="tb-btn active" id="btn-autofixup" data-i18n-title="tt_autofixup" title="Автоматически пересчитывать порты/стабы/выравнивание после каждого действия. Выключите при ручной шлифовке уже готового чертежа.">
       <i class="ti ti-plug-connected" style="font-size:13px"></i> <span data-i18n="auto_optimize">Авто-оптимизация</span>
     </button>
+    <button class="tb-btn" id="btn-heights" data-i18n-title="tt_heights" title="Высота потолка и высота прокладки трассы по умолчанию — нужны для расчёта вертикальных участков кабеля">
+      <i class="ti ti-ruler" style="font-size:13px"></i> <span data-i18n="heights_btn">Высоты</span>
+    </button>
     <div class="sep"></div>
     <button class="tb-btn" id="btn-route-optimize" data-i18n-title="tt_route_optimize" title="Полная переразводка чертежа по сетке с учётом разрешённых зон — заменяет пути линий целиком" style="background:#1a3a1a;border-color:#2a6a2a;color:#8aff8a">
       <i class="ti ti-map-2" style="font-size:13px"></i> <span data-i18n="route_optimize">Оптимизация чертежа</span>
@@ -264,6 +267,10 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     <button class="tb-btn" id="btn-site-mode" style="margin-left:auto" data-i18n-title="tt_toggle_mode" title="Переключить режим">PRO-режим</button>
     <button class="tb-btn success" id="btn-tour" style="font-weight:600" data-i18n-title="tt_tour" title="Пошаговое обучение">
       <i class="ti ti-school"></i> <span data-i18n="tour">Обучение</span>
+    </button>
+    <button class="tb-btn" id="whatsnew-btn" style="position:relative" data-i18n-title="tt_whatsnew" title="Что нового">
+      <span data-i18n="whatsnew_btn">Что нового</span>
+      <span id="whatsnew-dot" style="display:none;position:absolute;top:2px;right:2px;width:7px;height:7px;border-radius:50%;background:#ff5050;border:1px solid #1a1a1a"></span>
     </button>
     <button class="tb-btn" id="help-btn"><i class="ti ti-help-circle"></i></button>
     <div class="sep"></div>
@@ -314,6 +321,15 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
           </div>
           <input type="text" class="prop-input" id="current-color-cable" data-i18n-placeholder="cable_type_ph" placeholder="например, ВВГ 3×2.5">
           <div data-i18n="cable_type_hint" style="font-size:10px;color:#666;margin-top:3px">Применяется ко всем линиям этого цвета на чертеже</div>
+          <div class="prop-label" style="margin-top:10px" data-i18n="route_height_label">Высота трассы для текущего цвета</div>
+          <div style="display:flex;gap:6px;margin-top:4px">
+            <input type="number" class="prop-input" id="current-color-height" step="0.05" min="0" style="flex:1" data-i18n-placeholder="route_height_ph" placeholder="по умолчанию">
+            <select id="current-color-height-ref" class="prop-input" style="width:auto">
+              <option value="floor" data-i18n="height_ref_floor">от пола</option>
+              <option value="ceiling" data-i18n="height_ref_ceiling">от потолка</option>
+            </select>
+          </div>
+          <div id="current-color-height-hint" style="font-size:10px;color:#666;margin-top:3px"></div>
         </div>
         <div id="no-selection" data-i18n="no_selection">Выберите объект в режиме «Выбор»</div>
         <div id="props-content" style="display:none">
@@ -481,6 +497,42 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
   </div>
 </div>
 
+<div id="heights-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;align-items:center;justify-content:center">
+  <div style="background:#1e1e1e;border:1px solid #444;border-radius:12px;width:380px;padding:24px;position:relative">
+    <button onclick="closeHeightsModal()"
+      style="position:absolute;top:12px;right:14px;background:none;border:none;color:#666;font-size:20px;cursor:pointer">✕</button>
+    <h3 style="font-size:14px;font-weight:600;margin-bottom:6px;color:#e8e8e8">
+      <i class="ti ti-ruler" style="margin-right:6px"></i><span data-i18n="heights_modal_title">Высоты</span>
+    </h3>
+    <div data-i18n="heights_modal_desc" style="font-size:11px;color:#777;margin-bottom:16px">
+      Нужны для расчёта вертикальных участков кабеля (от трассы до розетки/выключателя) — используется в схеме портов.
+    </div>
+
+    <div class="prop-group" style="margin-bottom:14px">
+      <div class="prop-label" data-i18n="ceiling_height_label">Высота потолка (м)</div>
+      <input type="number" class="prop-input" id="ceiling-height-input" step="0.05" min="1" style="margin-top:4px">
+      <div data-i18n="ceiling_height_hint" style="font-size:10px;color:#666;margin-top:3px">Для пересчёта «от потолка» ↔ «от пола», одна на весь проект.</div>
+    </div>
+
+    <div class="prop-group">
+      <div class="prop-label" data-i18n="default_route_height_label">Высота трассы по умолчанию</div>
+      <div style="display:flex;gap:6px;margin-top:4px">
+        <input type="number" class="prop-input" id="default-route-height-input" step="0.05" min="0" style="flex:1">
+        <select id="default-route-height-ref" class="prop-input" style="width:auto">
+          <option value="floor" data-i18n="height_ref_floor">от пола</option>
+          <option value="ceiling" data-i18n="height_ref_ceiling">от потолка</option>
+        </select>
+      </div>
+      <div id="default-route-height-conversion" style="font-size:10px;color:#7dc4ff;margin-top:4px"></div>
+      <div data-i18n="default_route_height_hint" style="font-size:10px;color:#666;margin-top:3px">Где кабель идёт горизонтально, если для цвета не задано своё значение (поле в панели «Свойства»).</div>
+    </div>
+
+    <button onclick="closeHeightsModal()" style="width:100%;margin-top:18px;padding:9px;background:#1a3a5c;border:1px solid #4a9eff;border-radius:7px;color:#7dc4ff;font-size:13px;font-weight:600;cursor:pointer">
+      <span data-i18n="ok_btn">Ок</span>
+    </button>
+  </div>
+</div>
+
 <div id="export-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;align-items:center;justify-content:center">
   <div style="background:#1e1e1e;border:1px solid #444;border-radius:12px;width:340px;padding:24px;position:relative">
     <button onclick="document.getElementById('export-modal').style.display='none'"
@@ -554,6 +606,18 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 
     <!-- Size preview -->
     <div id="exp-size-info" style="font-size:11px;color:#555;margin-bottom:14px;padding:6px 8px;background:#151515;border-radius:5px;font-family:monospace"></div>
+
+    <!-- Scale bar placement -->
+    <div style="margin-bottom:14px">
+      <div data-i18n="exp_scalebar_label" style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Шкала масштаба</div>
+      <select id="exp-scalebar-corner" class="prop-input" style="width:100%">
+        <option value="bl" data-i18n="exp_scalebar_bl">Снизу слева</option>
+        <option value="br" data-i18n="exp_scalebar_br">Снизу справа</option>
+        <option value="tl" data-i18n="exp_scalebar_tl">Сверху слева</option>
+        <option value="tr" data-i18n="exp_scalebar_tr">Сверху справа</option>
+        <option value="off" data-i18n="exp_scalebar_off">Не показывать</option>
+      </select>
+    </div>
 
     <!-- Extra: ports diagram -->
     <label style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:8px 10px;border:1px solid #444;border-radius:6px;background:#2a2a2a;cursor:pointer;font-size:12px;color:#ccc">
@@ -660,7 +724,62 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
       <b>Горячие клавиши:</b> &nbsp;Ctrl+Z — отмена &nbsp;·&nbsp; Ctrl+Y — повтор &nbsp;·&nbsp; Esc — сброс выбора/рисования &nbsp;·&nbsp; Del — удалить выбранный объект
     </div>
 
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #333;font-size:12px;color:#666">
+      <span data-i18n="wn_footer_prompt">Нашли баг или есть предложение?</span>
+      <a href="#" id="guide-report-link" target="_blank" rel="noopener" style="color:#7dc4ff;text-decoration:none;font-weight:600" data-i18n="wn_footer_link">Написать разработчику</a>
+    </div>
+
     <button id="guide-close-bottom" data-i18n="guide_close_btn" style="margin-top:18px;width:100%;padding:10px;background:#1a3a5c;border:1px solid #4a9eff;border-radius:7px;color:#7dc4ff;font-size:13px;font-weight:600;cursor:pointer">Понятно, начать работу!</button>
+  </div>
+</div>
+
+<!-- What's New modal -->
+<div id="whatsnew-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;align-items:center;justify-content:center;overflow:auto;padding:20px">
+  <div style="background:#1e1e1e;border:1px solid #444;border-radius:12px;max-width:640px;width:100%;max-height:90vh;overflow-y:auto;padding:28px 30px;position:relative">
+    <button id="whatsnew-close" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#666;font-size:22px;cursor:pointer;line-height:1">✕</button>
+    <h2 data-i18n="whatsnew_h2" style="font-size:18px;font-weight:700;margin-bottom:20px;color:#e8e8e8">Что нового</h2>
+
+    <div class="guide-step">
+      <div class="guide-body" style="margin-left:0">
+        <div class="guide-title" data-i18n="wn_1_title">Направление у розеток и выключателей</div>
+        <div class="guide-text" data-i18n-html="wn_1_text">При простановке значка теперь можно протянуть курсор — так задаётся, с какой стороны кабель подходит к прибору. Поправить направление у уже стоящего значка — ПКМ прямо по нему и протяжка. Линии, ведущие к коробке, теперь честно выходят от значка в заданную сторону.</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-body" style="margin-left:0">
+        <div class="guide-title" data-i18n="wn_2_title">«Оптимизировать порты» — теперь по-настоящему убирает пересечения</div>
+        <div class="guide-text" data-i18n-html="wn_2_text">Кнопка в свойствах распредкоробки серьёзно переработана: подбирает не только форму пути, но и меняет местами порты между линиями, если так пересечений становится меньше. Для значков без строгого направления линии подводятся с приоритетом на противоположную от направления кабеля сторону коробки.</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-body" style="margin-left:0">
+        <div class="guide-title" data-i18n="wn_3_title">Высоты прокладки</div>
+        <div class="guide-text" data-i18n-html="wn_3_text">Кнопка «Высоты» — задайте высоту потолка проекта и высоту прокладки по умолчанию (для цвета или конкретного отхода). В схеме портов теперь показывается три числа: по прямой, с учётом вертикальных участков, и с учётом расхода на подключение.</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-body" style="margin-left:0">
+        <div class="guide-title" data-i18n="wn_4_title">Вставка точки на линии</div>
+        <div class="guide-text" data-i18n-html="wn_4_text">ПКМ на отрезке линии → «Добавить точку». Дальше этот участок можно тянуть ортогонально в сторону — как при обходе коробки — не разрывая линию и не ломая прямые углы.</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-body" style="margin-left:0">
+        <div class="guide-title" data-i18n="wn_5_title">Курсор больше не «убегает»</div>
+        <div class="guide-text" data-i18n-html="wn_5_text">Исправлено расхождение между тем, где реально происходит клик, и тем, где показывалось перекрестие — особенно заметно было при смене режима (линия/значок/выбор).</div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #333;font-size:12px;color:#666">
+      <span data-i18n="wn_footer_prompt">Нашли баг или есть предложение?</span>
+      <a href="#" id="whatsnew-report-link" target="_blank" rel="noopener" style="color:#7dc4ff;text-decoration:none;font-weight:600" data-i18n="wn_footer_link">Написать разработчику</a>
+    </div>
+
+    <button id="whatsnew-close-bottom" data-i18n="wn_close_btn" style="margin-top:18px;width:100%;padding:10px;background:#1a3a5c;border:1px solid #4a9eff;border-radius:7px;color:#7dc4ff;font-size:13px;font-weight:600;cursor:pointer">Понятно</button>
   </div>
 </div>
 
@@ -694,6 +813,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
   <div class="ctx-item" id="ctx-move"><i class="ti ti-arrows-move"></i> <span data-i18n="ctx_move">Переместить</span></div>
   <div class="ctx-item" id="ctx-color"><i class="ti ti-palette"></i> <span data-i18n="ctx_color">Цвет</span></div>
   <div class="ctx-item" id="ctx-len"><i class="ti ti-ruler-measure"></i> <span data-i18n="ctx_len">Изменить длину</span></div>
+  <div class="ctx-item" id="ctx-add-point"><i class="ti ti-plus"></i> <span data-i18n="ctx_add_point">Добавить точку</span></div>
   <div class="ctx-sep"></div>
   <div class="ctx-item del" id="ctx-delete"><i class="ti ti-trash"></i> <span data-i18n="ctx_delete">Удалить</span></div>
 </div>
@@ -722,6 +842,30 @@ function colorName(hex){
   const c=COLORS.find(c=>c.hex===hex);
   if(!c) return hex;
   return t('color_'+c.key) || c.name;
+}
+// Small colour-dot grid for the props panel (markers + PRO lines) — each dot
+// is titled with the user's own label for that colour if they set one via
+// right-click on the toolbar (e.g. "Кухня Л1"), falling back to the plain
+// colour name so it's never blank.
+function lum(hex){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return 0.299*r+0.587*g+0.114*b;
+}
+// Dropdown version — the label is always visible as text (no hovering
+// needed to find out what a colour means). Each option's own background is
+// tinted to match its colour, and a small swatch next to the select mirrors
+// the current choice at a glance.
+function propColorSelectHtml(currentColor, selectId){
+  const options=COLORS.map(c=>{
+    const label=colorLabels[c.hex]||colorName(c.hex);
+    const selected=c.hex===currentColor?' selected':'';
+    const textColor=lum(c.hex)>140?'#111':'#fff';
+    return `<option value="${c.hex}" style="background:${c.hex};color:${textColor}"${selected}>${label}</option>`;
+  }).join('');
+  return `<div style="display:flex;align-items:center;gap:8px">
+    <span id="${selectId}-swatch" style="width:18px;height:18px;border-radius:50%;background:${currentColor};flex-shrink:0;border:1px solid rgba(255,255,255,0.3)"></span>
+    <select id="${selectId}" class="prop-input" style="flex:1">${options}</select>
+  </div>`;
 }
 const SNAP_PX   = 14;
 // ── Base-mode free/orthogonal line drawing (PRO's own "lines" are always
@@ -823,6 +967,14 @@ const translations = {
     mt_kind_multi:'Коробка — несколько портов на каждой стороне',
     mt_kind_bus:'Щит — шина, много портов на длинных сторонах',
     mt_pro_only:'Коробки/щиты с портами — в PRO-режиме',
+    mt_default_height:'Высота по умолчанию', mt_default_height_hint:'Можно переопределить у конкретного значка в панели свойств.',
+    mt_height_ph_box:'не задано — 0 вертикали',
+    ok_btn:'Ок',
+    marker_height_label:'Высота значка', marker_height_hint_own:'Своё значение для этого значка.',
+    marker_height_hint_default:'Сейчас используется значение по умолчанию из типа: {v}.',
+    with_verticals_short:'верт.', with_allowance_short:'с расходом',
+    panel_cable_counts_label:'Линий по маркам кабеля',
+    cable_mark_unset:'марка не указана',
     mt_pps:'Портов на сторону', mt_size:'Размер значка (радиус, px)',
     mode_info_wall:'Кликните точки контура стен (шаг угла 15°). Двойной клик или Enter — завершить контур. Esc — отмена.',
     mode_info_line:'Клик — начало, клик — конец. Привязка к точкам и значкам. Ортогональная привязка ±7°.',
@@ -832,6 +984,7 @@ const translations = {
     mode_info_zones:'ПКМ — начать зону. Клик — добавить точку. Двойной клик/Enter — замкнуть (мин. 3 точки). Клик рядом с первой точкой — тоже замыкает. Выбор зоны — клик по её площади; тяните точку — переформировать, тяните площадь — переместить. ПКМ по точке — удалить её. Del — удалить всю зону. Esc — отменить/снять выбор. Зоны, которые накладываются друг на друга, читаются оптимизатором как одна сплошная область — без ручного слияния.',
     msg_click_next_dblclick_finish:'Кликните следующую точку. Двойной клик или клик на значок — завершить.',
     msg_line_done:'Линия завершена. Начните новую или переместите значок.',
+    msg_line_done_unconnected:'Линия создана, но один конец не подключён к значку — клик прошёл мимо. Перетащите этот конец точно на значок.',
     msg_click_next_or_marker_finish:'Кликните следующую точку. Клик на значок — завершить.',
     msg_click_end_esc_cancel:'Кликните конечную точку. Esc — отмена.',
     msg_start_auto_connected:'Начало автоматически подключено. Выберите тип подключения для конца.',
@@ -894,6 +1047,20 @@ const translations = {
     welcome_text2:'Кнопка «Обучение» всегда доступна в верхней панели.',
     welcome_later:'Потом', welcome_start:'Пройти обучение',
     guide_h2:'Как пользоваться калькулятором проводки',
+    tt_whatsnew:'Что нового', whatsnew_btn:'Что нового',
+    whatsnew_h2:'Что нового',
+    wn_1_title:'Направление у розеток и выключателей',
+    wn_1_text:'При простановке значка теперь можно протянуть курсор — так задаётся, с какой стороны кабель подходит к прибору. Поправить направление у уже стоящего значка — ПКМ прямо по нему и протяжка. Линии, ведущие к коробке, теперь честно выходят от значка в заданную сторону.',
+    wn_2_title:'«Оптимизировать порты» — теперь по-настоящему убирает пересечения',
+    wn_2_text:'Кнопка в свойствах распредкоробки серьёзно переработана: подбирает не только форму пути, но и меняет местами порты между линиями, если так пересечений становится меньше. Для значков без строгого направления линии подводятся с приоритетом на противоположную от направления кабеля сторону коробки.',
+    wn_3_title:'Высоты прокладки',
+    wn_3_text:'Кнопка «Высоты» — задайте высоту потолка проекта и высоту прокладки по умолчанию (для цвета или конкретного отхода). В схеме портов теперь показывается три числа: по прямой, с учётом вертикальных участков, и с учётом расхода на подключение.',
+    wn_4_title:'Вставка точки на линии',
+    wn_4_text:'ПКМ на отрезке линии → «Добавить точку». Дальше этот участок можно тянуть ортогонально в сторону — как при обходе коробки — не разрывая линию и не ломая прямые углы.',
+    wn_5_title:'Курсор больше не «убегает»',
+    wn_5_text:'Исправлено расхождение между тем, где реально происходит клик, и тем, где показывалось перекрестие — особенно заметно было при смене режима (линия/значок/выбор).',
+    wn_footer_prompt:'Нашли баг или есть предложение?', wn_footer_link:'Написать разработчику',
+    wn_close_btn:'Понятно',
     guide_sub:'Краткое руководство за 2 минуты',
     guide_1_title:'Сценарий А — есть фото плана',
     guide_1_text:'Нажмите <b>«Фон»</b> или перетащите изображение на холст. Затем сразу переходите к шагу 2 — «Задайте масштаб».',
@@ -927,6 +1094,24 @@ const translations = {
     exp_theme_hint:'Можно отметить обе — тогда скачаются два файла каждого вида',
     exp_ports_diagram:'Также скачать схему портов (крупные коробки/щиты с подписанными портами — отдельный файл)',
     exp_download_btn:'Скачать PNG',
+    exp_scalebar_label:'Шкала масштаба',
+    exp_scalebar_bl:'Снизу слева', exp_scalebar_br:'Снизу справа',
+    exp_scalebar_tl:'Сверху слева', exp_scalebar_tr:'Сверху справа',
+    exp_scalebar_off:'Не показывать',
+    msg_export_failed:'Не удалось создать файл — возможно, чертёж слишком большой для выбранного качества (попробуйте ниже), или страница открыта локальным файлом (file://) вместо сайта/сервера.',
+    confirm_file_protocol_export:'Похоже, страница открыта локальным файлом (адрес начинается с file://), а не через сайт или сервер. В таком режиме браузер часто не даёт скачать готовую картинку — скачивание может просто ничего не сделать. Откройте provodka.org напрямую или через локальный сервер для надёжной работы. Всё равно попробовать скачать сейчас?',
+    confirm_canvas_too_large:'При таком качестве и размере чертежа готовое изображение может не поместиться в память браузера — особенно на Safari/iPhone, у которого лимит заметно ниже, чем у Chrome. Скорее всего, скачивание просто ничего не сделает. Рекомендуем выбрать качество пониже. Всё равно попробовать на текущем качестве?',
+    heights_btn:'Высоты', tt_heights:'Высота потолка и высота прокладки трассы по умолчанию — нужны для расчёта вертикальных участков кабеля',
+    heights_modal_title:'Высоты',
+    heights_modal_desc:'Нужны для расчёта вертикальных участков кабеля (от трассы до розетки/выключателя) — используется в схеме портов.',
+    ceiling_height_label:'Высота потолка (м)',
+    ceiling_height_hint:'Для пересчёта «от потолка» ↔ «от пола», одна на весь проект.',
+    default_route_height_label:'Высота трассы по умолчанию',
+    default_route_height_hint:'Где кабель идёт горизонтально, если для цвета не задано своё значение (поле в панели «Свойства»).',
+    height_ref_floor:'от пола', height_ref_ceiling:'от потолка',
+    route_height_label:'Высота трассы для текущего цвета', route_height_ph:'по умолчанию',
+    route_height_hint_own:'Своё значение для этого цвета.',
+    route_height_hint_default:'Сейчас используется значение по умолчанию: {v}.',
     drop_hint:'Перетащите план сюда или нажмите «Фон»',
     tab_results:'Итого', tab_markers:'Значки', tab_props:'Свойства',
     tt_show_all:'Показать все скрытые линии', show_all:'Показать все', no_data:'Нет данных',
@@ -942,6 +1127,7 @@ const translations = {
     conn_connect:'Подключить', conn_connect_hint:'метры учитываются',
     conn_transit:'Транзит', conn_transit_hint:'проход насквозь',
     ctx_move:'Переместить', ctx_color:'Цвет', ctx_len:'Изменить длину', ctx_delete:'Удалить',
+    ctx_add_point:'Добавить точку', msg_point_added:'Точка добавлена — потяните её, чтобы изменить путь линии.',
     unit_m:'м', show:'Показать', hide:'Скрыть',
     res_by_cable_mark:'По маркам кабеля', res_section_lines:'Линии', res_section_markers:'Значки',
     res_lines_prefix:'Линии',
@@ -1040,6 +1226,14 @@ const translations = {
     mt_kind_multi:'Box — several ports per side',
     mt_kind_bus:'Panel — bus bar, many ports on the long sides',
     mt_pro_only:'Boxes/panels with ports — PRO mode only',
+    mt_default_height:'Default height', mt_default_height_hint:'Can be overridden per individual marker in the properties panel.',
+    mt_height_ph_box:'not set — zero vertical run',
+    ok_btn:'OK',
+    marker_height_label:'Marker height', marker_height_hint_own:'This marker has its own value.',
+    marker_height_hint_default:'Currently using the type default: {v}.',
+    with_verticals_short:'vert.', with_allowance_short:'with allowance',
+    panel_cable_counts_label:'Lines by cable mark',
+    cable_mark_unset:'mark not set',
     mt_pps:'Ports per side', mt_size:'Marker size (radius, px)',
     mode_info_wall:'Click points along the wall outline (15° angle steps). Double-click or Enter — finish the outline. Esc — cancel.',
     mode_info_line:'Click to start, click to end. Snaps to points and markers. Orthogonal snap ±7°.',
@@ -1049,6 +1243,7 @@ const translations = {
     mode_info_zones:'Right-click — start a zone. Click — add a point. Double-click/Enter — close (min. 3 points). Clicking near the first point also closes it. Select a zone — click inside it; drag a point to reshape, drag the body to move. Right-click a point — delete it. Del — delete the whole zone. Esc — cancel/deselect. Overlapping zones are read by the optimizer as one continuous area — no manual merging needed.',
     msg_click_next_dblclick_finish:'Click the next point. Double-click or click a marker to finish.',
     msg_line_done:'Line finished. Start a new one or move a marker.',
+    msg_line_done_unconnected:"Line created, but one end didn't connect to a marker — the click missed it. Drag that end exactly onto the marker.",
     msg_click_next_or_marker_finish:'Click the next point. Click a marker to finish.',
     msg_click_end_esc_cancel:'Click the end point. Esc — cancel.',
     msg_start_auto_connected:'Start auto-connected. Choose the connection type for the end.',
@@ -1111,6 +1306,20 @@ const translations = {
     welcome_text2:'The "Tutorial" button is always available in the top bar.',
     welcome_later:'Later', welcome_start:'Start tutorial',
     guide_h2:'How to use the wiring calculator',
+    tt_whatsnew:"What's new", whatsnew_btn:"What's new",
+    whatsnew_h2:"What's new",
+    wn_1_title:'Direction for sockets and switches',
+    wn_1_text:'When placing a marker, you can now drag the cursor — this sets which side the cable approaches the device from. To fix the direction on an already-placed marker, right-click directly on it and drag. Lines running to the distribution box now genuinely exit the marker in the set direction.',
+    wn_2_title:'"Optimize ports" now actually removes crossings',
+    wn_2_text:"The button in a distribution box's properties has been reworked substantially: it now adjusts not just the path shape but also swaps ports between lines when that reduces crossings. For markers without a strict direction, lines are routed with priority toward the box side opposite the cable's own direction.",
+    wn_3_title:'Routing heights',
+    wn_3_text:'The "Heights" button — set the project ceiling height and the default routing height (per colour or per specific run). The port diagram now shows three numbers: straight-line, with vertical runs included, and with connection allowance included.',
+    wn_4_title:'Inserting a point on a line',
+    wn_4_text:'Right-click a line segment → "Add point". You can then drag that stretch orthogonally sideways — same as routing around a box — without breaking the line or its right angles.',
+    wn_5_title:"The cursor no longer drifts",
+    wn_5_text:"Fixed a mismatch between where a click actually registered and where the crosshair was shown — most noticeable when switching modes (line/marker/select).",
+    wn_footer_prompt:'Found a bug or have a suggestion?', wn_footer_link:'Message the developer',
+    wn_close_btn:'Got it',
     guide_sub:'A quick 2-minute guide',
     guide_1_title:'Scenario A — you have a photo of the plan',
     guide_1_text:'Click <b>"Background"</b> or drag an image onto the canvas. Then go straight to step 2 — "Set the scale".',
@@ -1144,6 +1353,24 @@ const translations = {
     exp_theme_hint:'You can check both — two files will download, one per theme',
     exp_ports_diagram:'Also download the port diagram (enlarged boxes/panels with labeled ports — separate file)',
     exp_download_btn:'Download PNG',
+    exp_scalebar_label:'Scale bar',
+    exp_scalebar_bl:'Bottom left', exp_scalebar_br:'Bottom right',
+    exp_scalebar_tl:'Top left', exp_scalebar_tr:'Top right',
+    exp_scalebar_off:"Don't show",
+    msg_export_failed:"Couldn't create the file — the drawing may be too large for the chosen quality (try a lower one), or the page is open as a local file (file://) instead of a website/server.",
+    confirm_file_protocol_export:"It looks like this page is open as a local file (the address starts with file://), not through a website or server. In that mode browsers often refuse to hand over the finished image — the download may just do nothing. Open provodka.org directly, or via a local server, for reliable downloads. Try downloading anyway?",
+    confirm_canvas_too_large:"At this quality and drawing size, the finished image may not fit in the browser's memory — especially on Safari/iPhone, whose limit is much lower than Chrome's. The download will likely just do nothing. We recommend picking a lower quality. Try at the current quality anyway?",
+    heights_btn:'Heights', tt_heights:'Ceiling height and default cable-route height — needed to compute vertical cable runs',
+    heights_modal_title:'Heights',
+    heights_modal_desc:'Needed to compute vertical cable runs (from the route down to a socket/switch) — used in the ports diagram.',
+    ceiling_height_label:'Ceiling height (m)',
+    ceiling_height_hint:'Converts "from ceiling" ↔ "from floor", one value for the whole project.',
+    default_route_height_label:'Default route height',
+    default_route_height_hint:"Where the cable runs horizontally, if a colour doesn't have its own value set (field in the Properties panel).",
+    height_ref_floor:'from floor', height_ref_ceiling:'from ceiling',
+    route_height_label:'Route height for the current colour', route_height_ph:'default',
+    route_height_hint_own:'This colour has its own value.',
+    route_height_hint_default:'Currently using the default: {v}.',
     drop_hint:'Drag a plan here or click "Background"',
     tab_results:'Totals', tab_markers:'Markers', tab_props:'Properties',
     tt_show_all:'Show all hidden lines', show_all:'Show all', no_data:'No data',
@@ -1159,6 +1386,7 @@ const translations = {
     conn_connect:'Connect', conn_connect_hint:'meters count',
     conn_transit:'Pass-through', conn_transit_hint:'runs straight through',
     ctx_move:'Move', ctx_color:'Color', ctx_len:'Edit length', ctx_delete:'Delete',
+    ctx_add_point:'Add point', msg_point_added:'Point added — drag it to reshape the line.',
     unit_m:'m', show:'Show', hide:'Hide',
     res_by_cable_mark:'By cable type', res_section_lines:'Lines', res_section_markers:'Markers',
     res_lines_prefix:'Lines',
@@ -1257,6 +1485,14 @@ const translations = {
     mt_kind_multi:'Caja — varios puertos por lado',
     mt_kind_bus:'Panel — barra colectora, muchos puertos en los lados largos',
     mt_pro_only:'Cajas/paneles con puertos — solo en modo PRO',
+    mt_default_height:'Altura por defecto', mt_default_height_hint:'Se puede anular para un elemento concreto en el panel de propiedades.',
+    mt_height_ph_box:'sin definir — sin tramo vertical',
+    ok_btn:'Aceptar',
+    marker_height_label:'Altura del elemento', marker_height_hint_own:'Este elemento tiene su propio valor.',
+    marker_height_hint_default:'Actualmente se usa el valor por defecto del tipo: {v}.',
+    with_verticals_short:'vert.', with_allowance_short:'con margen',
+    panel_cable_counts_label:'Líneas por marca de cable',
+    cable_mark_unset:'marca no indicada',
     mt_pps:'Puertos por lado', mt_size:'Tamaño del marcador (radio, px)',
     mode_info_wall:'Marque los puntos del contorno de las paredes (pasos de 15°). Doble clic o Enter — cerrar el contorno. Esc — cancelar.',
     mode_info_line:'Clic para empezar, clic para terminar. Se ajusta a puntos y marcadores. Ajuste ortogonal ±7°.',
@@ -1266,6 +1502,7 @@ const translations = {
     mode_info_zones:'Clic derecho — iniciar una zona. Clic — añadir un punto. Doble clic/Enter — cerrar (mín. 3 puntos). Hacer clic cerca del primer punto también cierra. Seleccionar zona — clic dentro de su área; arrastre un punto para remodelar, arrastre el área para mover. Clic derecho en un punto — eliminarlo. Supr — eliminar toda la zona. Esc — cancelar/deseleccionar. Las zonas superpuestas se leen como una sola área continua — sin fusión manual.',
     msg_click_next_dblclick_finish:'Haga clic en el siguiente punto. Doble clic o clic en un marcador para terminar.',
     msg_line_done:'Línea terminada. Empiece una nueva o mueva un marcador.',
+    msg_line_done_unconnected:'Línea creada, pero un extremo no se conectó a un elemento — el clic falló. Arrastre ese extremo exactamente sobre el elemento.',
     msg_click_next_or_marker_finish:'Haga clic en el siguiente punto. Clic en un marcador para terminar.',
     msg_click_end_esc_cancel:'Haga clic en el punto final. Esc — cancelar.',
     msg_start_auto_connected:'Inicio conectado automáticamente. Elija el tipo de conexión para el final.',
@@ -1328,6 +1565,20 @@ const translations = {
     welcome_text2:'El botón «Tutorial» siempre está disponible en la barra superior.',
     welcome_later:'Más tarde', welcome_start:'Empezar tutorial',
     guide_h2:'Cómo usar la calculadora de cableado',
+    tt_whatsnew:'Novedades', whatsnew_btn:'Novedades',
+    whatsnew_h2:'Novedades',
+    wn_1_title:'Dirección para enchufes e interruptores',
+    wn_1_text:'Al colocar un elemento, ahora puede arrastrar el cursor — esto define de qué lado llega el cable al dispositivo. Para corregir la dirección de un elemento ya colocado, clic derecho directamente sobre él y arrastre. Las líneas hacia la caja de distribución ahora salen del elemento exactamente en la dirección indicada.',
+    wn_2_title:'«Optimizar puertos» ahora sí elimina los cruces',
+    wn_2_text:'El botón en las propiedades de la caja de distribución fue rediseñado a fondo: ahora ajusta no solo la forma del trazado, sino que también intercambia puertos entre líneas cuando eso reduce los cruces. Para elementos sin dirección estricta, las líneas se dirigen priorizando el lado de la caja opuesto a la dirección del cable.',
+    wn_3_title:'Alturas de tendido',
+    wn_3_text:'El botón «Alturas» — defina la altura del techo del proyecto y la altura de tendido por defecto (por color o por tramo específico). El esquema de puertos ahora muestra tres cifras: en línea recta, con los tramos verticales incluidos, y con el margen de conexión incluido.',
+    wn_4_title:'Insertar un punto en una línea',
+    wn_4_text:'Clic derecho en un tramo de línea → «Añadir punto». Luego puede arrastrar ese tramo ortogonalmente hacia un lado — igual que al bordear una caja — sin romper la línea ni sus ángulos rectos.',
+    wn_5_title:'El cursor ya no se desvía',
+    wn_5_text:'Se corrigió un desajuste entre el lugar donde realmente ocurría el clic y donde se mostraba la cruceta — era especialmente notorio al cambiar de modo (línea/elemento/selección).',
+    wn_footer_prompt:'¿Encontró un error o tiene una sugerencia?', wn_footer_link:'Escribir al desarrollador',
+    wn_close_btn:'Entendido',
     guide_sub:'Guía rápida de 2 minutos',
     guide_1_title:'Escenario A — tiene una foto del plano',
     guide_1_text:'Pulse <b>«Fondo»</b> o arrastre una imagen al lienzo. Luego pase directamente al paso 2 — «Defina la escala».',
@@ -1361,6 +1612,24 @@ const translations = {
     exp_theme_hint:'Puede marcar ambos — se descargarán dos archivos, uno por tema',
     exp_ports_diagram:'Descargar también el esquema de puertos (cajas/paneles ampliados con puertos etiquetados — archivo aparte)',
     exp_download_btn:'Descargar PNG',
+    exp_scalebar_label:'Escala gráfica',
+    exp_scalebar_bl:'Abajo a la izquierda', exp_scalebar_br:'Abajo a la derecha',
+    exp_scalebar_tl:'Arriba a la izquierda', exp_scalebar_tr:'Arriba a la derecha',
+    exp_scalebar_off:'No mostrar',
+    msg_export_failed:'No se pudo crear el archivo — puede que el plano sea demasiado grande para la calidad elegida (pruebe una menor), o que la página esté abierta como archivo local (file://) en vez de un sitio/servidor.',
+    confirm_file_protocol_export:'Parece que esta página está abierta como archivo local (la dirección empieza por file://), no a través de un sitio web o servidor. En ese modo, los navegadores suelen negarse a entregar la imagen final — la descarga puede simplemente no hacer nada. Abra provodka.org directamente, o mediante un servidor local, para descargas fiables. ¿Intentar descargar de todos modos?',
+    confirm_canvas_too_large:'Con esta calidad y este tamaño de plano, la imagen final puede no caber en la memoria del navegador — especialmente en Safari/iPhone, cuyo límite es mucho menor que el de Chrome. Lo más probable es que la descarga no haga nada. Recomendamos elegir una calidad menor. ¿Intentar de todos modos con la calidad actual?',
+    heights_btn:'Alturas', tt_heights:'Altura del techo y altura de trazado por defecto — necesarias para calcular los tramos verticales del cable',
+    heights_modal_title:'Alturas',
+    heights_modal_desc:'Necesarias para calcular los tramos verticales del cable (del trazado hasta el enchufe/interruptor) — se usa en el esquema de puertos.',
+    ceiling_height_label:'Altura del techo (m)',
+    ceiling_height_hint:'Para convertir «desde el techo» ↔ «desde el suelo», un valor para todo el proyecto.',
+    default_route_height_label:'Altura de trazado por defecto',
+    default_route_height_hint:'Por donde va el cable horizontalmente, si un color no tiene su propio valor (campo en el panel «Propiedades»).',
+    height_ref_floor:'desde el suelo', height_ref_ceiling:'desde el techo',
+    route_height_label:'Altura de trazado para el color actual', route_height_ph:'por defecto',
+    route_height_hint_own:'Este color tiene su propio valor.',
+    route_height_hint_default:'Actualmente se usa el valor por defecto: {v}.',
     drop_hint:'Arrastre un plano aquí o pulse «Fondo»',
     tab_results:'Totales', tab_markers:'Marcadores', tab_props:'Propiedades',
     tt_show_all:'Mostrar todas las líneas ocultas', show_all:'Mostrar todo', no_data:'Sin datos',
@@ -1376,6 +1645,7 @@ const translations = {
     conn_connect:'Conectar', conn_connect_hint:'cuentan los metros',
     conn_transit:'Tránsito', conn_transit_hint:'pasa de largo',
     ctx_move:'Mover', ctx_color:'Color', ctx_len:'Editar longitud', ctx_delete:'Eliminar',
+    ctx_add_point:'Añadir punto', msg_point_added:'Punto añadido — arrástrelo para cambiar el trazado de la línea.',
     unit_m:'m', show:'Mostrar', hide:'Ocultar',
     res_by_cable_mark:'Por tipo de cable', res_section_lines:'Líneas', res_section_markers:'Marcadores',
     res_lines_prefix:'Líneas',
@@ -1474,6 +1744,14 @@ const translations = {
     mt_kind_multi:'Қорап — әр жағында бірнеше порт',
     mt_kind_bus:'Щит — шина, ұзын жақтарында көп порт',
     mt_pro_only:'Порттары бар қораптар/щиттер — тек PRO режимінде',
+    mt_default_height:'Әдепкі биіктік', mt_default_height_hint:'Қасиеттер панелінде жеке белгіше үшін өзгертуге болады.',
+    mt_height_ph_box:'көрсетілмеген — тік учаске жоқ',
+    ok_btn:'Жарайды',
+    marker_height_label:'Белгіше биіктігі', marker_height_hint_own:'Бұл белгіше үшін өз мәні бар.',
+    marker_height_hint_default:'Қазір түрдің әдепкі мәні қолданылады: {v}.',
+    with_verticals_short:'тік.', with_allowance_short:'шығынмен',
+    panel_cable_counts_label:'Кабель маркасы бойынша сызықтар',
+    cable_mark_unset:'марка көрсетілмеген',
     mt_pps:'Әр жақтағы порттар', mt_size:'Белгіше өлшемі (радиус, px)',
     mode_info_wall:'Қабырға контурының нүктелерін шертіңіз (бұрыш қадамы 15°). Қос шерту немесе Enter — контурды аяқтау. Esc — болдырмау.',
     mode_info_line:'Шерту — бастау, шерту — аяқтау. Нүктелер мен белгішелерге тарту. Ортогональ тарту ±7°.',
@@ -1483,6 +1761,7 @@ const translations = {
     mode_info_zones:'Оң жақ түйме — аймақты бастау. Шерту — нүкте қосу. Қос шерту/Enter — жабу (мин. 3 нүкте). Бірінші нүктенің жанына шерту де жабады. Аймақты таңдау — оның аумағын шерту; нүктені тарту — қайта пішіндеу, аумақты тарту — жылжыту. Нүктені оң жақ түймемен басу — оны жою. Del — бүкіл аймақты жою. Esc — болдырмау/таңдауды алу. Бір-бірімен қабаттасатын аймақтар оптимизатормен бір тұтас аймақ ретінде оқылады — қолмен біріктірусіз.',
     msg_click_next_dblclick_finish:'Келесі нүктені шертіңіз. Қос шерту немесе белгішені шерту — аяқтау.',
     msg_line_done:'Сызық аяқталды. Жаңасын бастаңыз немесе белгішені жылжытыңыз.',
+    msg_line_done_unconnected:'Сызық жасалды, бірақ бір ұшы белгішеге қосылмады — шерту өтіп кетті. Осы ұшты дәл белгішеге тартыңыз.',
     msg_click_next_or_marker_finish:'Келесі нүктені шертіңіз. Белгішені шерту — аяқтау.',
     msg_click_end_esc_cancel:'Соңғы нүктені шертіңіз. Esc — болдырмау.',
     msg_start_auto_connected:'Басы автоматты түрде қосылды. Соңы үшін қосылу түрін таңдаңыз.',
@@ -1545,6 +1824,20 @@ const translations = {
     welcome_text2:'«Оқыту» түймесі әрқашан жоғарғы панельде қолжетімді.',
     welcome_later:'Кейінірек', welcome_start:'Оқытудан өту',
     guide_h2:'Сым калькуляторын қалай пайдалану керек',
+    tt_whatsnew:'Не жаңалық бар', whatsnew_btn:'Не жаңалық бар',
+    whatsnew_h2:'Не жаңалық бар',
+    wn_1_title:'Розетка мен ажыратқыш үшін бағыт',
+    wn_1_text:'Белгішені қою кезінде енді курсорды тартуға болады — осылай кабель құрылғыға қай жақтан келетінін белгілейсіз. Тұрған белгішенің бағытын түзету — тінтуірдің оң жақ түймесімен дәл белгішеге басып тарту. Қораптарға баратын сызықтар енді белгіден нақ берілген бағытта шығады.',
+    wn_2_title:'«Порттарды оңтайландыру» енді қиылысуларды нақты жояды',
+    wn_2_text:'Тарату қорабының қасиеттеріндегі түйме елеулі түрде қайта жасалды: енді жол пішінін ғана емес, қиылысулар азаятын болса, сызықтар арасында порттарды да ауыстырады. Қатаң бағыты жоқ белгішелер үшін сызықтар қораптың кабель бағытына қарама-қарсы жағын басымдықпен таңдайды.',
+    wn_3_title:'Төсеу биіктіктері',
+    wn_3_text:'«Биіктіктер» түймесі — жобаның төбе биіктігін және әдепкі төсеу биіктігін (түс немесе нақты тармақ үшін) орнатыңыз. Порт схемасында енді үш сан көрсетіледі: тура сызық бойынша, тік тармақтарды ескере отырып, және қосылу шығынын ескере отырып.',
+    wn_4_title:'Сызыққа нүкте қосу',
+    wn_4_text:'Сызық үзіндісінде тінтуірдің оң жақ түймесі → «Нүкте қосу». Одан кейін бұл бөлікті ортогональ түрде бүйірге тартуға болады — қорапты айналып өткендей — сызықты немесе оның тік бұрыштарын бұзбай.',
+    wn_5_title:'Курсор енді «қашпайды»',
+    wn_5_text:'Шертудің нақты орны мен айқас белгінің көрсетілетін орны арасындағы алшақтық түзетілді — режимді ауыстырғанда (сызық/белгіше/таңдау) әсіресе байқалатын.',
+    wn_footer_prompt:'Қате таптыңыз ба немесе ұсынысыңыз бар ма?', wn_footer_link:'Әзірлеушіге жазу',
+    wn_close_btn:'Түсінікті',
     guide_sub:'2 минуттық қысқаша нұсқаулық',
     guide_1_title:'А сценарийі — жоспар фотосы бар',
     guide_1_text:'<b>«Фон»</b> басыңыз немесе суретті холст үстіне тартыңыз. Содан кейін бірден 2-қадамға өтіңіз — «Масштабты орнатыңыз».',
@@ -1578,6 +1871,24 @@ const translations = {
     exp_theme_hint:'Екеуін де белгілеуге болады — әр тақырыптан бір файл жүктеледі',
     exp_ports_diagram:'Порт схемасын да жүктеу (жазылған порттары бар үлкейтілген қораптар/щиттер — бөлек файл)',
     exp_download_btn:'PNG жүктеу',
+    exp_scalebar_label:'Масштаб шкаласы',
+    exp_scalebar_bl:'Төменгі сол', exp_scalebar_br:'Төменгі оң',
+    exp_scalebar_tl:'Жоғарғы сол', exp_scalebar_tr:'Жоғарғы оң',
+    exp_scalebar_off:'Көрсетпеу',
+    msg_export_failed:'Файлды жасау мүмкін болмады — сызба таңдалған сапа үшін тым үлкен болуы мүмкін (төменірегін байқап көріңіз), немесе бет сайт/сервер орнына жергілікті файл (file://) ретінде ашылған.',
+    confirm_file_protocol_export:'Бұл бет сайт немесе сервер арқылы емес, жергілікті файл ретінде ашылған сияқты (мекенжай file:// деп басталады). Бұл режимде браузерлер көбінесе дайын суретті беруден бас тартады — жүктеп алу жай ештеңе істемеуі мүмкін. Сенімді жұмыс үшін provodka.org тікелей немесе жергілікті сервер арқылы ашыңыз. Бәрібір қазір жүктеп көру керек пе?',
+    confirm_canvas_too_large:'Осы сапа мен сызба өлшемінде дайын сурет браузер жадына сыймауы мүмкін — әсіресе Safari/iPhone-де, оның лимиті Chrome-ға қарағанда әлдеқайда төмен. Жүктеп алу, сірә, жай ештеңе істемейді. Төменірек сапаны таңдауды ұсынамыз. Бәрібір ағымдағы сапамен көру керек пе?',
+    heights_btn:'Биіктіктер', tt_heights:'Төбенің биіктігі және трассаны әдепкі бойынша төсеу биіктігі — кабельдің тік учаскелерін есептеу үшін керек',
+    heights_modal_title:'Биіктіктер',
+    heights_modal_desc:'Кабельдің тік учаскелерін есептеу үшін керек (трассадан розетка/ажыратқышқа дейін) — порттар схемасында қолданылады.',
+    ceiling_height_label:'Төбенің биіктігі (м)',
+    ceiling_height_hint:'«Төбеден» ↔ «еденнен» қайта есептеу үшін, бүкіл жобаға бір мән.',
+    default_route_height_label:'Әдепкі трасса биіктігі',
+    default_route_height_hint:'Кабель қайда көлденең жүреді, егер түс үшін өз мәні орнатылмаса («Қасиеттер» панеліндегі өріс).',
+    height_ref_floor:'еденнен', height_ref_ceiling:'төбеден',
+    route_height_label:'Ағымдағы түс үшін трасса биіктігі', route_height_ph:'әдепкі бойынша',
+    route_height_hint_own:'Бұл түс үшін өз мәні бар.',
+    route_height_hint_default:'Қазір әдепкі мән қолданылады: {v}.',
     drop_hint:'Жоспарды осында тартыңыз немесе «Фон» басыңыз',
     tab_results:'Қорытынды', tab_markers:'Белгішелер', tab_props:'Қасиеттер',
     tt_show_all:'Барлық жасырын сызықтарды көрсету', show_all:'Барлығын көрсету', no_data:'Деректер жоқ',
@@ -1593,6 +1904,7 @@ const translations = {
     conn_connect:'Қосу', conn_connect_hint:'метрлер есептеледі',
     conn_transit:'Транзит', conn_transit_hint:'өтіп кетеді',
     ctx_move:'Жылжыту', ctx_color:'Түс', ctx_len:'Ұзындықты өзгерту', ctx_delete:'Жою',
+    ctx_add_point:'Нүкте қосу', msg_point_added:'Нүкте қосылды — сызық жолын өзгерту үшін оны тартыңыз.',
     unit_m:'м', show:'Көрсету', hide:'Жасыру',
     res_by_cable_mark:'Кабель маркалары бойынша', res_section_lines:'Сызықтар', res_section_markers:'Белгішелер',
     res_lines_prefix:'Сызықтар',
@@ -1736,6 +2048,21 @@ function crossingPenaltyWorld(){ return mToW(crossingPenaltyCm/100); }
 let colorLabels = {};
 let colorCableTypes = {}; // hex -> cable type string (e.g. "ВВГ 3×2.5"), set once per color
 let hiddenColors = new Set(); // colors whose segments are hidden
+
+// Vertical run bookkeeping (added for the "length with verticals" ports-diagram
+// feature) — cable isn't just the flat planar path; it also runs vertically
+// from wherever it travels horizontally (the "route") down/up to the actual
+// device. ceilingHeightM converts any 'ceiling'-referenced height to a
+// floor-referenced one so everything can be compared on one scale.
+let ceilingHeightM = 2.8;           // project-wide, one number, simpler than per-room
+let defaultRouteHeightM = 0;        // project-wide default route height — 0 from ceiling by default
+let defaultRouteHeightRef = 'ceiling'; // 'floor'|'ceiling'
+let colorRouteHeight = {};          // {hex: {m, ref}} — optional per-colour override
+function heightToFloorRel(m, ref){ return ref==='ceiling' ? ceilingHeightM-m : m; }
+function routeHeightForColor(hex){
+  const o=colorRouteHeight[hex];
+  return o ? heightToFloorRel(o.m,o.ref) : heightToFloorRel(defaultRouteHeightM,defaultRouteHeightRef);
+}
 // walls: {id, wx1,wy1,wx2,wy2} — visual room outline, no metres calculation
 let walls = [];
 
@@ -2114,18 +2441,13 @@ function bestPortForLine(line, mk, atEnd, candidatePorts){
 //   If no free port on the primary side, fall back to the secondary side (the
 //   axis with the smaller offset), then finally the opposite (U-turn) side.
 // This implements: "розетка больше справа меньше снизу — правый нижний порт" etc.
-function choosePortTowardPoint(mk, targetPt, usedSet){
+function choosePortTowardPoint(mk, targetPt, usedSet, targetFacing){
   const mt=markerTypes.find(t=>t.id===mk.mtypeId);
   const ports=getMarkerPorts(mk);
   if(!ports.length) return null;
   if(!mt||mt.kind==='point') return ports[0];
 
   const used=usedSet||new Set();
-  const dx=targetPt.wx-mk.wx, dy=targetPt.wy-mk.wy;
-  const primaryHorizontal=Math.abs(dx)>=Math.abs(dy);
-  const primarySide  =primaryHorizontal?(dx>=0?'right':'left'):(dy>=0?'bottom':'top');
-  const secondarySide=primaryHorizontal?(dy>=0?'bottom':'top'):(dx>=0?'right':'left');
-  const oppositeSide  ={top:'bottom',bottom:'top',left:'right',right:'left'}[primarySide];
 
   function nearestOnSide(side){
     const cands=ports.filter(p=>p.side===side && !used.has(`${p.side}_${p.idx??0}`));
@@ -2138,6 +2460,31 @@ function choosePortTowardPoint(mk, targetPt, usedSet){
     });
     return cands[0];
   }
+
+  if(targetFacing){
+    // A cable leaving a facing marker heading, say, west reads best
+    // entering the box from the EAST (opposite) side — trying to use the
+    // box's west side too would mean it immediately doubles back on
+    // itself. Perpendicular sides are the next best fit; the box side
+    // matching the marker's own facing direction is the last resort.
+    const oppositeOfFacing={left:'right',right:'left',up:'bottom',down:'top'};
+    const sameAsFacing={left:'left',right:'right',up:'top',down:'bottom'};
+    const preferred=oppositeOfFacing[targetFacing];
+    const lastResort=sameAsFacing[targetFacing];
+    const perpendiculars=(preferred==='left'||preferred==='right')?['top','bottom']:['left','right'];
+    return nearestOnSide(preferred)
+        || nearestOnSide(perpendiculars[0])
+        || nearestOnSide(perpendiculars[1])
+        || nearestOnSide(lastResort)
+        || ports.find(p=>!used.has(`${p.side}_${p.idx??0}`))
+        || ports[0];
+  }
+
+  const dx=targetPt.wx-mk.wx, dy=targetPt.wy-mk.wy;
+  const primaryHorizontal=Math.abs(dx)>=Math.abs(dy);
+  const primarySide  =primaryHorizontal?(dx>=0?'right':'left'):(dy>=0?'bottom':'top');
+  const secondarySide=primaryHorizontal?(dy>=0?'bottom':'top'):(dx>=0?'right':'left');
+  const oppositeSide  ={top:'bottom',bottom:'top',left:'right',right:'left'}[primarySide];
 
   return nearestOnSide(primarySide)
       || nearestOnSide(secondarySide)
@@ -2215,6 +2562,142 @@ function buildBoxAwareConnector(a, b, boxAxis, boxAt){
     bend = boxAxis==='h' ? {wx:a.wx,wy:b.wy} : {wx:b.wx,wy:a.wy};
   }
   return [{wx:a.wx,wy:a.wy}, bend, {wx:b.wx,wy:b.wy}];
+}
+
+// Like buildBoxAwareConnector, but for a point marker with a fixed "facing"
+// (which way is away from its wall) — the run off the marker must go
+// strictly in that SIGNED direction (not just "this axis"), extending far
+// enough that the second leg never has to double back toward the wall.
+// This is what makes the cable leave a wall-mounted socket/switch head-on
+// instead of sliding along the wall first.
+// The marker's own facing-mandated exit is now a REAL point in the path
+// (not stub metadata) — a fixed ~20cm run off the marker, then a normal
+// minimal-bend connector from there to the target. Because it's an
+// ordinary pts[] entry, the user can drag it or collapse it later with the
+// regular point/segment editing tools, same as any point they'd add by
+// hand — unlike a stored stub, nothing about it is special or permanent.
+// This also naturally avoids "run the maximum distance in the facing
+// direction, then turn" — the exit is always short, and buildOrthogonalConnector
+// picks whatever's actually shortest from there.
+function buildFacingAwareConnector(markerPt, facing, otherPt){
+  const dir=FACING_DIRS[facing];
+  const EXIT_RUN=mToW(0.2); // ~20cm real point, not a stub
+  const anchor = dir.dx!==0
+    ? {wx:markerPt.wx+dir.dx*EXIT_RUN, wy:markerPt.wy}
+    : {wx:markerPt.wx, wy:markerPt.wy+dir.dy*EXIT_RUN};
+  const rest=buildOrthogonalConnector(anchor, otherPt);
+  return [{wx:markerPt.wx,wy:markerPt.wy}, ...rest];
+}
+
+// Same connection, but forces the OPPOSITE bend order from the anchor to
+// the target (buildOrthogonalConnector picks whichever axis has the larger
+// offset first; this picks the other one instead). Only used when trying
+// to route around a specific crossing with a sibling line — a plain single
+// bend has exactly two possible shapes, and if the default one crosses
+// something, the other one is the first thing worth trying before reaching
+// for anything more complex.
+function buildFacingAwareConnectorAlt(markerPt, facing, otherPt){
+  const dir=FACING_DIRS[facing];
+  const EXIT_RUN=mToW(0.2);
+  const anchor = dir.dx!==0
+    ? {wx:markerPt.wx+dir.dx*EXIT_RUN, wy:markerPt.wy}
+    : {wx:markerPt.wx, wy:markerPt.wy+dir.dy*EXIT_RUN};
+  if(Math.abs(anchor.wx-otherPt.wx)<0.5 || Math.abs(anchor.wy-otherPt.wy)<0.5){
+    return [{wx:markerPt.wx,wy:markerPt.wy}, {wx:anchor.wx,wy:anchor.wy}, {wx:otherPt.wx,wy:otherPt.wy}];
+  }
+  const ddx=Math.abs(otherPt.wx-anchor.wx), ddy=Math.abs(otherPt.wy-anchor.wy);
+  const bend=ddx>=ddy?{wx:anchor.wx,wy:otherPt.wy}:{wx:otherPt.wx,wy:anchor.wy}; // opposite of buildOrthogonalConnector's own choice
+  return [{wx:markerPt.wx,wy:markerPt.wy}, {wx:anchor.wx,wy:anchor.wy}, bend, {wx:otherPt.wx,wy:otherPt.wy}];
+}
+
+// Does segment a->b "накладывается" (overlap) any segment of any line in
+// avoidLines — either a genuine crossing (perpendicular intersection), or
+// running coaxially with an overlapping range within tolerance (parallel,
+// same track, which reads just as badly on the drawing)?
+function segmentOverlapsAnyLine(a, b, avoidLines, tolerance){
+  const abIsH=Math.abs(a.wy-b.wy)<Math.abs(a.wx-b.wx);
+  for(const pts of avoidLines){
+    for(let i=0;i<pts.length-1;i++){
+      const c=pts[i], d=pts[i+1];
+      if(segsIntersect(a.wx,a.wy,b.wx,b.wy,c.wx,c.wy,d.wx,d.wy)) return true;
+      const cdIsH=Math.abs(c.wy-d.wy)<Math.abs(c.wx-d.wx);
+      if(abIsH && cdIsH && Math.abs(a.wy-c.wy)<tolerance){
+        const abLo=Math.min(a.wx,b.wx), abHi=Math.max(a.wx,b.wx);
+        const cdLo=Math.min(c.wx,d.wx), cdHi=Math.max(c.wx,d.wx);
+        if(abLo<cdHi-tolerance && cdLo<abHi-tolerance) return true;
+      }
+      if(!abIsH && !cdIsH && Math.abs(a.wx-c.wx)<tolerance){
+        const abLo=Math.min(a.wy,b.wy), abHi=Math.max(a.wy,b.wy);
+        const cdLo=Math.min(c.wy,d.wy), cdHi=Math.max(c.wy,d.wy);
+        if(abLo<cdHi-tolerance && cdLo<abHi-tolerance) return true;
+      }
+    }
+  }
+  return false;
+}
+
+// Builds the connector for a facing-constrained marker using a fixed
+// 2-bend shape — exit along the facing axis, a cross-leg to reach the
+// other end's coordinate on the perpendicular axis, then the final leg
+// straight in. Unlike buildFacingAwareConnector's "run as far as possible,
+// one bend" shape, the exit length here starts at ~20cm and grows in 2cm
+// steps for as long as the cross-leg overlaps ("накладывается") any
+// already-placed line — this is what makes crossings get avoided
+// PROACTIVELY, as each line is routed, instead of being fixed up
+// afterward. avoidLines is a list of other lines' pts arrays to check
+// against (typically this box's sibling lines, already finalized).
+function buildFacingAwareConnectorAdaptive(markerPt, facing, otherPt, avoidLines){
+  const dir=FACING_DIRS[facing];
+  const STEP=mToW(0.02), TOL=mToW(0.01);
+  let exitLen=mToW(0.2);
+  const MAX_TRIES=80; // 20cm + 80*2cm = up to 180cm — generous safety cap
+  // Never let the exit run overshoot past the target's own coordinate on
+  // the facing axis — beyond that point the final leg would have to double
+  // back on itself, which reads as a broken zigzag rather than a clean
+  // route. If the target is "behind" the facing direction there's no such
+  // ceiling from this rule (the exit always needs to clear the marker
+  // first regardless), so MAX_TRIES alone is the guard there.
+  let maxExitLen=Infinity;
+  if(dir.dx!==0){
+    const aheadDist = dir.dx>0 ? (otherPt.wx-markerPt.wx) : (markerPt.wx-otherPt.wx);
+    if(aheadDist>0) maxExitLen=aheadDist;
+  } else {
+    const aheadDist = dir.dy>0 ? (otherPt.wy-markerPt.wy) : (markerPt.wy-otherPt.wy);
+    if(aheadDist>0) maxExitLen=aheadDist;
+  }
+  let path;
+  for(let t=0;t<MAX_TRIES;t++){
+    const clampedExit=Math.min(exitLen, maxExitLen);
+    if(dir.dx!==0){
+      const exitX=markerPt.wx+dir.dx*clampedExit;
+      path=[
+        {wx:markerPt.wx,wy:markerPt.wy},
+        {wx:exitX,wy:markerPt.wy},
+        {wx:exitX,wy:otherPt.wy},
+        {wx:otherPt.wx,wy:otherPt.wy},
+      ];
+    } else {
+      const exitY=markerPt.wy+dir.dy*clampedExit;
+      path=[
+        {wx:markerPt.wx,wy:markerPt.wy},
+        {wx:markerPt.wx,wy:exitY},
+        {wx:otherPt.wx,wy:exitY},
+        {wx:otherPt.wx,wy:otherPt.wy},
+      ];
+    }
+    // Check every leg, not just the cross-leg — near the box, where several
+    // lines converge on their own stubs, a conflict just as often shows up
+    // on the final leg (the approach into the port) as on the middle one.
+    if(!(avoidLines&&avoidLines.length)) return path;
+    let blocked=false;
+    for(let i=0;i<path.length-1 && !blocked;i++){
+      if(segmentOverlapsAnyLine(path[i],path[i+1],avoidLines,TOL)) blocked=true;
+    }
+    if(!blocked) return path;
+    if(clampedExit>=maxExitLen) break; // hit the ceiling — further extension would just start backtracking
+    exitLen+=STEP;
+  }
+  return path; // exhausted the search — return the last (capped) attempt rather than something worse
 }
 
 // Connects a list of waypoints (start stub end, any manual points the user
@@ -2489,6 +2972,17 @@ function enforceMinSegment(line){
   const pts=line.pts;
   if(!pts||pts.length<2) return;
 
+  // If the endpoint at pts[0]/pts[last] is a point-kind marker with a
+  // facing constraint, the leg touching it MUST stay on that axis — used
+  // below instead of the generic "which axis was it before" heuristic,
+  // which doesn't know about facing and can insert a bend that undoes it.
+  function facingIsHorizontal(conn){
+    if(!conn?.markerId) return null;
+    const mk=markers.find(m=>m.id===conn.markerId);
+    if(!mk?.facing) return null;
+    return FACING_DIRS[mk.facing].dx!==0;
+  }
+
   let guard=0, changed=true;
   while(changed&&guard<50){
     changed=false; guard++;
@@ -2514,14 +3008,19 @@ function enforceMinSegment(line){
         pts[i+1]=newB;
         if(pts.length>i+2){
           const c=pts[i+2];
-          const wasH=Math.abs(c.wy-b.wy)<=Math.abs(c.wx-b.wx);
-          const bend=wasH?{wx:c.wx,wy:newB.wy}:{wx:newB.wx,wy:c.wy};
           if(i+2===pts.length-1){
             // c is the line's OTHER connected endpoint — never move it.
             // Insert a bend point instead so the path stays orthogonal.
+            // If c's own marker has a facing constraint, the leg touching
+            // it must stay on that axis, not whatever axis the segment
+            // we're fixing happened to be on before.
+            const forcedH=facingIsHorizontal(line.connEnd);
+            const wasH=forcedH!=null ? !forcedH : (Math.abs(c.wy-b.wy)<=Math.abs(c.wx-b.wx));
+            const bend=wasH?{wx:c.wx,wy:newB.wy}:{wx:newB.wx,wy:c.wy};
             pts.splice(i+2,0,bend);
           } else {
-            pts[i+2]=bend;
+            const wasH=Math.abs(c.wy-b.wy)<=Math.abs(c.wx-b.wx);
+            pts[i+2]=wasH?{wx:c.wx,wy:newB.wy}:{wx:newB.wx,wy:c.wy};
           }
         }
         changed=true; break;
@@ -2537,14 +3036,16 @@ function enforceMinSegment(line){
         pts[i]=newA;
         if(i-1>=0){
           const p=pts[i-1];
-          const wasH=Math.abs(p.wy-a.wy)<=Math.abs(p.wx-a.wx);
-          const bend=wasH?{wx:p.wx,wy:newA.wy}:{wx:newA.wx,wy:p.wy};
           if(i-1===0){
             // p is the line's OTHER connected endpoint — never move it.
-            // Insert a bend point instead so the path stays orthogonal.
+            // Same facing check as above, mirrored for the start end.
+            const forcedH=facingIsHorizontal(line.connStart);
+            const wasH=forcedH!=null ? !forcedH : (Math.abs(p.wy-a.wy)<=Math.abs(p.wx-a.wx));
+            const bend=wasH?{wx:p.wx,wy:newA.wy}:{wx:newA.wx,wy:p.wy};
             pts.splice(i,0,bend);
           } else {
-            pts[i-1]=bend;
+            const wasH=Math.abs(p.wy-a.wy)<=Math.abs(p.wx-a.wx);
+            pts[i-1]=wasH?{wx:p.wx,wy:newA.wy}:{wx:newA.wx,wy:p.wy};
           }
         }
         changed=true; break;
@@ -2704,7 +3205,12 @@ function alignPointMarkersToBoxPorts(mk){
       if(moved){
         const stubEnd=getStubEndPt(conn, port.wx, port.wy)||{wx:port.wx,wy:port.wy};
         const target={wx:otherMk.wx, wy:otherMk.wy};
-        line.pts = atEnd? buildWaypointPath([target, stubEnd]) : buildWaypointPath([stubEnd, target]);
+        if(otherMk.facing){
+          const rebuilt=buildFacingAwareConnectorAdaptive(target, otherMk.facing, stubEnd);
+          line.pts = atEnd ? rebuilt : rebuilt.slice().reverse();
+        } else {
+          line.pts = atEnd? buildWaypointPath([target, stubEnd]) : buildWaypointPath([stubEnd, target]);
+        }
         orthogonalizeLine(line);
         routeAroundMarkers(line);
       }
@@ -2723,6 +3229,470 @@ function alignPointMarkersToBoxPorts(mk){
 // base 5cm; two lines heading toward each other is a genuine crossing no
 // depth choice can avoid (that needs a different port assignment instead).
 // Applies to box-to-box connections too, not just box-to-socket ones.
+// ── Magistralization (bundling nearby box exits into a shared run) ──
+// Given a box-connected line's pts (with pts[0] = the box's own stub end,
+// never moved), returns a NEW pts array with the exit run (pts[1]) snapped
+// onto a different perpendicular coordinate — inserting a connector next to
+// the fixed stub, and another one further along if that helped preserve the
+// rest of the path unchanged. Pure function — used both to evaluate
+// candidate merges and to apply the winning one.
+function shiftExitSegmentTo(pts, newCoord){
+  const origLast=pts.length-1;
+  if(pts.length<2) return pts.map(p=>({...p}));
+  const segH=Math.abs(pts[1].wy-pts[0].wy)<=Math.abs(pts[1].wx-pts[0].wx);
+  const shiftPt=(pt)=> segH ? {wx:pt.wx, wy:newCoord} : {wx:newCoord, wy:pt.wy};
+  const isCollinear=(i)=> i+1<=origLast && (Math.abs(pts[i+1].wy-pts[i].wy)<=Math.abs(pts[i+1].wx-pts[i].wx))===segH;
+
+  // Only insert the connector next to pts[0] if it would actually differ
+  // from pts[0] itself — if newCoord already matches the stub's own
+  // perpendicular position, adding it anyway just creates an exact
+  // duplicate point.
+  const stub0Coord = segH ? pts[0].wy : pts[0].wx;
+  const head = Math.abs(stub0Coord-newCoord)<0.01 ? [{...pts[0]}] : [{...pts[0]}, shiftPt(pts[0])];
+  let tail;
+  if(1<origLast && isCollinear(1)){
+    tail=[shiftPt(pts[1]), segH?{wx:pts[2].wx,wy:newCoord}:{wx:newCoord,wy:pts[2].wy}, ...pts.slice(2).map(p=>({...p}))];
+  } else {
+    tail=[shiftPt(pts[1]), ...pts.slice(2).map(p=>({...p}))];
+  }
+  return [...head, ...tail];
+}
+
+// Tries pulling two lines' exit runs onto one shared coordinate — same
+// axis, so the existing bundling renderer draws them as a clean parallel
+// pair (no new data concept, no rendering change — see chat history).
+// Only accepted if NEITHER line's own length grows more than thresholdFrac
+// (10-15% requested; caller passes the ceiling). Returns null if the two
+// exits aren't even on the same axis, are already aligned, or merging
+// would cost either line too much length.
+function tryMergeExitRuns(ptsA, ptsB, thresholdFrac){
+  if(ptsA.length<2||ptsB.length<2) return null;
+  const segHA=Math.abs(ptsA[1].wy-ptsA[0].wy)<=Math.abs(ptsA[1].wx-ptsA[0].wx);
+  const segHB=Math.abs(ptsB[1].wy-ptsB[0].wy)<=Math.abs(ptsB[1].wx-ptsB[0].wx);
+  if(segHA!==segHB) return null;
+
+  const coordA=segHA?ptsA[1].wy:ptsA[1].wx;
+  const coordB=segHB?ptsB[1].wy:ptsB[1].wx;
+  if(Math.abs(coordA-coordB)<0.01) return null; // already aligned
+
+  const origLenA=lineLengthFromPts(ptsA), origLenB=lineLengthFromPts(ptsB);
+  let best=null;
+  [coordA, coordB].forEach(c=>{
+    const newA=Math.abs(c-coordA)<0.01 ? ptsA.map(p=>({...p})) : shiftExitSegmentTo(ptsA, c);
+    const newB=Math.abs(c-coordB)<0.01 ? ptsB.map(p=>({...p})) : shiftExitSegmentTo(ptsB, c);
+    const lenA=lineLengthFromPts(newA), lenB=lineLengthFromPts(newB);
+    const okA=lenA<=origLenA*(1+thresholdFrac)+0.01;
+    const okB=lenB<=origLenB*(1+thresholdFrac)+0.01;
+    if(okA&&okB){
+      const totalLen=lenA+lenB;
+      if(!best||totalLen<best.totalLen) best={newA,newB,totalLen};
+    }
+  });
+  return best;
+}
+function lineLengthFromPts(pts){
+  let l=0;
+  for(let i=0;i<pts.length-1;i++) l+=Math.hypot(pts[i+1].wx-pts[i].wx, pts[i+1].wy-pts[i].wy);
+  return l;
+}
+
+// Pairwise pass over a box's own lines: for each pair whose exit runs are
+// on the same axis, try bundling them per tryMergeExitRuns. Only considers
+// lines going to a point-kind marker (socket/switch) — that's the shape
+// shiftExitSegmentTo assumes (one stub, one run toward a single target);
+// box-to-box connections are left untouched.
+// Same staircase-detour technique as routeSegmentAroundBoxes, but for
+// routing pts[i]->pts[i+1] around a SPECIFIC other line's segments (given a
+// small clearance thickness) instead of a box's body. Kept as its own
+// function rather than refactoring routeSegmentAroundBoxes, so the
+// already-tested box-avoidance path is never at risk. Returns true and
+// mutates pts (inserting the detour) if obstacleSegs actually blocks this
+// segment; false (no change) otherwise.
+function routeSegmentAroundLineObstacle(pts, i, obstacleSegs, clearance){
+  const a=pts[i], b=pts[i+1];
+  const isH=Math.abs(a.wy-b.wy)<=Math.abs(a.wx-b.wx);
+  const rects=[];
+  for(const seg of obstacleSegs){
+    const segIsH=Math.abs(seg.a.wy-seg.b.wy)<=Math.abs(seg.a.wx-seg.b.wx);
+    if(segIsH===isH) continue; // parallel obstacle segments don't make a single crossing point to hop over this way
+    if(isH){
+      const y=a.wy;
+      const segX0=Math.min(a.wx,b.wx), segX1=Math.max(a.wx,b.wx);
+      const ox=seg.a.wx; // vertical obstacle segment: fixed X
+      const oy0=Math.min(seg.a.wy,seg.b.wy), oy1=Math.max(seg.a.wy,seg.b.wy);
+      if(y<=oy0||y>=oy1) continue;
+      if(ox<=segX0||ox>=segX1) continue;
+      // Small rect AROUND the actual crossing point (ox,y) — not the
+      // obstacle's own full length, which could be metres long.
+      rects.push({x0:ox-clearance,x1:ox+clearance,y0:y-clearance,y1:y+clearance});
+    } else {
+      const x=a.wx;
+      const segY0=Math.min(a.wy,b.wy), segY1=Math.max(a.wy,b.wy);
+      const oy=seg.a.wy; // horizontal obstacle segment: fixed Y
+      const ox0=Math.min(seg.a.wx,seg.b.wx), ox1=Math.max(seg.a.wx,seg.b.wx);
+      if(x<=ox0||x>=ox1) continue;
+      if(oy<=segY0||oy>=segY1) continue;
+      rects.push({x0:x-clearance,x1:x+clearance,y0:oy-clearance,y1:oy+clearance});
+    }
+  }
+  if(!rects.length) return false;
+
+  if(isH){
+    const y=a.wy;
+    const minY0=Math.min(...rects.map(r=>r.y0)), maxY1=Math.max(...rects.map(r=>r.y1));
+    const goTop=(y-minY0)<=(maxY1-y);
+    const detourY=goTop?minY0:maxY1;
+    const segX0=Math.min(a.wx,b.wx), segX1=Math.max(a.wx,b.wx);
+    const turnX0=Math.max(segX0, Math.min(...rects.map(r=>r.x0)));
+    const turnX1=Math.min(segX1, Math.max(...rects.map(r=>r.x1)));
+    const dir=b.wx>=a.wx?1:-1;
+    const tx1=dir>0?turnX0:turnX1, tx2=dir>0?turnX1:turnX0;
+    pts.splice(i+1,0,{wx:tx1,wy:y},{wx:tx1,wy:detourY},{wx:tx2,wy:detourY},{wx:tx2,wy:y});
+    return true;
+  } else {
+    const x=a.wx;
+    const minX0=Math.min(...rects.map(r=>r.x0)), maxX1=Math.max(...rects.map(r=>r.x1));
+    const goLeft=(x-minX0)<=(maxX1-x);
+    const detourX=goLeft?minX0:maxX1;
+    const segY0=Math.min(a.wy,b.wy), segY1=Math.max(a.wy,b.wy);
+    const turnY0=Math.max(segY0, Math.min(...rects.map(r=>r.y0)));
+    const turnY1=Math.min(segY1, Math.max(...rects.map(r=>r.y1)));
+    const dir=b.wy>=a.wy?1:-1;
+    const ty1=dir>0?turnY0:turnY1, ty2=dir>0?turnY1:turnY0;
+    pts.splice(i+1,0,{wx:x,wy:ty1},{wx:detourX,wy:ty1},{wx:detourX,wy:ty2},{wx:x,wy:ty2});
+    return true;
+  }
+}
+// Tries inserting a detour around EVERY segment of a line's own pts that
+// crosses obstacleLine's segments. Processes each ORIGINAL segment exactly
+// once (never re-scans a segment it just inserted) — re-scanning the
+// growing array was causing repeated near-duplicate detours to pile up
+// around the same spot. Returns a NEW pts array (does not mutate the input).
+function detourLineAroundLine(pts, obstacleLine, clearance){
+  const obstacleSegs=[];
+  for(let k=0;k<obstacleLine.length-1;k++) obstacleSegs.push({a:obstacleLine[k], b:obstacleLine[k+1]});
+  const result=[{...pts[0]}];
+  for(let i=0;i<pts.length-1;i++){
+    const tmp=[{...pts[i]},{...pts[i+1]}];
+    if(routeSegmentAroundLineObstacle(tmp, 0, obstacleSegs, clearance)){
+      result.push(...tmp.slice(1)); // tmp is now [a, p1,p2,p3,p4, b] — a is already in result
+    } else {
+      result.push({...pts[i+1]});
+    }
+  }
+  return result;
+}
+
+// After ports/stubs/facing exits have all settled, look for any REMAINING
+// crossings among just this box's own lines (matches "0 crossings within
+// one box" — not concerned with the rest of the drawing) and try to clear
+// them in three escalating steps: alternate bend order first (cheapest,
+// zero extra turns), then a real detour around the other line's own
+// segment (costs 2 extra turns, but reliably clears the conflict). Only
+// accepted if it stays within 15% of that line's length from BEFORE this
+// whole optimisation pass started (baselineLengths — not from whatever an
+// earlier step already changed it to), and only kept if it actually
+// reduces the crossing count between these two specific lines. Bounded
+// iteration count as a safety net against ever looping.
+// Swaps which box side/port two of this box's own lines use, rebuilds both
+// from scratch with the new assignment, and refreshes stub depths on the
+// whole box (a swap can change which OTHER lines share a side). Returns
+// true and keeps the swap if it doesn't make the crossing between these two
+// worse; false (and reverts everything) otherwise. This exists because the
+// exhaustive port search scores every candidate with the DEFAULT connector
+// shape — a swap that only pays off once resolveCrossingsWithAlternateShapes
+// gets a chance to fix up the shape afterward looks no better to that
+// search than leaving things alone, so it never gets chosen on its own.
+function tryPortSwapForCrossing(mk, cLines, facingCandidates, px, py, before, baselineLengths){
+  const A=facingCandidates[px], B=facingCandidates[py];
+  const connA=A.atEnd?A.line.connEnd:A.line.connStart;
+  const connB=B.atEnd?B.line.connEnd:B.line.connStart;
+  if(connA.side==='center'||connB.side==='center') return false; // shouldn't happen for a box's own conn
+
+  const savedA={...connA}, savedB={...connB};
+  const savedPtsA=A.line.pts, savedPtsB=B.line.pts;
+  const savedAllStubs=cLines.map(({line,atEnd})=>{
+    const c=atEnd?line.connEnd:line.connStart;
+    return {conn:c, side:c.side, portIdx:c.portIdx, stubLen:c.stubLen};
+  });
+
+  function rebuildFresh(cand){
+    const conn=cand.atEnd?cand.line.connEnd:cand.line.connStart;
+    const otherConn=cand.atEnd?cand.line.connStart:cand.line.connEnd;
+    const otherMk=markers.find(m=>m.id===otherConn.markerId);
+    const port=getMarkerPorts(mk).find(p=>p.side===conn.side&&p.idx===(conn.portIdx??0));
+    if(!port) return;
+    conn.stubLen=stubLenForIdx(conn.portIdx??0);
+    const dir=portSideDir(conn.side);
+    const stubEnd={wx:port.wx+dir.dx*conn.stubLen, wy:port.wy+dir.dy*conn.stubLen};
+    const target={wx:otherMk.wx, wy:otherMk.wy};
+    const avoidLines=cLines.filter(c=>c.line!==cand.line && c.line.pts).map(c=>c.line.pts);
+    const rebuilt=otherMk.facing
+      ? buildFacingAwareConnectorAdaptive(target, otherMk.facing, stubEnd, avoidLines)
+      : buildWaypointPath([target, stubEnd]);
+    cand.line.pts = cand.atEnd ? rebuilt : rebuilt.slice().reverse();
+    orthogonalizeLine(cand.line); routeAroundMarkers(cand.line);
+  }
+
+  const tmpSide=connA.side, tmpIdx=connA.portIdx;
+  connA.side=connB.side; connA.portIdx=connB.portIdx;
+  connB.side=tmpSide; connB.portIdx=tmpIdx;
+  rebuildFresh(A); rebuildFresh(B);
+  resolveBoxStubDepths(mk);
+
+  function countPairCrossingsNow(){
+    let n=0;
+    const pa=A.line.pts, pb=B.line.pts;
+    for(let a=0;a<pa.length-1;a++)for(let b=0;b<pb.length-1;b++){
+      if(segsIntersect(pa[a].wx,pa[a].wy,pa[a+1].wx,pa[a+1].wy,pb[b].wx,pb[b].wy,pb[b+1].wx,pb[b+1].wy)) n++;
+    }
+    return n;
+  }
+
+  // The swap alone often isn't enough — try the alternate bend order for
+  // each line too (same as resolveCrossingsWithAlternateShapes' step 1)
+  // before deciding whether this whole swap is worth keeping.
+  for(const cand of [A,B]){
+    if(countPairCrossingsNow()===0) break;
+    const conn=cand.atEnd?cand.line.connEnd:cand.line.connStart;
+    const otherConn=cand.atEnd?cand.line.connStart:cand.line.connEnd;
+    const otherMk=markers.find(m=>m.id===otherConn.markerId);
+    if(!otherMk?.facing) continue;
+    const port=getMarkerPorts(mk).find(p=>p.side===conn.side&&p.idx===(conn.portIdx??0));
+    if(!port) continue;
+    const dir=portSideDir(conn.side);
+    const stubEnd={wx:port.wx+dir.dx*conn.stubLen, wy:port.wy+dir.dy*conn.stubLen};
+    const target={wx:otherMk.wx, wy:otherMk.wy};
+    const baseline=baselineLengths.get(cand.line.id) ?? lineLengthFromPts(cand.line.pts);
+    const altRaw=buildFacingAwareConnectorAlt(target, otherMk.facing, stubEnd);
+    const altPts=cand.atEnd?altRaw:altRaw.slice().reverse();
+    if(lineLengthFromPts(altPts)<=baseline*1.15+0.01){
+      const before2=countPairCrossingsNow();
+      const savedCandPts=cand.line.pts;
+      cand.line.pts=altPts;
+      orthogonalizeLine(cand.line); routeAroundMarkers(cand.line);
+      if(countPairCrossingsNow()>=before2) cand.line.pts=savedCandPts; // no improvement, put it back
+    }
+  }
+
+  if(countPairCrossingsNow()<before) return true;
+
+  // Didn't help — put everything back exactly as it was.
+  Object.assign(connA, savedA); Object.assign(connB, savedB);
+  A.line.pts=savedPtsA; B.line.pts=savedPtsB;
+  savedAllStubs.forEach(s=>{ s.conn.side=s.side; s.conn.portIdx=s.portIdx; s.conn.stubLen=s.stubLen; });
+  return false;
+}
+
+// Rebuilds every one of this box's own lines that goes to a facing-
+// constrained point marker, one at a time, using the adaptive-exit-length
+// algorithm — each new line avoids every sibling already finalized in this
+// same pass. This is what makes crossings get avoided PROACTIVELY as each
+// line is routed, rather than reactively fixed up afterward. Lines whose
+// other end isn't a facing point marker are left to whatever built them
+// already (box-to-box connections, etc.) — this pass only touches the case
+// buildFacingAwareConnectorAdaptive actually applies to.
+function rebuildLinesAdaptively(mk, cLines){
+  const facingCandidates=cLines.filter(({line,atEnd})=>{
+    const otherConn=atEnd?line.connStart:line.connEnd;
+    const otherMk=otherConn?.markerId?markers.find(m=>m.id===otherConn.markerId):null;
+    const otherMt=otherMk?markerTypes.find(t=>t.id===otherMk.mtypeId):null;
+    return otherMt?.kind==='point' && !!otherMk?.facing;
+  });
+  if(!facingCandidates.length) return;
+
+  function buildOneAvoiding(cand, avoidLines){
+    const {line, atEnd}=cand;
+    const conn=atEnd?line.connEnd:line.connStart;
+    const otherConn=atEnd?line.connStart:line.connEnd;
+    const otherMk=markers.find(m=>m.id===otherConn.markerId);
+    const port=getMarkerPorts(mk).find(p=>p.side===conn.side&&p.idx===(conn.portIdx??0));
+    if(!port) return null;
+    const stubLen=stubLenForIdx(conn.portIdx??0);
+    conn.stubLen=stubLen;
+    const dir=portSideDir(conn.side);
+    const stubEnd={wx:port.wx+dir.dx*stubLen, wy:port.wy+dir.dy*stubLen};
+    const target={wx:otherMk.wx, wy:otherMk.wy};
+    const rebuilt=buildFacingAwareConnectorAdaptive(target, otherMk.facing, stubEnd, avoidLines);
+    return atEnd ? rebuilt : rebuilt.slice().reverse();
+  }
+
+  // First pass: build each in turn, avoiding only what's already been
+  // placed — matches the straightforward reading of the spec, and is
+  // enough on its own for the common case.
+  for(let i=0;i<facingCandidates.length;i++){
+    const cand=facingCandidates[i];
+    const avoidLines=facingCandidates.slice(0,i).map(c=>c.line.pts);
+    const pts=buildOneAvoiding(cand, avoidLines);
+    if(pts){ cand.line.pts=pts; orthogonalizeLine(cand.line); routeAroundMarkers(cand.line); }
+  }
+
+  // Relaxation passes: the very first line built above had nothing to
+  // avoid yet, so it can still end up in the way of something placed
+  // later. Re-settle every line against the CURRENT state of every other
+  // one (this time including lines processed after it too), repeating
+  // until nothing changes or a guard cap is hit.
+  for(let iter=0; iter<6; iter++){
+    let changed=false;
+    for(const cand of facingCandidates){
+      const before=JSON.stringify(cand.line.pts);
+      const avoidLines=facingCandidates.filter(c=>c!==cand).map(c=>c.line.pts);
+      const pts=buildOneAvoiding(cand, avoidLines);
+      if(pts){
+        cand.line.pts=pts; orthogonalizeLine(cand.line); routeAroundMarkers(cand.line);
+        if(JSON.stringify(cand.line.pts)!==before) changed=true;
+      }
+    }
+    if(!changed) break;
+  }
+}
+
+function resolveCrossingsWithAlternateShapes(mk, cLines, baselineLengths){
+  const facingCandidates=cLines.filter(({line,atEnd})=>{
+    const otherConn=atEnd?line.connStart:line.connEnd;
+    const otherMk=otherConn?.markerId?markers.find(m=>m.id===otherConn.markerId):null;
+    const otherMt=otherMk?markerTypes.find(t=>t.id===otherMk.mtypeId):null;
+    return otherMt?.kind==='point' && !!otherMk?.facing && line.pts?.length>=2;
+  });
+  if(facingCandidates.length<2) return;
+
+  function countPairCrossings(x,y){
+    let n=0;
+    const A=facingCandidates[x].line.pts, B=facingCandidates[y].line.pts;
+    for(let a=0;a<A.length-1;a++)for(let b=0;b<B.length-1;b++){
+      if(segsIntersect(A[a].wx,A[a].wy,A[a+1].wx,A[a+1].wy,B[b].wx,B[b].wy,B[b+1].wx,B[b+1].wy)) n++;
+    }
+    return n;
+  }
+  function findCrossingPair(){
+    for(let x=0;x<facingCandidates.length;x++)for(let y=x+1;y<facingCandidates.length;y++){
+      if(countPairCrossings(x,y)>0) return [x,y];
+    }
+    return null;
+  }
+
+  const LINE_CLEARANCE=mToW(0.03); // ~3cm — matches the app's own line-width+gap convention
+
+  let guard=0;
+  while(guard++<12){
+    const pair=findCrossingPair();
+    if(!pair) break;
+    const [px,py]=pair;
+    const before=countPairCrossings(px,py);
+    if(tryPortSwapForCrossing(mk, cLines, facingCandidates, px, py, before, baselineLengths)){
+      continue; // helped (or fully resolved) — re-scan from scratch, the shape fixups below still get a chance on whatever's left
+    }
+    let fixed=false;
+    for(const idx of pair){
+      const otherIdx = idx===pair[0] ? pair[1] : pair[0];
+      const {line, atEnd}=facingCandidates[idx];
+      const otherConn=atEnd?line.connStart:line.connEnd;
+      const otherMk=markers.find(m=>m.id===otherConn.markerId);
+      const conn=atEnd?line.connEnd:line.connStart;
+      const port=getMarkerPorts(mk).find(p=>p.side===conn.side&&p.idx===(conn.portIdx??0));
+      if(!port) continue;
+      const stubLen=stubLenForIdx(conn.portIdx??0);
+      const dir=portSideDir(conn.side);
+      const stubEnd={wx:port.wx+dir.dx*stubLen, wy:port.wy+dir.dy*stubLen};
+      const target={wx:otherMk.wx, wy:otherMk.wy};
+      const baseline=baselineLengths.get(line.id) ?? lineLengthFromPts(line.pts);
+      const savedPts=line.pts;
+
+      // Step 1: cheapest fix — just the other bend order, no extra turns.
+      const altRaw=buildFacingAwareConnectorAlt(target, otherMk.facing, stubEnd);
+      const altPts=atEnd?altRaw:altRaw.slice().reverse();
+      if(lineLengthFromPts(altPts)<=baseline*1.15+0.01){
+        line.pts=altPts;
+        orthogonalizeLine(line); routeAroundMarkers(line);
+        if(countPairCrossings(px,py)<before){ fixed=true; break; }
+        line.pts=savedPts;
+      }
+
+      // Step 2: a real detour around the other line's own segment — costs
+      // extra turns, but actually clears a conflict neither bend order can.
+      const detoured=detourLineAroundLine(savedPts, facingCandidates[otherIdx].line.pts, LINE_CLEARANCE);
+      if(lineLengthFromPts(detoured)<=baseline*1.15+0.01){
+        line.pts=detoured;
+        orthogonalizeLine(line); routeAroundMarkers(line);
+        if(countPairCrossings(px,py)<before){ fixed=true; break; }
+        line.pts=savedPts;
+      }
+    }
+    if(!fixed) break; // nothing tried helped this specific crossing — stop here
+  }
+}
+
+function magistralizeLines(mk, cLines){
+  const MERGE_THRESHOLD=0.15;
+  const candidates=cLines.map(({line,atEnd,conn})=>{
+    const otherConn=atEnd?line.connStart:line.connEnd;
+    const otherMk=otherConn?.markerId?markers.find(m=>m.id===otherConn.markerId):null;
+    const otherMt=otherMk?markerTypes.find(t=>t.id===otherMk.mtypeId):null;
+    if(otherMt?.kind!=='point'||!line.pts||line.pts.length<3) return null;
+    // Facing can force a bend right next to the box's own stub, so the
+    // pts[0]→pts[1] segment isn't reliably "this box port's natural exit
+    // direction" — only treat it as a magistralization candidate when it
+    // actually IS still on that natural axis (skip the rest; merging along
+    // the wrong axis wouldn't mean anything).
+    const ptsBoxFirst=atEnd?line.pts.slice().reverse():line.pts;
+    if(ptsBoxFirst.length<2) return null;
+    const exitIsH=Math.abs(ptsBoxFirst[1].wy-ptsBoxFirst[0].wy)<=Math.abs(ptsBoxFirst[1].wx-ptsBoxFirst[0].wx);
+    const portIsH=conn.side==='left'||conn.side==='right';
+    if(exitIsH!==portIsH) return null;
+    return {line, atEnd};
+  }).filter(Boolean);
+
+  function crossingsAgainstOthers(testLine, excludeIds){
+    let n=0;
+    for(const {line:other} of cLines){
+      if(excludeIds.has(other.id)||!other.pts) continue;
+      for(let a=0;a<testLine.pts.length-1;a++)for(let b=0;b<other.pts.length-1;b++){
+        if(segsIntersect(testLine.pts[a].wx,testLine.pts[a].wy,testLine.pts[a+1].wx,testLine.pts[a+1].wy,
+                          other.pts[b].wx,other.pts[b].wy,other.pts[b+1].wx,other.pts[b+1].wy)) n++;
+      }
+    }
+    return n;
+  }
+
+  const merged=new Set();
+  for(let i=0;i<candidates.length;i++){
+    if(merged.has(i)) continue;
+    for(let j=i+1;j<candidates.length;j++){
+      if(merged.has(j)) continue;
+      const {line:lineA, atEnd:atEndA}=candidates[i];
+      const {line:lineB, atEnd:atEndB}=candidates[j];
+      const ptsA=atEndA?lineA.pts.slice().reverse():lineA.pts;
+      const ptsB=atEndB?lineB.pts.slice().reverse():lineB.pts;
+      const result=tryMergeExitRuns(ptsA, ptsB, MERGE_THRESHOLD);
+      if(result){
+        const savedA=lineA.pts, savedB=lineB.pts;
+        const excludeIds=new Set([lineA.id,lineB.id]);
+        const crossingsBefore=crossingsAgainstOthers(lineA,excludeIds)+crossingsAgainstOthers(lineB,excludeIds);
+        lineA.pts=atEndA?result.newA.slice().reverse():result.newA;
+        lineB.pts=atEndB?result.newB.slice().reverse():result.newB;
+        orthogonalizeLine(lineA); routeAroundMarkers(lineA);
+        orthogonalizeLine(lineB); routeAroundMarkers(lineB);
+        const crossingsAfter=crossingsAgainstOthers(lineA,excludeIds)+crossingsAgainstOthers(lineB,excludeIds);
+        let selfCross=0;
+        for(let a=0;a<lineA.pts.length-1;a++)for(let b=0;b<lineB.pts.length-1;b++){
+          if(segsIntersect(lineA.pts[a].wx,lineA.pts[a].wy,lineA.pts[a+1].wx,lineA.pts[a+1].wy,
+                            lineB.pts[b].wx,lineB.pts[b].wy,lineB.pts[b+1].wx,lineB.pts[b+1].wy)) selfCross++;
+        }
+        if(crossingsAfter>crossingsBefore || selfCross>0){
+          // Bundling these two would introduce a NEW conflict — either with
+          // some other line, or (a merge shape can do this too) with each
+          // other. This pass is purely cosmetic, it must never undo what
+          // crossing-resolution already achieved. Skip this pair.
+          lineA.pts=savedA; lineB.pts=savedB;
+          continue;
+        }
+        merged.add(i); merged.add(j);
+        break;
+      }
+    }
+  }
+}
+
 function resolveBoxStubDepths(mk){
   const mt=markerTypes.find(t=>t.id===mk.mtypeId);
   if(!mt||(mt.kind!=='multi'&&mt.kind!=='bus')) return;
@@ -2803,9 +3773,14 @@ function resolveBoxStubDepths(mk){
       c.conn.stubLen=d;
       const stubEnd={wx:c.port.wx+dir.dx*d, wy:c.port.wy+dir.dy*d};
       if(c.otherMt?.kind==='point'){
-        c.line.pts = c.atEnd
-          ? buildBoxAwareConnector(c.target, stubEnd, boxAxis, 'b')
-          : buildBoxAwareConnector(stubEnd, c.target, boxAxis, 'a');
+        if(c.otherMk.facing){
+          const rebuilt=buildFacingAwareConnectorAdaptive(c.target, c.otherMk.facing, stubEnd);
+          c.line.pts = c.atEnd ? rebuilt : rebuilt.slice().reverse();
+        } else {
+          c.line.pts = c.atEnd
+            ? buildBoxAwareConnector(c.target, stubEnd, boxAxis, 'b')
+            : buildBoxAwareConnector(stubEnd, c.target, boxAxis, 'a');
+        }
       } else {
         stretchLineForMarker(c.line, mk.id, c.port.wx, c.port.wy);
       }
@@ -2833,6 +3808,7 @@ function updateLinesForMarker(mk){
 
   // Save original pts for all connected lines
   const savedPtsAll=cLines.map(({line})=>line.pts.map(p=>({...p})));
+  const baselineLengths=new Map(cLines.map(({line},i)=>[line.id, lineLengthFromPts(savedPtsAll[i])]));
 
   // If the OTHER end of this line is a point-kind marker (socket/switch),
   // the path can be freely rebuilt to the minimal connector for any
@@ -2848,14 +3824,25 @@ function updateLinesForMarker(mk){
     const dir=portSideDir(port.side);
     const stubEnd={wx:port.wx+dir.dx*stubLen, wy:port.wy+dir.dy*stubLen};
     const target={wx:otherMk.wx, wy:otherMk.wy};
+    if(otherMk.facing){
+      const rebuilt=buildFacingAwareConnectorAdaptive(target, otherMk.facing, stubEnd);
+      return atEnd ? rebuilt : rebuilt.slice().reverse();
+    }
     const boxAxis=dir.dy===0?'h':'v';
     return atEnd
       ? buildBoxAwareConnector(target, stubEnd, boxAxis, 'b')
       : buildBoxAwareConnector(stubEnd, target, boxAxis, 'a');
   }
 
+  const savedConnAll=cLines.map(({conn})=>({side:conn.side, portIdx:conn.portIdx}));
+
   function applyCandidatePort(li, port){
-    const {line, atEnd}=cLines[li];
+    const {line, conn, atEnd}=cLines[li];
+    // Update the actual connection metadata too, not just the drawn path —
+    // facingPreferencePenalty() (and anything else scoring this candidate)
+    // needs to see WHICH side is actually being tried, not whatever side
+    // this line had before the search started.
+    conn.side=port.side; conn.portIdx=port.idx??0;
     const fresh=freshPathForPort(line, atEnd, port);
     if(fresh){ line.pts=fresh; }
     else{ stretchLineForMarker(line, mk.id, port.wx, port.wy); }
@@ -2883,11 +3870,33 @@ function updateLinesForMarker(mk){
     return cLines.reduce((_,{line})=>_+lineLength(line),0);
   }
 
+  // For each line going to a facing marker, penalise using a box side that
+  // doesn't match the user's stated priority: opposite side (best, no
+  // penalty) → perpendicular sides (mild) → same-direction side (worst,
+  // last resort). Kept modest relative to length/crossings so it acts as a
+  // tiebreaker, not something that overrides genuine crossing avoidance.
+  const oppositeOfFacing={left:'right',right:'left',up:'bottom',down:'top'};
+  const sameAsFacing={left:'left',right:'right',up:'top',down:'bottom'};
+  function facingPreferencePenalty(){
+    let penalty=0;
+    cLines.forEach(({line,atEnd})=>{
+      const otherConn=atEnd?line.connStart:line.connEnd;
+      const otherMk=otherConn?.markerId?markers.find(m=>m.id===otherConn.markerId):null;
+      if(!otherMk?.facing) return;
+      const conn=atEnd?line.connEnd:line.connStart;
+      if(!conn?.side||conn.side==='center') return;
+      if(conn.side===oppositeOfFacing[otherMk.facing]) return; // preferred — no penalty
+      if(conn.side===sameAsFacing[otherMk.facing]) penalty+=mToW(3); // last resort
+      else penalty+=mToW(1); // perpendicular — mild
+    });
+    return penalty;
+  }
+
   // Single weighted cost: shorter total length is better, each crossing costs
   // a configurable "equivalent length" penalty (default 30cm — see the
   // crossing-penalty slider).
   function totalCost(){
-    return totalLength() + totalCrossings()*crossingPenaltyWorld();
+    return totalLength() + totalCrossings()*crossingPenaltyWorld() + facingPreferencePenalty();
   }
 
   let bestAssignment=null, bestCost=Infinity;
@@ -2911,6 +3920,8 @@ function updateLinesForMarker(mk){
       usedPorts.delete(pi);
       // Restore for next candidate
       line.pts=savedPtsAll[lineIdx].map(p=>({...p}));
+      cLines[lineIdx].conn.side=savedConnAll[lineIdx].side;
+      cLines[lineIdx].conn.portIdx=savedConnAll[lineIdx].portIdx;
     }
   }
 
@@ -2968,6 +3979,10 @@ function updateLinesForMarker(mk){
   // doesn't match actual target order — see resolveBoxStubDepths.
   resolveBoxStubDepths(mk);
   alignPointMarkersToBoxPorts(mk);
+  rebuildLinesAdaptively(mk, cLines);
+  resolveCrossingsWithAlternateShapes(mk, cLines, baselineLengths);
+  rebuildLinesAdaptively(mk, cLines);
+  // magistralizeLines(mk, cLines); // TEMPORARILY DISABLED — investigating a reported bug where it produces extra segments near stubs
 }
 
 function distPointToSegW(px,py,ax,ay,bx,by){
@@ -3013,7 +4028,15 @@ function repairCollapsedLine(line){
   if(!mkS||!mkE) return false;
   const startTarget=endpointTargetFor(mkS, line.connStart);
   const endTarget=endpointTargetFor(mkE, line.connEnd);
-  line.pts=buildWaypointPath([startTarget, endTarget]);
+  const mtE=markerTypes.find(t=>t.id===mkE.mtypeId);
+  const mtS=markerTypes.find(t=>t.id===mkS.mtypeId);
+  if(mtE?.kind==='point' && mkE.facing){
+    line.pts=buildFacingAwareConnectorAdaptive(endTarget, mkE.facing, startTarget).slice().reverse();
+  } else if(mtS?.kind==='point' && mkS.facing){
+    line.pts=buildFacingAwareConnectorAdaptive(startTarget, mkS.facing, endTarget);
+  } else {
+    line.pts=buildWaypointPath([startTarget, endTarget]);
+  }
   orthogonalizeLine(line);
   routeAroundMarkers(line);
   return true;
@@ -3036,12 +4059,52 @@ function lineLength(line){
   return l;
 }
 
+// Effective height of a point-kind marker, converted to floor-relative —
+// null for box-kind markers (Кр/ЩР aren't tracked, assumed to sit right at
+// route height, no extra vertical run there).
+function getMarkerHeightM(mk){
+  const mt=markerTypes.find(t=>t.id===mk.mtypeId);
+  if(!mt) return null;
+  if(mk.heightM!=null) return heightToFloorRel(mk.heightM, mk.heightRef||'floor'); // instance override always wins
+  if(mt.heightM!=null) return heightToFloorRel(mt.heightM, mt.heightRef||'floor'); // then the type's own default
+  // Nothing configured anywhere: point-kind devices (sockets/switches)
+  // almost always sit well below the route, so assume a sensible standard
+  // height rather than silently dropping the vertical run to zero. Box-kind
+  // markers (Кр/ЩР) are usually mounted close to route height, so with
+  // nothing configured, assume zero extra run rather than guessing.
+  if(mt.kind==='point') return heightToFloorRel(0.3,'floor');
+  return null;
+}
+
+// Vertical run for a line: the cable drops from wherever it travels
+// horizontally (the route height for that line's colour) down/up to each
+// connected point-kind marker's actual height. Box-kind ends contribute
+// nothing (see getMarkerHeightM). Transit connections don't count — the
+// cable passes through, it isn't ending there.
+function lineVerticalRunM(line){
+  let total=0;
+  [line.connStart, line.connEnd].forEach(conn=>{
+    if(!conn || conn.type==='transit') return;
+    const mk=markers.find(m=>m.id===conn.markerId);
+    if(!mk) return;
+    const deviceH=getMarkerHeightM(mk);
+    if(deviceH==null) return;
+    total+=Math.abs(routeHeightForColor(line.color)-deviceH);
+  });
+  return total;
+}
+function lineLengthWithVerticalsM(line){
+  if(scale==null) return null;
+  return lineLength(line)*scale + lineVerticalRunM(line);
+}
+
 // Same as lineLength (in metres), but also adds each end's marker-type
 // installation allowance (mt.extra) — same rule as the "Итого" panel: only
-// for connStart/connEnd of type 'connected', never 'transit'.
+// for connStart/connEnd of type 'connected', never 'transit' — plus the
+// vertical run, since "full length" means the true total.
 function lineFullLengthM(line){
   if(scale==null) return null;
-  let l=lineLength(line)*scale;
+  let l=lineLength(line)*scale + lineVerticalRunM(line);
   [line.connStart, line.connEnd].forEach(conn=>{
     if(!conn || conn.type==='transit') return;
     const mk=markers.find(m=>m.id===conn.markerId);
@@ -3063,6 +4126,21 @@ let pendingAction=null, modalCb=null;
 
 // Drag
 let isDragging=false, dragObj=null;
+// New: point markers can carry a "facing" (which side is toward the wall
+// they're mounted on — the cable approaches FROM the opposite side). Set by
+// a press-drag-release gesture at placement time, correctable later via a
+// small handle. undefined = no constraint, today's free-form routing.
+let markerPlaceDrag=null; // {startCx,startCy,wx,wy} while placing a new marker
+let suppressNextContextMenu=false; // set after a right-button facing-drag so releasing doesn't also pop the context menu
+let ctxMenuHit=null, ctxMenuWorldPos=null; // what was right-clicked and where, for "Добавить точку"
+const FACING_DIRS={right:{dx:1,dy:0},down:{dx:0,dy:1},left:{dx:-1,dy:0},up:{dx:0,dy:-1}};
+function snapToFacing(dx,dy){
+  const norm=((Math.atan2(dy,dx)*180/Math.PI)%360+360)%360;
+  if(norm>=315||norm<45) return 'right';
+  if(norm>=45&&norm<135) return 'down';
+  if(norm>=135&&norm<225) return 'left';
+  return 'up';
+}
 
 // Pan
 let bgImg=null, bgImgDataUrl=null;
@@ -3668,13 +4746,42 @@ function redraw(){
     // Port dots for multi/bus intentionally removed — just the box and the
     // lines, no extra markers at each connection point.
 
+    // Facing indicator: shown only when this exact point marker is selected
+    // — shows which side faces away from the wall (cable approaches from
+    // there). Set/corrected via right-button drag directly on the marker
+    // body (see mousedown) — this is just the always-visible readout plus
+    // the live preview while that drag is in progress.
+    if(kind==='point' && isSel && mode==='select'){
+      const draggingThis = isDragging && dragObj?.type==='marker-facing' && dragObj.idx===i;
+      let dir, armLen;
+      if(draggingThis && mousePos){
+        const dx=mousePos.x-p.cx, dy=mousePos.y-p.cy;
+        const dist=Math.hypot(dx,dy);
+        dir = dist>8 ? FACING_DIRS[snapToFacing(dx,dy)] : FACING_DIRS[mk.facing||'right'];
+        armLen = r+22;
+      } else {
+        dir=FACING_DIRS[mk.facing||'right'];
+        armLen=r+22;
+      }
+      const ax=p.cx+dir.dx*armLen, ay=p.cy+dir.dy*armLen;
+      const handleColor = draggingThis ? '#f0c040' : (mk.facing?'#f0c040':'rgba(240,192,64,0.5)');
+      ctx.strokeStyle=handleColor; ctx.lineWidth=2;ctx.setLineDash((mk.facing||draggingThis)?[]:[3,3]);
+      ctx.beginPath();ctx.moveTo(p.cx,p.cy);ctx.lineTo(ax,ay);ctx.stroke();ctx.setLineDash([]);
+      const ang=Math.atan2(dir.dy,dir.dx);
+      ctx.beginPath();
+      ctx.moveTo(ax,ay);
+      ctx.lineTo(ax-Math.cos(ang-0.4)*8, ay-Math.sin(ang-0.4)*8);
+      ctx.lineTo(ax-Math.cos(ang+0.4)*8, ay-Math.sin(ang+0.4)*8);
+      ctx.closePath(); ctx.fillStyle=handleColor; ctx.fill();
+    }
+
     // Box numbers intentionally NOT shown here — not useful while actively
     // drawing/editing, only in the exported PNG (see renderToCtx / the
     // watermark pass), which is where they're actually needed.
   });
 
   // ── Marker placement preview (alignment guides) ──
-  if(mode==='marker' && mousePos && !(isDragging&&dragObj)){
+  if(mode==='marker' && mousePos && !(isDragging&&dragObj) && !markerPlaceDrag){
     const snap=markerAlignSnap(mousePos.x, mousePos.y, -1);
     if(snap.hLine!==null){
       ctx.strokeStyle='rgba(255,200,80,0.55)'; ctx.lineWidth=1;
@@ -3689,6 +4796,28 @@ function redraw(){
     const ghostY = snap.sy!==null?snap.sy:mousePos.y;
     ctx.beginPath();ctx.arc(ghostX,ghostY,MK_R,0,Math.PI*2);
     ctx.strokeStyle='rgba(125,196,255,0.7)';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);
+  }
+  // ── Marker placement drag in progress: position is locked in, now
+  // showing which direction ("facing" — away from the wall) will be set.
+  if(markerPlaceDrag && mousePos){
+    const {startCx:gx, startCy:gy}=markerPlaceDrag;
+    ctx.beginPath();ctx.arc(gx,gy,MK_R,0,Math.PI*2);
+    ctx.strokeStyle='rgba(125,196,255,0.9)';ctx.lineWidth=2;ctx.setLineDash([]);ctx.stroke();
+    const dx=mousePos.x-gx, dy=mousePos.y-gy;
+    const dist=Math.hypot(dx,dy);
+    if(dist>8){
+      const dir=FACING_DIRS[snapToFacing(dx,dy)];
+      const armLen=Math.max(MK_R+18, Math.min(dist, MK_R+60));
+      const ax=gx+dir.dx*armLen, ay=gy+dir.dy*armLen;
+      ctx.strokeStyle='#f0c040'; ctx.lineWidth=2.5;
+      ctx.beginPath();ctx.moveTo(gx,gy);ctx.lineTo(ax,ay);ctx.stroke();
+      const ang=Math.atan2(dir.dy,dir.dx);
+      ctx.beginPath();
+      ctx.moveTo(ax,ay);
+      ctx.lineTo(ax-Math.cos(ang-0.4)*9, ay-Math.sin(ang-0.4)*9);
+      ctx.lineTo(ax-Math.cos(ang+0.4)*9, ay-Math.sin(ang+0.4)*9);
+      ctx.closePath(); ctx.fillStyle='#f0c040'; ctx.fill();
+    }
   }
   // ── Alignment guides while dragging an existing marker ──
   if(isDragging && dragObj && dragObj.type==='marker'){
@@ -3924,7 +5053,13 @@ function redraw(){
   }
   // ── Custom crosshair cursor ──
   if(cursorSize>0 && mousePos && !isDragging){
-    const x=mousePos.x, y=mousePos.y, r=cursorSize;
+    // While placing a new marker with a direction-drag in progress, the
+    // marker itself is anchored at the mousedown position — the crosshair
+    // must show THAT position, not wherever the drag has moved to (that's
+    // shown separately by the yellow direction arrow).
+    const cx = markerPlaceDrag ? markerPlaceDrag.startCx : mousePos.x;
+    const cy = markerPlaceDrag ? markerPlaceDrag.startCy : mousePos.y;
+    const x=cx, y=cy, r=cursorSize;
     ctx.save();
     ctx.strokeStyle='rgba(255,255,255,0.85)';
     ctx.lineWidth=1.5;
@@ -4372,6 +5507,7 @@ function applyConnection(pending,type){
 // ═══════════════════════════════════════════════════════
 drC.addEventListener('contextmenu',e=>{
   e.preventDefault();
+  if(suppressNextContextMenu){ suppressNextContextMenu=false; return; }
   if(mode==='zones') return;
   if(!e._suppressCtx){
     hideConnPopup();
@@ -4380,6 +5516,8 @@ drC.addEventListener('contextmenu',e=>{
     if(!hit){hideCtxMenu();return;}
     selType=hit.type==='line-vertex'?'line':hit.type;
     selIdx=hit.idx;
+    ctxMenuHit=hit;
+    ctxMenuWorldPos=c2w(p.x,p.y);
     redraw();showPropsTab();updatePropsPanel();
     showCtxMenu(e.clientX,e.clientY,hit);
   }
@@ -4392,6 +5530,34 @@ drC.addEventListener('mousedown',e=>{
     e.preventDefault();
     isMidPan=true;midStart={...p};midOrigin={bgX,bgY};
     drC.style.cursor='grabbing';return;
+  }
+  if(e.button===2 && mode==='select'){
+    for(let i=markers.length-1;i>=0;i--){
+      const mk=markers[i];
+      const mt=markerTypes.find(t=>t.id===mk.mtypeId);
+      if(mt?.kind!=='point') continue;
+      const mp=w2c(mk.wx,mk.wy);
+      const rr=mToW(PHYS_MARKER_R)*bgS;
+      if(Math.hypot(p.x-mp.cx,p.y-mp.cy)<Math.max(rr,14)+4){
+        selType='marker'; selIdx=i;
+        isDragging=true;
+        dragObj={type:'marker-facing',idx:i,cx:mp.cx,cy:mp.cy};
+        suppressNextContextMenu=true;
+        showPropsTab();updatePropsPanel();redraw();
+        return;
+      }
+    }
+  }
+  if(mode==='marker' && e.button===0){
+    const mt=markerTypes.find(t=>t.id===selectedMarkerTypeId);
+    if(!mt){alert(t('alert_create_type_first'));return;}
+    let px=p.x, py=p.y;
+    const snap=markerAlignSnap(px,py,-1);
+    if(snap.sx!==null) px=snap.sx;
+    if(snap.sy!==null) py=snap.sy;
+    const w=c2w(px,py);
+    markerPlaceDrag={startCx:px,startCy:py,wx:w.wx,wy:w.wy};
+    return;
   }
   if(mode==='zones'){
     if(zoneDraftPts){
@@ -4453,6 +5619,8 @@ drC.addEventListener('mousedown',e=>{
       const ep=nearEndpointC(p,obj);
       if(ep){isDragging=true;dragObj={type:selType==='wall'?'wall-endpoint':'endpoint',segIdx:selIdx,end:ep,orig:{...obj}};return;}
     }
+    // Facing correction now lives at the top of this handler (right-button
+    // drag directly on the marker body) — nothing extra needed here.
     const hit=hitTest(p);
     // Normalize hit type for drag purposes
     const hitType=hit?.type==='line-vertex'?'line':hit?.type;
@@ -4539,45 +5707,44 @@ drC.addEventListener('mousemove',e=>{
       const w=c2w(p.x,p.y);
       const newVx=w.wx, newVy=w.wy;
 
-      // Restore from snapshot each frame
-      vline.pts=vorig.map(pt=>({...pt}));
-
       // Determine orientation of adjacent segments
       const prevH=Math.abs(vorig[vi].wy-vorig[vi-1].wy)<=Math.abs(vorig[vi].wx-vorig[vi-1].wx);
       const nextH=Math.abs(vorig[vi+1].wy-vorig[vi].wy)<=Math.abs(vorig[vi+1].wx-vorig[vi].wx);
 
-      // Move the corner point — adjacent segments stretch/shrink to maintain H/V:
-      // H segment: both endpoints share same Y → match Y of corner
-      // V segment: both endpoints share same X → match X of corner
       if(prevH && !nextH){
-        // Prev H, next V: corner moves freely in 2D
+        // Prev H, next V: corner moves freely in 2D — an ordinary L-corner drag.
+        vline.pts=vorig.map(pt=>({...pt}));
         vline.pts[vi]={wx:newVx, wy:newVy};
-        // Prev H: pts[vi-1].wy must equal pts[vi].wy
         vline.pts[vi-1]={wx:vorig[vi-1].wx, wy:newVy};
-        // Next V: pts[vi+1].wx must equal pts[vi].wx
         vline.pts[vi+1]={wx:newVx, wy:vorig[vi+1].wy};
       } else if(!prevH && nextH){
-        // Prev V, next H: corner moves freely in 2D
+        // Prev V, next H: corner moves freely in 2D — an ordinary L-corner drag.
+        vline.pts=vorig.map(pt=>({...pt}));
         vline.pts[vi]={wx:newVx, wy:newVy};
-        // Prev V: pts[vi-1].wx must equal pts[vi].wx
         vline.pts[vi-1]={wx:newVx, wy:vorig[vi-1].wy};
-        // Next H: pts[vi+1].wy must equal pts[vi].wy
         vline.pts[vi+1]={wx:vorig[vi+1].wx, wy:newVy};
-      } else if(prevH && nextH){
-        // Both H: corner can only slide horizontally
-        vline.pts[vi]={wx:newVx, wy:vorig[vi].wy};
-        vline.pts[vi-1]={wx:vorig[vi-1].wx, wy:vorig[vi].wy};
-        vline.pts[vi+1]={wx:vorig[vi+1].wx, wy:vorig[vi].wy};
       } else {
-        // Both V: corner can only slide vertically
-        vline.pts[vi]={wx:vorig[vi].wx, wy:newVy};
-        vline.pts[vi-1]={wx:vorig[vi-1].wx, wy:newVy};
-        vline.pts[vi+1]={wx:vorig[vi+1].wx, wy:newVy};
+        // Both legs on the SAME axis (this is what a point inserted mid-segment
+        // starts as) — dragging perpendicular now makes a proper rectangular
+        // offset: run out from each anchor to the new position, then straight
+        // across. Same shape routeAroundMarkers uses to dodge a box, so this
+        // gives exactly the "shift this stretch sideways" the point-insert
+        // feature is for, instead of the old collapse-to-a-slide behaviour.
+        const middle = prevH
+          ? [ {wx:vorig[vi-1].wx, wy:vorig[vi-1].wy},
+              {wx:vorig[vi-1].wx, wy:newVy},
+              {wx:vorig[vi+1].wx, wy:newVy},
+              {wx:vorig[vi+1].wx, wy:vorig[vi+1].wy} ]
+          : [ {wx:vorig[vi-1].wx, wy:vorig[vi-1].wy},
+              {wx:newVx, wy:vorig[vi-1].wy},
+              {wx:newVx, wy:vorig[vi+1].wy},
+              {wx:vorig[vi+1].wx, wy:vorig[vi+1].wy} ];
+        vline.pts=[...vorig.slice(0,vi-1), ...middle, ...vorig.slice(vi+2)];
       }
 
       // Keep anchor endpoints fixed
       if(vline.connStart?.markerId) vline.pts[0]={...vorig[0]};
-      if(vline.connEnd?.markerId)   vline.pts[vorig.length-1]={...vorig[vorig.length-1]};
+      if(vline.connEnd?.markerId)   vline.pts[vline.pts.length-1]={...vorig[vorig.length-1]};
     } else if(dragObj.type==='line-seg'){
       const line=lines[dragObj.lineIdx];
       if(!line) {redraw();return;}
@@ -4585,78 +5752,46 @@ drC.addEventListener('mousemove',e=>{
       const orig=dragObj.origPts;
       const origLast=orig.length-1;
 
-      // Always restore from snapshot — compute fresh each frame
-      line.pts=orig.map(pt=>({...pt}));
-
       const segH=Math.abs(orig[si+1].wy-orig[si].wy)<=Math.abs(orig[si+1].wx-orig[si].wx);
       const dWx=(p.x-dragObj.startP.x)/bgS;
       const dWy=(p.y-dragObj.startP.y)/bgS;
+      const shiftPt=(pt)=> segH ? {wx:pt.wx, wy:pt.wy+dWy} : {wx:pt.wx+dWx, wy:pt.wy};
+      // Is the segment at index i on the same axis as the one being dragged?
+      const isCollinear=(i)=>(Math.abs(orig[i+1].wy-orig[i].wy)<=Math.abs(orig[i+1].wx-orig[i].wx))===segH;
 
-      // Is either endpoint of this segment fixed at a marker?
-      const startAnchored=si===0 && !!line.connStart?.markerId;
-      const endAnchored  =si===origLast-1 && !!line.connEnd?.markerId;
+      const startAnchored = si===0 && !!line.connStart?.markerId;
+      const endAnchored   = si+1===origLast && !!line.connEnd?.markerId;
 
-      if(segH){
-        // H segment: moves up/down by dWy
-        if(startAnchored){
-          // pts[0] is fixed — insert V connector: pts[0] → (pts[0].wx, pts[0].wy+dWy) → moved H
-          line.pts.splice(1,0,{wx:orig[0].wx, wy:orig[0].wy+dWy});
-          line.pts[2]={wx:orig[1].wx, wy:orig[0].wy+dWy};
-          if(orig.length>2){
-            const n2H=Math.abs((orig[2]?.wy||orig[1].wy)-orig[1].wy)<=Math.abs((orig[2]?.wx||orig[1].wx)-orig[1].wx);
-            if(n2H&&line.pts[3]) line.pts[3]={wx:line.pts[3].wx, wy:orig[0].wy+dWy};
-          }
-        } else if(endAnchored){
-          // pts[last] is fixed — move segment, insert V connector before anchor
-          line.pts[si]  ={wx:orig[si].wx,   wy:orig[si].wy  +dWy};
-          line.pts[si+1]={wx:orig[si+1].wx, wy:orig[si].wy  +dWy};
-          line.pts.splice(si+2,0,{wx:orig[si+1].wx, wy:orig[si+1].wy});
-          if(si>0){
-            const prevH=Math.abs(orig[si].wy-orig[si-1].wy)<=Math.abs(orig[si].wx-orig[si-1].wx);
-            if(prevH) line.pts[si-1]={wx:orig[si-1].wx, wy:orig[si].wy+dWy};
-          }
-        } else {
-          line.pts[si]  ={wx:orig[si].wx,   wy:orig[si].wy  +dWy};
-          line.pts[si+1]={wx:orig[si+1].wx, wy:orig[si+1].wy+dWy};
-          if(si>0){
-            const prevH=Math.abs(orig[si].wy-orig[si-1].wy)<=Math.abs(orig[si].wx-orig[si-1].wx);
-            if(prevH) line.pts[si-1]={wx:orig[si-1].wx, wy:orig[si].wy+dWy};
-          }
-          if(si+1<origLast){
-            const nextH=Math.abs(orig[si+2].wy-orig[si+1].wy)<=Math.abs(orig[si+2].wx-orig[si+1].wx);
-            if(nextH) line.pts[si+2]={wx:orig[si+2].wx, wy:orig[si+1].wy+dWy};
-          }
-        }
+      // Only pts[si] and pts[si+1] — the two points bounding the segment
+      // actually being dragged — move. Everything outside them stays
+      // exactly where it was: this is the "Добавить точку" use case, a
+      // bounded local detour (same shape routeAroundMarkers uses around a
+      // box), not a walk out to the line's real corners. Whenever the
+      // immediate neighbour was on the SAME axis as the drag, it can't stay
+      // fixed AND connect directly to the moved point without going
+      // diagonal — so a fresh perpendicular connector gets inserted there
+      // instead of (as before) silently dragging that neighbour along too.
+      const middle=[];
+      if(startAnchored){
+        middle.push({...orig[0]}, shiftPt(orig[0]));
+      } else if(si>0 && isCollinear(si-1)){
+        middle.push(segH?{wx:orig[si-1].wx,wy:orig[si].wy+dWy}:{wx:orig[si].wx+dWx,wy:orig[si-1].wy});
+        middle.push(shiftPt(orig[si]));
       } else {
-        // V segment: moves left/right by dWx
-        if(startAnchored){
-          line.pts.splice(1,0,{wx:orig[0].wx+dWx, wy:orig[0].wy});
-          line.pts[2]={wx:orig[0].wx+dWx, wy:orig[1].wy};
-          if(orig.length>2){
-            const n2V=Math.abs((orig[2]?.wx||orig[1].wx)-orig[1].wx)<Math.abs((orig[2]?.wy||orig[1].wy)-orig[1].wy);
-            if(n2V&&line.pts[3]) line.pts[3]={wx:orig[0].wx+dWx, wy:line.pts[3].wy};
-          }
-        } else if(endAnchored){
-          line.pts[si]  ={wx:orig[si].wx  +dWx, wy:orig[si].wy};
-          line.pts[si+1]={wx:orig[si].wx  +dWx, wy:orig[si+1].wy};
-          line.pts.splice(si+2,0,{wx:orig[si+1].wx, wy:orig[si+1].wy});
-          if(si>0){
-            const prevH=Math.abs(orig[si].wy-orig[si-1].wy)<=Math.abs(orig[si].wx-orig[si-1].wx);
-            if(!prevH) line.pts[si-1]={wx:orig[si].wx+dWx, wy:orig[si-1].wy};
-          }
-        } else {
-          line.pts[si]  ={wx:orig[si].wx  +dWx, wy:orig[si].wy};
-          line.pts[si+1]={wx:orig[si+1].wx+dWx, wy:orig[si+1].wy};
-          if(si>0){
-            const prevH=Math.abs(orig[si].wy-orig[si-1].wy)<=Math.abs(orig[si].wx-orig[si-1].wx);
-            if(!prevH) line.pts[si-1]={wx:orig[si].wx+dWx, wy:orig[si-1].wy};
-          }
-          if(si+1<origLast){
-            const nextH=Math.abs(orig[si+2].wy-orig[si+1].wy)<=Math.abs(orig[si+2].wx-orig[si+1].wx);
-            if(!nextH) line.pts[si+2]={wx:orig[si+1].wx+dWx, wy:orig[si+2].wy};
-          }
-        }
+        middle.push(shiftPt(orig[si]));
       }
+      if(endAnchored){
+        middle.push(shiftPt(orig[origLast]), {...orig[origLast]});
+      } else if(si+1<origLast && isCollinear(si+1)){
+        middle.push(shiftPt(orig[si+1]));
+        middle.push(segH?{wx:orig[si+2].wx,wy:orig[si+1].wy+dWy}:{wx:orig[si+1].wx+dWx,wy:orig[si+2].wy});
+      } else {
+        middle.push(shiftPt(orig[si+1]));
+      }
+
+      const prefix=orig.slice(0,si).map(pt=>({...pt}));
+      const suffix=orig.slice(si+2).map(pt=>({...pt}));
+      line.pts=[...prefix, ...middle, ...suffix];
       dragObj._segH=segH; dragObj._dWx=dWx; dragObj._dWy=dWy;
     } else if(dragObj.type==='marker'){
       let px=p.x, py=p.y;
@@ -4690,7 +5825,7 @@ drC.addEventListener('mousemove',e=>{
     }
     redraw();return;
   }
-  if(mode==='line'||mode==='scale'||mode==='wall'||mode==='marker'||mode==='dim'||mode==='measure') redraw();
+  if(mode==='line'||mode==='scale'||mode==='wall'||mode==='marker'||mode==='dim'||mode==='measure'||mode==='select') redraw();
   if(mode==='select'){ drC.style.cursor=cursorSize>0?'none':hitTest(p)?'pointer':'default'; }
   // Redraw crosshair on every mousemove when custom cursor active
   if(cursorSize>0) redraw();
@@ -4698,6 +5833,22 @@ drC.addEventListener('mousemove',e=>{
 
 drC.addEventListener('mouseup',e=>{
   if(isMidPan){isMidPan=false;drC.style.cursor='crosshair';return;}
+  if(markerPlaceDrag){
+    const p=getPos(e);
+    const dx=p.x-markerPlaceDrag.startCx, dy=p.y-markerPlaceDrag.startCy;
+    const dist=Math.hypot(dx,dy);
+    const mt=markerTypes.find(t=>t.id===selectedMarkerTypeId);
+    if(mt){
+      saveHistory();
+      const mk={id:uid(),wx:markerPlaceDrag.wx,wy:markerPlaceDrag.wy,mtypeId:mt.id,color:currentColor};
+      mk.worldSize=(mt.size||MK_R)/bgS;
+      if(dist>8 && mt.kind==='point') mk.facing=snapToFacing(dx,dy);
+      markers.push(mk);
+    }
+    markerPlaceDrag=null;
+    redraw();
+    return;
+  }
   if(mode==='zones'){
     if(zoneDragMode&&selectedZoneIdx!=null){
       saveHistory();
@@ -4707,12 +5858,24 @@ drC.addEventListener('mouseup',e=>{
     return;
   }
   if(isDragging){
+    if(dragObj?.type==='marker-facing'){
+      const p=getPos(e);
+      const dx=p.x-dragObj.cx, dy=p.y-dragObj.cy;
+      if(Math.hypot(dx,dy)>8) markers[dragObj.idx].facing=snapToFacing(dx,dy);
+    }
     if(dragObj?.type==='marker' && autoFixupEnabled){
       // A moved marker may now block lines it isn't even connected to (or an old
       // detour may no longer be needed). Clean up every line once the drag settles.
       lines.forEach(line=>{ simplifyLine(line); orthogonalizeLine(line); routeAroundMarkers(line); });
       markers.forEach(m=>{ if(isBoxKind(m)){ resolveBoxStubDepths(m); alignPointMarkersToBoxPorts(m); } });
       repairAnyCollapsedLines();
+    }
+    if((dragObj?.type==='line-seg'||dragObj?.type==='line-vertex') && lines[dragObj.lineIdx]){
+      // Collapses any point that's now truly redundant (e.g. a connector
+      // from an earlier drag that a later one made collinear again) —
+      // without this, repeated drags on the same stretch just kept
+      // stacking new connector points on top of old ones.
+      simplifyLine(lines[dragObj.lineIdx]);
     }
     saveHistory();isDragging=false;dragObj=null;
     drC.style.cursor=mode==='select'?'pointer':'default';
@@ -4803,7 +5966,8 @@ drC.addEventListener('click',e=>{
               if(c?.markerId===mk.id&&c.side!=='center') usedEnd.add(`${c.side}_${c.portIdx??0}`);
             });
           });
-          bestPort=choosePortTowardPoint(mk, targetForEnd, usedEnd);
+          const startMkForFacing=markers.find(m=>m.id===currentLine.connStart?.markerId);
+          bestPort=choosePortTowardPoint(mk, targetForEnd, usedEnd, startMkForFacing?.facing);
         }
         const portWx=bestPort?bestPort.wx:mk.wx;
         const portWy=bestPort?bestPort.wy:mk.wy;
@@ -4823,12 +5987,21 @@ drC.addEventListener('click',e=>{
          const waypoints=[pts[0], ...manualWaypoints, {wx:portWx,wy:portWy}];
 
          if(manualWaypoints.length===0){
-           // Direct point<->box connection: keep the box's own exit axis as
-           // long as possible, turning only right before the point marker —
-           // matches how an installer actually runs a wire off a box.
-           // connS.side!=='center' reliably means connStart is a box with an
-           // already-assigned port (point markers always keep side:'center').
-           if(connS?.side&&connS.side!=='center'&&mtEnd?.kind==='point'){
+           const startMk=markers.find(m=>m.id===currentLine.connStart?.markerId);
+           const startMt=startMk&&markerTypes.find(t=>t.id===startMk.mtypeId);
+           // Facing takes priority over the generic box-aware cases below —
+           // it's an explicit, deliberate constraint the user set, not a
+           // heuristic guess.
+           if(mtEnd?.kind==='point' && mk.facing){
+             currentLine.pts=buildFacingAwareConnectorAdaptive(waypoints[1], mk.facing, waypoints[0]).slice().reverse();
+           } else if(startMt?.kind==='point' && startMk.facing){
+             currentLine.pts=buildFacingAwareConnectorAdaptive(waypoints[0], startMk.facing, waypoints[1]);
+           } else if(connS?.side&&connS.side!=='center'&&mtEnd?.kind==='point'){
+             // Direct point<->box connection: keep the box's own exit axis as
+             // long as possible, turning only right before the point marker —
+             // matches how an installer actually runs a wire off a box.
+             // connS.side!=='center' reliably means connStart is a box with an
+             // already-assigned port (point markers always keep side:'center').
              const dirS=portSideDir(connS.side);
              currentLine.pts=buildBoxAwareConnector(waypoints[0], waypoints[1], dirS.dy===0?'h':'v', 'a');
            } else if((!connS?.side||connS.side==='center')&&mtEnd?.kind!=='point'&&bestPort){
@@ -4918,9 +6091,10 @@ drC.addEventListener('click',e=>{
         });
         // Don't call updateLinesForMarker here - it overrides port selection
         // User can manually optimise via "Оптимизировать порты" button
+        const hasUnconnectedEnd = !currentLine.connStart?.markerId || !currentLine.connEnd?.markerId;
         currentLine=null;
         startPt=null; startMarkerIdx=null; startPortKey=null;
-        setInfo(t('msg_line_done'));
+        setInfo(hasUnconnectedEnd ? t('msg_line_done_unconnected') : t('msg_line_done'), hasUnconnectedEnd);
         redraw();
         updateResults();
         return;
@@ -5144,18 +6318,8 @@ drC.addEventListener('click',e=>{
       setInfo(t('msg_measure_added'));
     }
   } else if(mode==='marker'){
-    const mt=markerTypes.find(t=>t.id===selectedMarkerTypeId);
-    if(!mt){alert(t('alert_create_type_first'));return;}
-    let px=p.x, py=p.y;
-    const snap=markerAlignSnap(px,py,-1);
-    if(snap.sx!==null) px=snap.sx;
-    if(snap.sy!==null) py=snap.sy;
-    const w=c2w(px,py);
-    saveHistory();
-    const mk={id:uid(),wx:w.wx,wy:w.wy,mtypeId:mt.id,color:currentColor};
-    mk.worldSize=(mt.size||MK_R)/bgS; // lock world size at placement zoom
-    markers.push(mk);
-    redraw();
+    // Placement now happens on mousedown/mouseup (press, drag for
+    // direction, release) — see those handlers. Nothing to do on click.
   } else if(mode==='select'){
     hideConnPopup();
     const hit=hitTest(p);
@@ -5356,6 +6520,17 @@ function openMarkerTypeModal(existing){
       <input type="number" id="mt-pps" min="1" max="24" step="1" value="${existing?.portsPerSide||2}">
       <div style="font-size:10px;color:#555;margin-top:3px">Коробки: 2, Щит: 12 (обе длинные стороны)</div>
     </div>
+    <div class="mfield" id="mt-height-wrap">
+      <label>${t('mt_default_height')}</label>
+      <div style="display:flex;gap:6px">
+        <input type="number" id="mt-height" min="0" step="0.05" style="flex:1" value="${existing?.heightM!=null?existing.heightM:(curKind==='point'?0.3:'')}" placeholder="${curKind==='point'?'':t('mt_height_ph_box')}">
+        <select id="mt-height-ref" class="prop-input" style="width:auto">
+          <option value="floor"${(existing?.heightRef||'floor')==='floor'?' selected':''}>${t('height_ref_floor')}</option>
+          <option value="ceiling"${existing?.heightRef==='ceiling'?' selected':''}>${t('height_ref_ceiling')}</option>
+        </select>
+      </div>
+      <div style="font-size:10px;color:#555;margin-top:3px">${t('mt_default_height_hint')}</div>
+    </div>
     <div class="mfield"><label>${t('mt_size')}</label>
       <input type="number" id="mt-size" min="8" max="32" step="1" value="${existing?existing.size||14:14}">
     </div>
@@ -5371,13 +6546,17 @@ function openMarkerTypeModal(existing){
     const size=parseInt(document.getElementById('mt-size').value)||14;
     const portsPerSide=kind==='multi'?(parseInt(document.getElementById('mt-pps').value)||2)
                        :kind==='bus'?12:1;
+    const heightInputRaw=document.getElementById('mt-height').value;
+    const heightM = heightInputRaw.trim()!=='' ? (parseFloat(heightInputRaw)||0) : undefined;
+    const heightRef = heightM!=null ? (document.getElementById('mt-height-ref').value||'floor') : undefined;
     if(isNew){
       const id=uid();
-      markerTypes.push({id,abbr,desc,extra,size,portsPerSide,kind});
+      markerTypes.push({id,abbr,desc,extra,size,portsPerSide,kind,heightM,heightRef});
       selectedMarkerTypeId=id;
     } else {
       existing.abbr=abbr;existing.desc=desc;existing.extra=extra;
       existing.size=size;existing.portsPerSide=portsPerSide;existing.kind=kind;
+      existing.heightM=heightM;existing.heightRef=heightRef;
     }
     renderMarkerTypesList();redraw();
     modal.classList.remove('show');modalCb=null;
@@ -5389,6 +6568,7 @@ function openMarkerTypeModal(existing){
 // ═══════════════════════════════════════════════════════
 function showCtxMenu(cx,cy,hit){
   document.getElementById('ctx-len').style.display=hit.type==='segment'?'flex':'none';
+  document.getElementById('ctx-add-point').style.display=hit.type==='line'?'flex':'none';
   ctxMenu.style.left=cx+'px';ctxMenu.style.top=cy+'px';
   ctxMenu.classList.add('show');
   requestAnimationFrame(()=>{
@@ -5421,6 +6601,29 @@ document.getElementById('ctx-len').addEventListener('click',()=>{
   });
 });
 document.getElementById('ctx-delete').addEventListener('click',deleteSelected);
+document.getElementById('ctx-add-point').addEventListener('click',()=>{
+  hideCtxMenu();
+  if(!ctxMenuHit || ctxMenuHit.type!=='line' || !ctxMenuWorldPos) return;
+  const line=lines[ctxMenuHit.idx];
+  const si=ctxMenuHit.segIdx;
+  if(!line || si==null || si<0 || si>=line.pts.length-1) return;
+  const a=line.pts[si], b=line.pts[si+1];
+  // Snap the new point exactly onto the segment (it's axis-aligned) rather
+  // than wherever the cursor happened to be within hit-test tolerance.
+  let newPt;
+  if(Math.abs(a.wy-b.wy)<0.01){ // horizontal segment
+    const minX=Math.min(a.wx,b.wx), maxX=Math.max(a.wx,b.wx);
+    newPt={wx:Math.max(minX,Math.min(maxX,ctxMenuWorldPos.wx)), wy:a.wy};
+  } else { // vertical segment
+    const minY=Math.min(a.wy,b.wy), maxY=Math.max(a.wy,b.wy);
+    newPt={wx:a.wx, wy:Math.max(minY,Math.min(maxY,ctxMenuWorldPos.wy))};
+  }
+  saveHistory();
+  line.pts.splice(si+1,0,newPt);
+  ctxMenuHit=null; ctxMenuWorldPos=null;
+  redraw();
+  setInfo(t('msg_point_added'));
+});
 
 // ═══════════════════════════════════════════════════════
 // PROPS PANEL
@@ -5445,13 +6648,22 @@ function updatePropsPanel(){
 
   document.getElementById('prop-colors').parentElement.style.display=(selType==='segment')?'block':'none';
   if(selType==='segment'){
-    document.getElementById('prop-colors').querySelectorAll('.color-dot')
-      .forEach(d=>d.classList.toggle('active',d.dataset.hex===obj.color));
+    refreshPropColorTitles();
+    const sel=document.getElementById('prop-colors-select');
+    if(sel){
+      sel.value=obj.color;
+      const swatch=document.getElementById('prop-colors-select-swatch');
+      if(swatch) swatch.style.background=obj.color;
+    }
   }
 
   document.getElementById('prop-len-group').style.display=(selType==='segment')?'block':'none';
   document.getElementById('prop-mtype-group').style.display=(selType==='marker')?'block':'none';
   document.getElementById('prop-conns-group').style.display=(selType==='marker')?'block':'none';
+  if(selType!=='marker'){
+    const orientElClear=document.getElementById('bus-orient-group');
+    if(orientElClear) orientElClear.innerHTML='';
+  }
 
   if(selType==='segment'){
     document.getElementById('prop-len').value=(obj.real||0).toFixed(2);
@@ -5468,7 +6680,7 @@ function updatePropsPanel(){
 
   if(selType==='line' && obj){
     const lenM=scale!==null?(lineLength(obj)*scale).toFixed(2):'?';
-    const colorNameV=colorName(obj.color);
+    const colorNameV=colorLabels[obj.color]||colorName(obj.color);
 
     // Port selectors for each connected end
     function portSelectorHtml(conn, endKind){
@@ -5498,10 +6710,9 @@ function updatePropsPanel(){
     lineEl.innerHTML=`
       <div class="prop-group">
         <div class="prop-label">${t('prop_pro_line')}</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
-          <span style="width:14px;height:14px;background:${obj.color};border-radius:50%;flex-shrink:0"></span>
-          <span style="font-size:12px">${colorNameV}</span>
-          <span style="margin-left:auto;font-size:12px;font-weight:700;color:#eee">${lenM} ${t('unit_m')}</span>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+          <div style="flex:1">${propColorSelectHtml(obj.color,'line-color-select')}</div>
+          <span style="font-size:12px;font-weight:700;color:#eee;white-space:nowrap">${lenM} ${t('unit_m')}</span>
         </div>
       </div>
       <div class="prop-group" style="margin-top:6px">
@@ -5513,6 +6724,14 @@ function updatePropsPanel(){
           <i class="ti ti-wand" style="font-size:11px"></i> ${t('declutter_line_btn')}
         </button>
       </div>`;
+
+    document.getElementById('line-color-select')?.addEventListener('change',function(){
+      saveHistory();
+      obj.color=this.value;
+      const swatch=document.getElementById('line-color-select-swatch');
+      if(swatch) swatch.style.background=this.value;
+      redraw(); updateResults(); updatePropsPanel();
+    });
 
     document.getElementById('btn-declutter-line')?.addEventListener('click',()=>{
       saveHistory();
@@ -5564,6 +6783,13 @@ function updatePropsPanel(){
     document.getElementById('prop-mtype').value=obj.mtypeId;
     const mt=markerTypes.find(t=>t.id===obj.mtypeId);
 
+    // Colour picker — every dot shows the user's own label for that colour
+    // if one was set (e.g. "Кухня Л1"), falling back to the colour name.
+    const mkColorHtml=`<div class="prop-group" style="margin-top:8px">
+      <div class="prop-label">${t('prop_color')}</div>
+      <div style="margin-top:4px">${propColorSelectHtml(obj.color||'#4a9eff','marker-color-select')}</div>
+    </div>`;
+
     // Orientation + optimise button for marker (no port dropdowns here anymore)
     let orientHtml='';
     if(mt?.kind==='bus'){
@@ -5589,6 +6815,49 @@ function updatePropsPanel(){
       </div>`;
     }
 
+    // Panel-only: how many connected lines use each cable mark — helps
+    // reading off a material takeoff straight from the panel.
+    let cableCountsHtml='';
+    if(mt?.kind==='bus'){
+      const connectedLines=lines.filter(l=>(l.connStart?.markerId===obj.id&&l.connStart?.type!=='transit')||(l.connEnd?.markerId===obj.id&&l.connEnd?.type!=='transit'));
+      const counts={};
+      connectedLines.forEach(l=>{
+        const mark=colorCableTypes[l.color]||t('cable_mark_unset');
+        counts[mark]=(counts[mark]||0)+1;
+      });
+      const rows=Object.entries(counts).sort((a,b)=>b[1]-a[1])
+        .map(([mark,n])=>`<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0"><span>${mark}</span><span style="color:#eee;font-weight:600">${n}</span></div>`)
+        .join('');
+      if(rows){
+        cableCountsHtml=`<div class="prop-group" style="margin-top:8px">
+          <div class="prop-label">${t('panel_cable_counts_label')}</div>
+          <div style="margin-top:4px">${rows}</div>
+        </div>`;
+      }
+    }
+
+    // Height override — falls back to the type's own default (shown as
+    // placeholder) until the user sets a value here. Same for every kind of
+    // marker now (used to be point-only, made consistent on request).
+    let heightHtml='';
+    {
+      const typeDefaultM = mt?.heightM!=null ? mt.heightM : 0.3;
+      const typeDefaultRef = mt?.heightRef || 'floor';
+      const hasOwn = obj.heightM!=null;
+      heightHtml=`<div class="prop-group" style="margin-top:8px">
+        <div class="prop-label">${t('marker_height_label')}</div>
+        <div style="display:flex;gap:6px;margin-top:4px">
+          <input type="number" id="marker-height-input" class="prop-input" min="0" step="0.05" style="flex:1"
+            placeholder="${typeDefaultM}" value="${hasOwn?obj.heightM:''}">
+          <select id="marker-height-ref" class="prop-input" style="width:auto">
+            <option value="floor"${(obj.heightRef||typeDefaultRef)==='floor'?' selected':''}>${t('height_ref_floor')}</option>
+            <option value="ceiling"${(obj.heightRef||typeDefaultRef)==='ceiling'?' selected':''}>${t('height_ref_ceiling')}</option>
+          </select>
+        </div>
+        <div style="font-size:10px;color:#666;margin-top:3px">${hasOwn?t('marker_height_hint_own'):t('marker_height_hint_default').replace('{v}', typeDefaultM+' '+t(typeDefaultRef==='ceiling'?'height_ref_ceiling':'height_ref_floor'))}</div>
+      </div>`;
+    }
+
     let orientEl=document.getElementById('bus-orient-group');
     if(!orientEl){
       orientEl=document.createElement('div');
@@ -5596,7 +6865,35 @@ function updatePropsPanel(){
       const mtypeGroup=document.getElementById('prop-mtype-group');
       if(mtypeGroup) mtypeGroup.insertAdjacentElement('afterend',orientEl);
     }
-    orientEl.innerHTML=orientHtml+optimiseHtml;
+    orientEl.innerHTML=mkColorHtml+heightHtml+orientHtml+optimiseHtml+cableCountsHtml;
+
+    const mkColorSel=document.getElementById('marker-color-select');
+    if(mkColorSel){
+      mkColorSel.addEventListener('change',()=>{
+        saveHistory();
+        obj.color=mkColorSel.value;
+        const swatch=document.getElementById('marker-color-select-swatch');
+        if(swatch) swatch.style.background=mkColorSel.value;
+        redraw(); updatePropsPanel();
+      });
+    }
+
+    {
+      const heightInput=document.getElementById('marker-height-input');
+      const heightRefSel=document.getElementById('marker-height-ref');
+      const saveMarkerHeight=()=>{
+        saveHistory();
+        const v=parseFloat(heightInput.value);
+        if(!isNaN(v) && heightInput.value.trim()!==''){
+          obj.heightM=v; obj.heightRef=heightRefSel.value;
+        } else {
+          delete obj.heightM; delete obj.heightRef;
+        }
+        updatePropsPanel();
+      };
+      heightInput?.addEventListener('input', saveMarkerHeight);
+      heightRefSel?.addEventListener('change', saveMarkerHeight);
+    }
 
     if(mt?.kind==='bus'){
       document.getElementById('bus-orient-h')?.addEventListener('click',()=>{
@@ -5661,8 +6958,8 @@ document.getElementById('prop-apply').addEventListener('click',()=>{
   saveHistory();
   const obj=selType==='segment'?segments[selIdx]:markers[selIdx];
   if(selType==='segment'){
-    const ac=document.querySelector('#prop-colors .color-dot.active');
-    const newColor = ac ? ac.dataset.hex : obj.color;
+    const sel=document.getElementById('prop-colors-select');
+    const newColor = sel ? sel.value : obj.color;
     obj.color=newColor;
     const val=parseFloat(document.getElementById('prop-len').value);
     if(!isNaN(val)&&val>0){
@@ -5680,22 +6977,27 @@ document.getElementById('prop-delete').addEventListener('click',deleteSelected);
 
 // Prop color dots
 const pcEl=document.getElementById('prop-colors');
-COLORS.forEach(c=>{
-  const d=document.createElement('div');
-  d.className='color-dot';d.style.background=c.hex;d.title=c.name;d.dataset.hex=c.hex;
-  d.addEventListener('click',()=>{
-    pcEl.querySelectorAll('.color-dot').forEach(x=>x.classList.remove('active'));d.classList.add('active');
-  });
-  pcEl.appendChild(d);
+pcEl.innerHTML=propColorSelectHtml(COLORS[0].hex,'prop-colors-select');
+document.getElementById('prop-colors-select').addEventListener('change',function(){
+  const swatch=document.getElementById('prop-colors-select-swatch');
+  if(swatch) swatch.style.background=this.value;
 });
+function refreshPropColorTitles(){
+  document.getElementById('prop-colors-select').querySelectorAll('option').forEach(o=>{
+    o.textContent=colorLabels[o.value]||colorName(o.value);
+  });
+}
 
 // Tabs
+function switchToTab(tabName){
+  const tab=document.querySelector(`.stab[data-tab="${tabName}"]`);
+  if(!tab) return;
+  document.querySelectorAll('.stab').forEach(t=>t.classList.toggle('active',t===tab));
+  document.querySelectorAll('.spanel').forEach(p=>p.classList.toggle('active',p.id==='tab-'+tabName));
+  if(tabName==='markers-cfg') renderMarkerTypesList();
+}
 document.querySelectorAll('.stab').forEach(tab=>{
-  tab.addEventListener('click',()=>{
-    document.querySelectorAll('.stab').forEach(t=>t.classList.toggle('active',t===tab));
-    document.querySelectorAll('.spanel').forEach(p=>p.classList.toggle('active',p.id==='tab-'+tab.dataset.tab));
-    if(tab.dataset.tab==='markers-cfg') renderMarkerTypesList();
-  });
+  tab.addEventListener('click',()=>switchToTab(tab.dataset.tab));
 });
 
 // ═══════════════════════════════════════════════════════
@@ -5722,6 +7024,7 @@ function deleteSelected(){
     lines=lines.filter(l=>l.connStart?.markerId!==mkId&&l.connEnd?.markerId!==mkId);
   }
   selType=null;selIdx=null;updatePropsPanel();redraw();
+  switchToTab('markers-cfg');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -5999,7 +7302,7 @@ function safeFileName(name){
 }
 function doSaveProject(){
   const name=getProjectName();
-  const data={version:10,pro:true,projectName:name,scale,segments,lines,markers,walls,measurements,markerTypes,colorLabels,colorCableTypes,hiddenColors:[...hiddenColors],bg:bgImgDataUrl,bgX,bgY,bgS,bgOpacity,markerSnapRadius,crossingPenaltyCm,autoFixupEnabled,zones};
+  const data={version:10,pro:true,projectName:name,scale,segments,lines,markers,walls,measurements,markerTypes,colorLabels,colorCableTypes,hiddenColors:[...hiddenColors],bg:bgImgDataUrl,bgX,bgY,bgS,bgOpacity,markerSnapRadius,crossingPenaltyCm,autoFixupEnabled,zones,ceilingHeightM,defaultRouteHeightM,defaultRouteHeightRef,colorRouteHeight};
   const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download=safeFileName(name)+'.wiring';a.click();
@@ -6026,6 +7329,10 @@ document.getElementById('project-in').addEventListener('change',e=>{
       colorLabels=d.colorLabels||{};
       colorCableTypes=d.colorCableTypes||{};
       hiddenColors=new Set(d.hiddenColors||[]);
+      ceilingHeightM=d.ceilingHeightM!=null?d.ceilingHeightM:2.8;
+      defaultRouteHeightM=d.defaultRouteHeightM!=null?d.defaultRouteHeightM:0;
+      defaultRouteHeightRef=d.defaultRouteHeightRef||'ceiling';
+      colorRouteHeight=d.colorRouteHeight||{};
       // Restore project name if present in the file
       if(d.projectName) document.getElementById('project-name').value=d.projectName;
       if(d.bgOpacity!=null){
@@ -6340,6 +7647,20 @@ function updateCurrentColorCableUI(overrideColor){
   input.dataset.activeHex = hex; // remember which color this input is currently editing
   dot.style.background=hex;
   input.value=colorCableTypes[hex]||'';
+
+  const heightInput=document.getElementById('current-color-height');
+  const heightRefSel=document.getElementById('current-color-height-ref');
+  const heightHint=document.getElementById('current-color-height-hint');
+  if(heightInput && heightRefSel){
+    heightInput.dataset.activeHex=hex;
+    const own=colorRouteHeight[hex];
+    heightInput.value = own ? own.m : '';
+    heightRefSel.value = own ? own.ref : defaultRouteHeightRef;
+    const fallbackTxt = `${defaultRouteHeightM} ${t(defaultRouteHeightRef==='ceiling'?'height_ref_ceiling':'height_ref_floor')}`;
+    if(heightHint) heightHint.textContent = own
+      ? t('route_height_hint_own')
+      : t('route_height_hint_default').replace('{v}', fallbackTxt);
+  }
 }
 document.getElementById('current-color-cable').addEventListener('input',()=>{
   const input=document.getElementById('current-color-cable');
@@ -6350,6 +7671,21 @@ document.getElementById('current-color-cable').addEventListener('input',()=>{
   buildColorPicker(); // refresh the gold-ring indicator on the toolbar dot
   redraw(); // refresh the cable-type line shown in the results panel
 });
+function saveCurrentColorHeight(){
+  const heightInput=document.getElementById('current-color-height');
+  const heightRefSel=document.getElementById('current-color-height-ref');
+  const hex=heightInput.dataset.activeHex || currentColor;
+  const v=parseFloat(heightInput.value);
+  if(!isNaN(v) && heightInput.value.trim()!==''){
+    colorRouteHeight[hex]={m:v, ref:heightRefSel.value};
+  } else {
+    delete colorRouteHeight[hex];
+  }
+  updateCurrentColorCableUI(hex);
+  updateResults();
+}
+document.getElementById('current-color-height').addEventListener('input', saveCurrentColorHeight);
+document.getElementById('current-color-height-ref').addEventListener('change', saveCurrentColorHeight);
 updateCurrentColorCableUI();
 
 // ═══════════════════════════════════════════════════════
@@ -7040,6 +8376,47 @@ function closeRouteOptModal(){
 
 document.getElementById('btn-route-optimize').addEventListener('click', openRouteOptModal);
 
+// Shows what a floor/ceiling height equals on the OTHER plane — e.g.
+// "2.80 от потолка = 0.00 от пола". Same conversion works both directions
+// since it's a simple mirror around the ceiling height.
+function heightConversionText(m, ref){
+  if(m==null || isNaN(m)) return '';
+  const other=ceilingHeightM-m;
+  const otherRefKey = ref==='ceiling' ? 'height_ref_floor' : 'height_ref_ceiling';
+  const ownRefKey = ref==='ceiling' ? 'height_ref_ceiling' : 'height_ref_floor';
+  return `${m} ${t(ownRefKey)} = ${other.toFixed(2)} ${t(otherRefKey)}`;
+}
+function updateHeightsModalConversion(){
+  const v=parseFloat(document.getElementById('default-route-height-input').value);
+  const ref=document.getElementById('default-route-height-ref').value;
+  document.getElementById('default-route-height-conversion').textContent=heightConversionText(v,ref);
+}
+function openHeightsModal(){
+  document.getElementById('ceiling-height-input').value=ceilingHeightM;
+  document.getElementById('default-route-height-input').value=defaultRouteHeightM;
+  document.getElementById('default-route-height-ref').value=defaultRouteHeightRef;
+  updateHeightsModalConversion();
+  document.getElementById('heights-modal').style.display='flex';
+}
+function closeHeightsModal(){
+  document.getElementById('heights-modal').style.display='none';
+}
+document.getElementById('btn-heights').addEventListener('click', openHeightsModal);
+document.getElementById('ceiling-height-input').addEventListener('input',function(){
+  const v=parseFloat(this.value);
+  if(!isNaN(v)&&v>0){ ceilingHeightM=v; updateResults(); }
+  updateHeightsModalConversion();
+});
+document.getElementById('default-route-height-input').addEventListener('input',function(){
+  const v=parseFloat(this.value);
+  if(!isNaN(v)&&v>=0){ defaultRouteHeightM=v; updateResults(); }
+  updateHeightsModalConversion();
+});
+document.getElementById('default-route-height-ref').addEventListener('change',function(){
+  defaultRouteHeightRef=this.value; updateResults();
+  updateHeightsModalConversion();
+});
+
 // Suggests moving a distribution box (Кр) within a fixed 50cm radius when it
 // shortens the total routed length of its OWN connections — never applied
 // automatically, only shown as a per-suggestion confirmable proposal.
@@ -7224,6 +8601,9 @@ function updateExpSizeInfo(){
 
 let __downloadStaggerIndex=0; // shared across ports-diagram pages AND the main drawing export — every triggered download in one export run gets its own slot, so a browser's multi-download-spam guard never sees them arrive in a tight burst
 function doExport(){
+  if(location.protocol==='file:'){
+    if(!confirm(t('confirm_file_protocol_export'))) return;
+  }
   __downloadStaggerIndex=0;
   if(document.getElementById('exp-ports-diagram')?.checked){
     exportPortsDiagram();
@@ -7261,6 +8641,19 @@ function doExportForTheme(theme){
     bgY=MARGIN-minWy*bgS;
 
     const totalH = sceneH + legendH;
+
+    // Safari (especially iOS) hard-caps canvas area at 16,777,216px, far
+    // below Chrome/Firefox's own limits — a large plan at 4x/8x quality can
+    // silently exceed it, and toBlob() then just returns null with no error
+    // at all. Catch this BEFORE spending time building the canvas, not after.
+    const totalArea=(sceneW*dpr)*(totalH*dpr);
+    const SAFE_CANVAS_AREA=16000000;
+    if(totalArea>SAFE_CANVAS_AREA){
+      bgX=savedBgX; bgY=savedBgY; bgS=savedBgS;
+      if(!confirm(t('confirm_canvas_too_large'))) return;
+      bgX=MARGIN-minWx*bgS;
+      bgY=MARGIN-minWy*bgS;
+    }
     const off=document.createElement('canvas');
     off.width=sceneW*dpr; off.height=totalH*dpr;
     const octx=off.getContext('2d');
@@ -7268,11 +8661,14 @@ function doExportForTheme(theme){
     renderToCtx(octx,sceneW,sceneH,dpr,false,true);
     if(legendH>0) drawLegendStrip(octx, sceneW, sceneH, legendH, usedColors);
     drawWatermark(octx, sceneW, totalH);
+    const scalebarCorner1=document.getElementById('exp-scalebar-corner')?.value||'bl';
+    if(scalebarCorner1!=='off') drawScaleBar(octx, sceneW, sceneH, scalebarCorner1);
 
     bgX=savedBgX; bgY=savedBgY; bgS=savedBgS;
     const fullDelay=(__downloadStaggerIndex++)*300;
     setTimeout(()=>{
       off.toBlob(blob=>{
+        if(!blob){ setInfo(t('msg_export_failed')); return; }
         const a=document.createElement('a');
         a.href=URL.createObjectURL(blob);
         a.download=safeFileName(getProjectName())+`-full-${dpr}x-${theme}.png`;
@@ -7284,6 +8680,11 @@ function doExportForTheme(theme){
   } else {
     const sceneW=bgC.width, sceneH=bgC.height;
     const totalH = sceneH + legendH;
+    const totalAreaVp=(sceneW*dpr)*(totalH*dpr);
+    const SAFE_CANVAS_AREA_VP=16000000;
+    if(totalAreaVp>SAFE_CANVAS_AREA_VP){
+      if(!confirm(t('confirm_canvas_too_large'))) return;
+    }
     const off=document.createElement('canvas');
     off.width=sceneW*dpr; off.height=totalH*dpr;
     const octx=off.getContext('2d');
@@ -7291,9 +8692,12 @@ function doExportForTheme(theme){
     renderToCtx(octx,sceneW,sceneH,dpr);
     if(legendH>0) drawLegendStrip(octx, sceneW, sceneH, legendH, usedColors);
     drawWatermark(octx, sceneW, totalH);
+    const scalebarCorner2=document.getElementById('exp-scalebar-corner')?.value||'bl';
+    if(scalebarCorner2!=='off') drawScaleBar(octx, sceneW, sceneH, scalebarCorner2);
     const viewportDelay=(__downloadStaggerIndex++)*300;
     setTimeout(()=>{
       off.toBlob(blob=>{
+        if(!blob){ setInfo(t('msg_export_failed')); return; }
         const a=document.createElement('a');
         a.href=URL.createObjectURL(blob);
         a.download=safeFileName(getProjectName())+`-${dpr}x-${theme}.png`;
@@ -7582,6 +8986,62 @@ function drawWatermark(octx, W, H){
   octx.textBaseline = 'alphabetic';
 }
 
+// Classic alternating-segment scale bar — lets someone reading just the
+// image measure distances without knowing the digital scale. Skipped if no
+// real-world scale was ever set (nothing meaningful to show then).
+// `corner` is one of 'bl'|'br'|'tl'|'tr' (default 'bl'). W/H here must be the
+// SCENE's own size (not scene+legend) so it always lands inside the drawing,
+// never overlapping a legend strip drawn below it.
+function drawScaleBar(octx, W, H, corner){
+  if(scale==null) return;
+  corner=corner||'bl';
+  const T=EXPORT_THEMES[exportTheme]||EXPORT_THEMES.dark;
+
+  // Pick a "nice" round length in metres close to some reasonable on-image width.
+  const targetPx=140;
+  const targetM=(targetPx/bgS)*scale;
+  const niceSteps=[0.1,0.2,0.25,0.5,1,2,2.5,5,10,20,25,50,100,200,250,500,1000];
+  let barM=niceSteps[0];
+  niceSteps.forEach(v=>{ if(Math.abs(v-targetM)<Math.abs(barM-targetM)) barM=v; });
+  const barPx=(barM/scale)*bgS;
+  if(!isFinite(barPx) || barPx<20 || barPx>W*0.6) return; // degenerate zoom — skip rather than draw nonsense
+
+  const segs=4;
+  const segPx=barPx/segs;
+  const barH=6;
+  const pad=10;
+  const fmt=(m)=> m>=1 ? (Number.isInteger(m)?m:m.toFixed(2))+' м' : Math.round(m*100)+' см';
+  octx.font='10px sans-serif';
+  const labelW=octx.measureText(fmt(barM)).width;
+  const panelW=barPx+labelW/2+8;
+  const panelH=barH+24;
+
+  // Bottom-right is where the watermark lives — push the bar up above it so
+  // they never overlap if the user picks that corner too.
+  const watermarkClearance = corner==='br' ? 26 : 0;
+
+  let x0, y0;
+  if(corner==='br'){ x0=W-pad-barPx-labelW/2; y0=H-pad-14-watermarkClearance; }
+  else if(corner==='tl'){ x0=pad; y0=pad+panelH-10; }
+  else if(corner==='tr'){ x0=W-pad-barPx-labelW/2; y0=pad+panelH-10; }
+  else { x0=pad; y0=H-pad-14; } // 'bl', default
+
+  octx.fillStyle=T.watermarkBg;
+  octx.fillRect(x0-4, y0-16, panelW, panelH);
+
+  for(let i=0;i<segs;i++){
+    octx.fillStyle = i%2===0 ? T.text : T.pageBg;
+    octx.fillRect(x0+i*segPx, y0, segPx, barH);
+  }
+  octx.strokeStyle=T.text; octx.lineWidth=1;
+  octx.strokeRect(x0,y0,barPx,barH);
+
+  octx.fillStyle=T.text; octx.textAlign='center'; octx.textBaseline='bottom';
+  octx.fillText('0', x0, y0-2);
+  octx.fillText(fmt(barM), x0+barPx, y0-2);
+  octx.textAlign='left'; octx.textBaseline='alphabetic';
+}
+
 // Shared "Название — метка — марка кабеля" label, used by both the legend
 // and the ports diagram, so they always describe a color the same way.
 function buildColorLabel(hex){
@@ -7802,14 +9262,15 @@ function drawPortList(ctx, mk, x, y, maxWidth, opts){
       if(!compact && colorCableTypes[conn.color]) label+=` — ${colorCableTypes[conn.color]}`;
       if(scale!=null){
         const plain=lineLength(conn.line)*scale;
+        const withVert=lineLengthWithVerticalsM(conn.line);
         if(mt.kind==='bus' && !compact){
           // The panel's own ports are the trunk runs to each box — the
           // ones worth knowing the material allowance for too. Skipped in
           // compact mode — there isn't room, and the plain grid view is
           // about identifying ports, not the material takeoff.
-          label+=` — ${plain.toFixed(2)} ${t('unit_m')} (с расходом ${lineFullLengthM(conn.line).toFixed(2)} ${t('unit_m')})`;
+          label+=` — ${plain.toFixed(2)} ${t('unit_m')} (${t('with_verticals_short')} ${withVert.toFixed(2)} ${t('unit_m')}, ${t('with_allowance_short')} ${lineFullLengthM(conn.line).toFixed(2)} ${t('unit_m')})`;
         } else {
-          label+=` — ${plain.toFixed(2)} ${t('unit_m')}`;
+          label+=` — ${plain.toFixed(2)} ${t('unit_m')} (${t('with_verticals_short')} ${withVert.toFixed(2)} ${t('unit_m')})`;
         }
       }
       ctx.fillText(label, x+dotR*2+6, cy);
@@ -7972,6 +9433,7 @@ function exportPortsDiagramForTheme(theme){
     const delay = (__downloadStaggerIndex++)*300; // shared slot — see doExport()
     setTimeout(()=>{
       off.toBlob(blob=>{
+        if(!blob){ setInfo(t('msg_export_failed')); return; }
         const a=document.createElement('a');
         a.href=URL.createObjectURL(blob);
         a.download=safeFileName(getProjectName())+`-ports-${theme}${pageSuffix}.png`;
@@ -8064,8 +9526,47 @@ document.getElementById('guide-close').addEventListener('click',()=>{ document.g
 document.getElementById('guide-close-bottom').addEventListener('click',()=>{ document.getElementById('guide-modal').style.display='none'; });
 document.getElementById('guide-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) e.currentTarget.style.display='none'; });
 
+document.getElementById('whatsnew-close').addEventListener('click',()=>{ document.getElementById('whatsnew-modal').style.display='none'; });
+document.getElementById('whatsnew-close-bottom').addEventListener('click',()=>{ document.getElementById('whatsnew-modal').style.display='none'; });
+document.getElementById('whatsnew-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) e.currentTarget.style.display='none'; });
+
+// Bump this string whenever new entries are added to the What's New modal —
+// anyone who hasn't seen THIS version yet gets the red dot on the button.
+const WHATSNEW_VERSION='2026-08-17';
+function updateWhatsNewDot(){
+  const seen=localStorage.getItem('wiringSeenWhatsNew');
+  document.getElementById('whatsnew-dot').style.display = (seen===WHATSNEW_VERSION) ? 'none' : 'block';
+}
+updateWhatsNewDot();
+
+document.getElementById('whatsnew-btn').addEventListener('click',()=>{
+  document.getElementById('whatsnew-modal').style.display='flex';
+  localStorage.setItem('wiringSeenWhatsNew', WHATSNEW_VERSION);
+  updateWhatsNewDot();
+
+  // Bug-report link — reuses the same site-owner WhatsApp contact already
+  // used for ad inquiries (see partners.json / _ad_slot_whatsapp), so
+  // nothing new needs to be configured for this to work.
+  const reportLink=document.getElementById('whatsnew-report-link');
+  const wa=partnersConfig && partnersConfig._ad_slot_whatsapp;
+  if(wa){
+    reportLink.href=`https://wa.me/${wa}?text=${encodeURIComponent('Здравствуйте! Нашёл(а) баг / есть предложение по калькулятору проводки (provodka.org): ')}`;
+    reportLink.style.display='inline';
+  } else {
+    reportLink.style.display='none';
+  }
+});
+
 document.getElementById('help-btn').addEventListener('click',()=>{
   document.getElementById('guide-modal').style.display='flex';
+  const reportLink=document.getElementById('guide-report-link');
+  const wa=partnersConfig && partnersConfig._ad_slot_whatsapp;
+  if(wa){
+    reportLink.href=`https://wa.me/${wa}?text=${encodeURIComponent('Здравствуйте! Нашёл(а) баг / есть предложение по калькулятору проводки (provodka.org): ')}`;
+    reportLink.style.display='inline';
+  } else {
+    reportLink.style.display='none';
+  }
 });
 // Keep old alert as backup: remove old handler below
 function _OLD_help_UNUSED(){
@@ -8251,7 +9752,21 @@ window.addEventListener('resize', ()=>{
 // ═══════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════
-function setInfo(t){document.getElementById('info-text').textContent=t;}
+function setInfo(msg, isWarning){
+  const el=document.getElementById('info-text');
+  el.textContent=msg;
+  el.style.color=isWarning?'#ffb020':'';
+  el.style.fontWeight=isWarning?'600':'';
+  // info-bar is flex-shrink:0 — a message that wraps to a different number
+  // of lines than before changes the canvas's available height without any
+  // window resize event ever firing, leaving drC's internal width/height
+  // stale and every click coordinate off by that gap (this is why the
+  // crosshair could drift from the actual click point after switching
+  // modes or seeing a longer/shorter status message). Reading clientWidth/
+  // Height here forces the browser to finish any pending layout first, so
+  // this reliably catches the change right as it happens.
+  if(wrap.clientWidth!==drC.width || wrap.clientHeight!==drC.height) resize();
+}
 resize();
 setMode('line');
 renderMarkerTypesList();

@@ -323,7 +323,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
           <div data-i18n="cable_type_hint" style="font-size:10px;color:#666;margin-top:3px">Применяется ко всем линиям этого цвета на чертеже</div>
           <div class="prop-label" style="margin-top:10px" data-i18n="route_height_label">Высота трассы для текущего цвета</div>
           <div style="display:flex;gap:6px;margin-top:4px">
-            <input type="number" class="prop-input" id="current-color-height" step="0.05" min="0" style="flex:1" data-i18n-placeholder="route_height_ph" placeholder="по умолчанию">
+            <input type="text" inputmode="decimal" class="prop-input" id="current-color-height" style="flex:1" data-i18n-placeholder="route_height_ph" placeholder="по умолчанию">
             <select id="current-color-height-ref" class="prop-input" style="width:auto">
               <option value="floor" data-i18n="height_ref_floor">от пола</option>
               <option value="ceiling" data-i18n="height_ref_ceiling">от потолка</option>
@@ -510,14 +510,14 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 
     <div class="prop-group" style="margin-bottom:14px">
       <div class="prop-label" data-i18n="ceiling_height_label">Высота потолка (м)</div>
-      <input type="number" class="prop-input" id="ceiling-height-input" step="0.05" min="1" style="margin-top:4px">
+      <input type="text" inputmode="decimal" class="prop-input" id="ceiling-height-input" style="margin-top:4px">
       <div data-i18n="ceiling_height_hint" style="font-size:10px;color:#666;margin-top:3px">Для пересчёта «от потолка» ↔ «от пола», одна на весь проект.</div>
     </div>
 
     <div class="prop-group">
       <div class="prop-label" data-i18n="default_route_height_label">Высота трассы по умолчанию</div>
       <div style="display:flex;gap:6px;margin-top:4px">
-        <input type="number" class="prop-input" id="default-route-height-input" step="0.05" min="0" style="flex:1">
+        <input type="text" inputmode="decimal" class="prop-input" id="default-route-height-input" style="flex:1">
         <select id="default-route-height-ref" class="prop-input" style="width:auto">
           <option value="floor" data-i18n="height_ref_floor">от пола</option>
           <option value="ceiling" data-i18n="height_ref_ceiling">от потолка</option>
@@ -738,6 +738,45 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
   <div style="background:#1e1e1e;border:1px solid #444;border-radius:12px;max-width:640px;width:100%;max-height:90vh;overflow-y:auto;padding:28px 30px;position:relative">
     <button id="whatsnew-close" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#666;font-size:22px;cursor:pointer;line-height:1">✕</button>
     <h2 data-i18n="whatsnew_h2" style="font-size:18px;font-weight:700;margin-bottom:20px;color:#e8e8e8">Что нового</h2>
+
+    <div class="whatsnew-date" data-i18n="wn_r2_date" style="font-size:12px;font-weight:700;color:#7dc4ff;margin-bottom:10px;text-transform:uppercase;letter-spacing:.03em">18 августа 2026</div>
+
+    <div class="guide-step">
+      <div class="guide-body" style="margin-left:0">
+        <div class="guide-title" data-i18n="wn_r2_1_title">Высоту теперь можно крутить колесом мыши</div>
+        <div class="guide-text" data-i18n-html="wn_r2_1_text">Во всех полях с высотой (потолок, трасса, значок, тип значка) — кликните в поле и покрутите колесо мыши, чтобы изменить значение без набора с клавиатуры.</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-body" style="margin-left:0">
+        <div class="guide-title" data-i18n="wn_r2_2_title">Высоту можно вводить и через запятую</div>
+        <div class="guide-text" data-i18n-html="wn_r2_2_text">Раньше поля принимали только точку как разделитель дробной части. Теперь работает и запятая, и точка — как удобнее.</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-body" style="margin-left:0">
+        <div class="guide-title" data-i18n="wn_r2_3_title">Смена высоты у типа значка спрашивает подтверждение</div>
+        <div class="guide-text" data-i18n-html="wn_r2_3_text">Если меняете высоту по умолчанию у типа значка, а среди уже расставленных значков этого типа есть с индивидуально заданной высотой — программа спросит, сбросить ли её на новое значение.</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-body" style="margin-left:0">
+        <div class="guide-title" data-i18n="wn_r2_4_title">Новый формат подписей в схеме портов</div>
+        <div class="guide-text" data-i18n-html="wn_r2_4_text">В скачиваемой схеме теперь отдельно видно длину по горизонтали, разницу высот по вертикали и итоговую длину с учётом расхода на подключение — вместо одной вложенной строки.</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-body" style="margin-left:0">
+        <div class="guide-title" data-i18n="wn_r2_5_title">Починена потеря фокуса при вводе высоты</div>
+        <div class="guide-text" data-i18n-html="wn_r2_5_text">Раньше при наборе высоты у значка курсор мог «убегать» из поля на середине ввода. Больше не убегает.</div>
+      </div>
+    </div>
+
+    <div class="whatsnew-date" data-i18n="wn_r1_date" style="font-size:12px;font-weight:700;color:#7dc4ff;margin:22px 0 10px;text-transform:uppercase;letter-spacing:.03em;border-top:1px solid #333;padding-top:18px">17 августа 2026</div>
 
     <div class="guide-step">
       <div class="guide-body" style="margin-left:0">
@@ -968,11 +1007,13 @@ const translations = {
     mt_kind_bus:'Щит — шина, много портов на длинных сторонах',
     mt_pro_only:'Коробки/щиты с портами — в PRO-режиме',
     mt_default_height:'Высота по умолчанию', mt_default_height_hint:'Можно переопределить у конкретного значка в панели свойств.',
+    confirm_apply_height_to_existing:'У {n} уже размещённых значков этого типа задана своя высота. Сбросить её и применить новую высоту типа?',
     mt_height_ph_box:'не задано — 0 вертикали',
     ok_btn:'Ок',
     marker_height_label:'Высота значка', marker_height_hint_own:'Своё значение для этого значка.',
     marker_height_hint_default:'Сейчас используется значение по умолчанию из типа: {v}.',
-    with_verticals_short:'верт.', with_allowance_short:'с расходом',
+    with_verticals_short:'верт.', with_allowance_short:'с учётом расхода',
+    horiz_label:'по горизонтали', vert_label:'по вертикали',
     panel_cable_counts_label:'Линий по маркам кабеля',
     cable_mark_unset:'марка не указана',
     mt_pps:'Портов на сторону', mt_size:'Размер значка (радиус, px)',
@@ -1060,6 +1101,17 @@ const translations = {
     wn_5_title:'Курсор больше не «убегает»',
     wn_5_text:'Исправлено расхождение между тем, где реально происходит клик, и тем, где показывалось перекрестие — особенно заметно было при смене режима (линия/значок/выбор).',
     wn_footer_prompt:'Нашли баг или есть предложение?', wn_footer_link:'Написать разработчику',
+    wn_r2_date:'18 августа 2026', wn_r1_date:'17 августа 2026',
+    wn_r2_1_title:'Высоту теперь можно крутить колесом мыши',
+    wn_r2_1_text:'Во всех полях с высотой (потолок, трасса, значок, тип значка) — кликните в поле и покрутите колесо мыши, чтобы изменить значение без набора с клавиатуры.',
+    wn_r2_2_title:'Высоту можно вводить и через запятую',
+    wn_r2_2_text:'Раньше поля принимали только точку как разделитель дробной части. Теперь работает и запятая, и точка — как удобнее.',
+    wn_r2_3_title:'Смена высоты у типа значка спрашивает подтверждение',
+    wn_r2_3_text:'Если меняете высоту по умолчанию у типа значка, а среди уже расставленных значков этого типа есть с индивидуально заданной высотой — программа спросит, сбросить ли её на новое значение.',
+    wn_r2_4_title:'Новый формат подписей в схеме портов',
+    wn_r2_4_text:'В скачиваемой схеме теперь отдельно видно длину по горизонтали, разницу высот по вертикали и итоговую длину с учётом расхода на подключение — вместо одной вложенной строки.',
+    wn_r2_5_title:'Починена потеря фокуса при вводе высоты',
+    wn_r2_5_text:'Раньше при наборе высоты у значка курсор мог «убегать» из поля на середине ввода. Больше не убегает.',
     wn_close_btn:'Понятно',
     guide_sub:'Краткое руководство за 2 минуты',
     guide_1_title:'Сценарий А — есть фото плана',
@@ -1227,11 +1279,13 @@ const translations = {
     mt_kind_bus:'Panel — bus bar, many ports on the long sides',
     mt_pro_only:'Boxes/panels with ports — PRO mode only',
     mt_default_height:'Default height', mt_default_height_hint:'Can be overridden per individual marker in the properties panel.',
+    confirm_apply_height_to_existing:'{n} already-placed markers of this type have their own height set. Clear it and apply the new type height to them too?',
     mt_height_ph_box:'not set — zero vertical run',
     ok_btn:'OK',
     marker_height_label:'Marker height', marker_height_hint_own:'This marker has its own value.',
     marker_height_hint_default:'Currently using the type default: {v}.',
     with_verticals_short:'vert.', with_allowance_short:'with allowance',
+    horiz_label:'horizontal', vert_label:'vertical',
     panel_cable_counts_label:'Lines by cable mark',
     cable_mark_unset:'mark not set',
     mt_pps:'Ports per side', mt_size:'Marker size (radius, px)',
@@ -1319,6 +1373,17 @@ const translations = {
     wn_5_title:"The cursor no longer drifts",
     wn_5_text:"Fixed a mismatch between where a click actually registered and where the crosshair was shown — most noticeable when switching modes (line/marker/select).",
     wn_footer_prompt:'Found a bug or have a suggestion?', wn_footer_link:'Message the developer',
+    wn_r2_date:'August 18, 2026', wn_r1_date:'August 17, 2026',
+    wn_r2_1_title:'Height fields now support the mouse wheel',
+    wn_r2_1_text:'In every height field (ceiling, route, marker, marker type) — click into the field and scroll to change the value without typing.',
+    wn_r2_2_title:'Height can be typed with either decimal separator',
+    wn_r2_2_text:'These fields used to accept only a period. Now both a comma and a period work — whichever is more convenient.',
+    wn_r2_3_title:'Changing a marker type\'s height now asks for confirmation',
+    wn_r2_3_text:'If you change a marker type\'s default height and some already-placed markers of that type have their own height set, the app now asks whether to reset it to the new value.',
+    wn_r2_4_title:'New label format in the ports diagram',
+    wn_r2_4_text:'The downloadable diagram now shows horizontal length, the vertical height difference, and the total with connection allowance separately, instead of one nested line.',
+    wn_r2_5_title:'Fixed focus loss while typing a height',
+    wn_r2_5_text:'Typing a marker\'s height used to kick the cursor out of the field mid-edit. Fixed.',
     wn_close_btn:'Got it',
     guide_sub:'A quick 2-minute guide',
     guide_1_title:'Scenario A — you have a photo of the plan',
@@ -1486,11 +1551,13 @@ const translations = {
     mt_kind_bus:'Panel — barra colectora, muchos puertos en los lados largos',
     mt_pro_only:'Cajas/paneles con puertos — solo en modo PRO',
     mt_default_height:'Altura por defecto', mt_default_height_hint:'Se puede anular para un elemento concreto en el panel de propiedades.',
+    confirm_apply_height_to_existing:'{n} elementos de este tipo ya colocados tienen su propia altura definida. ¿Borrarla y aplicarles también la nueva altura del tipo?',
     mt_height_ph_box:'sin definir — sin tramo vertical',
     ok_btn:'Aceptar',
     marker_height_label:'Altura del elemento', marker_height_hint_own:'Este elemento tiene su propio valor.',
     marker_height_hint_default:'Actualmente se usa el valor por defecto del tipo: {v}.',
     with_verticals_short:'vert.', with_allowance_short:'con margen',
+    horiz_label:'horizontal', vert_label:'vertical',
     panel_cable_counts_label:'Líneas por marca de cable',
     cable_mark_unset:'marca no indicada',
     mt_pps:'Puertos por lado', mt_size:'Tamaño del marcador (radio, px)',
@@ -1578,6 +1645,17 @@ const translations = {
     wn_5_title:'El cursor ya no se desvía',
     wn_5_text:'Se corrigió un desajuste entre el lugar donde realmente ocurría el clic y donde se mostraba la cruceta — era especialmente notorio al cambiar de modo (línea/elemento/selección).',
     wn_footer_prompt:'¿Encontró un error o tiene una sugerencia?', wn_footer_link:'Escribir al desarrollador',
+    wn_r2_date:'18 de agosto de 2026', wn_r1_date:'17 de agosto de 2026',
+    wn_r2_1_title:'Los campos de altura ya admiten la rueda del ratón',
+    wn_r2_1_text:'En cada campo de altura (techo, tendido, elemento, tipo de elemento) — haga clic en el campo y gire la rueda para cambiar el valor sin escribir.',
+    wn_r2_2_title:'La altura se puede escribir con cualquier separador decimal',
+    wn_r2_2_text:'Antes estos campos solo aceptaban el punto. Ahora funcionan tanto la coma como el punto — lo que sea más cómodo.',
+    wn_r2_3_title:'Cambiar la altura de un tipo de elemento ahora pide confirmación',
+    wn_r2_3_text:'Si cambia la altura por defecto de un tipo de elemento y algunos elementos de ese tipo ya colocados tienen su propia altura, la aplicación ahora pregunta si restablecerla al nuevo valor.',
+    wn_r2_4_title:'Nuevo formato de etiquetas en el esquema de puertos',
+    wn_r2_4_text:'El esquema descargable ahora muestra por separado la longitud horizontal, la diferencia de altura vertical y el total con el margen de conexión, en vez de una sola línea anidada.',
+    wn_r2_5_title:'Corregida la pérdida de foco al escribir una altura',
+    wn_r2_5_text:'Antes, al escribir la altura de un elemento, el cursor podía salir del campo a mitad de la edición. Ya no ocurre.',
     wn_close_btn:'Entendido',
     guide_sub:'Guía rápida de 2 minutos',
     guide_1_title:'Escenario A — tiene una foto del plano',
@@ -1745,11 +1823,13 @@ const translations = {
     mt_kind_bus:'Щит — шина, ұзын жақтарында көп порт',
     mt_pro_only:'Порттары бар қораптар/щиттер — тек PRO режимінде',
     mt_default_height:'Әдепкі биіктік', mt_default_height_hint:'Қасиеттер панелінде жеке белгіше үшін өзгертуге болады.',
+    confirm_apply_height_to_existing:'Осы түрдегі {n} қойылған белгішенің өз биіктігі бар. Оны тазалап, жаңа түр биіктігін оларға да қолдану керек пе?',
     mt_height_ph_box:'көрсетілмеген — тік учаске жоқ',
     ok_btn:'Жарайды',
     marker_height_label:'Белгіше биіктігі', marker_height_hint_own:'Бұл белгіше үшін өз мәні бар.',
     marker_height_hint_default:'Қазір түрдің әдепкі мәні қолданылады: {v}.',
     with_verticals_short:'тік.', with_allowance_short:'шығынмен',
+    horiz_label:'көлденеңінен', vert_label:'тігінен',
     panel_cable_counts_label:'Кабель маркасы бойынша сызықтар',
     cable_mark_unset:'марка көрсетілмеген',
     mt_pps:'Әр жақтағы порттар', mt_size:'Белгіше өлшемі (радиус, px)',
@@ -1837,6 +1917,17 @@ const translations = {
     wn_5_title:'Курсор енді «қашпайды»',
     wn_5_text:'Шертудің нақты орны мен айқас белгінің көрсетілетін орны арасындағы алшақтық түзетілді — режимді ауыстырғанда (сызық/белгіше/таңдау) әсіресе байқалатын.',
     wn_footer_prompt:'Қате таптыңыз ба немесе ұсынысыңыз бар ма?', wn_footer_link:'Әзірлеушіге жазу',
+    wn_r2_date:'2026 жылғы 18 тамыз', wn_r1_date:'2026 жылғы 17 тамыз',
+    wn_r2_1_title:'Биіктік өрістерінде енді тінтуір дөңгелегі жұмыс істейді',
+    wn_r2_1_text:'Кез келген биіктік өрісінде (төбе, трасса, белгіше, белгіше түрі) — өріске басып, дөңгелекті айналдырыңыз — теру қажет емес.',
+    wn_r2_2_title:'Биіктікті кез келген бөлгішпен енгізуге болады',
+    wn_r2_2_text:'Бұрын өрістер тек нүктені қабылдайтын. Енді үтір де, нүкте де жұмыс істейді — қалауыңызша.',
+    wn_r2_3_title:'Белгіше түрінің биіктігін өзгерткенде растау сұралады',
+    wn_r2_3_text:'Белгіше түрінің әдепкі биіктігін өзгертсеңіз, ал осы түрдегі кейбір қойылған белгішелердің өз биіктігі болса — бағдарлама оны жаңа мәнге ысыру керек пе деп сұрайды.',
+    wn_r2_4_title:'Порт схемасында жазбалардың жаңа пішімі',
+    wn_r2_4_text:'Жүктелетін схемада енді көлденең ұзындық, тік биіктік айырмасы және қосылу шығынын ескере отырып жалпы ұзындық бөлек көрсетіледі — бір ішкі жол орнына.',
+    wn_r2_5_title:'Биіктікті теру кезіндегі фокус жоғалуы түзетілді',
+    wn_r2_5_text:'Бұрын белгіше биіктігін теру кезінде курсор өрістен ортасында «қашып» кетуі мүмкін еді. Енді қашпайды.',
     wn_close_btn:'Түсінікті',
     guide_sub:'2 минуттық қысқаша нұсқаулық',
     guide_1_title:'А сценарийі — жоспар фотосы бар',
@@ -6523,7 +6614,7 @@ function openMarkerTypeModal(existing){
     <div class="mfield" id="mt-height-wrap">
       <label>${t('mt_default_height')}</label>
       <div style="display:flex;gap:6px">
-        <input type="number" id="mt-height" min="0" step="0.05" style="flex:1" value="${existing?.heightM!=null?existing.heightM:(curKind==='point'?0.3:'')}" placeholder="${curKind==='point'?'':t('mt_height_ph_box')}">
+        <input type="text" inputmode="decimal" id="mt-height" style="flex:1" value="${existing?.heightM!=null?existing.heightM:(curKind==='point'?0.3:'')}" placeholder="${curKind==='point'?'':t('mt_height_ph_box')}">
         <select id="mt-height-ref" class="prop-input" style="width:auto">
           <option value="floor"${(existing?.heightRef||'floor')==='floor'?' selected':''}>${t('height_ref_floor')}</option>
           <option value="ceiling"${existing?.heightRef==='ceiling'?' selected':''}>${t('height_ref_ceiling')}</option>
@@ -6547,20 +6638,29 @@ function openMarkerTypeModal(existing){
     const portsPerSide=kind==='multi'?(parseInt(document.getElementById('mt-pps').value)||2)
                        :kind==='bus'?12:1;
     const heightInputRaw=document.getElementById('mt-height').value;
-    const heightM = heightInputRaw.trim()!=='' ? (parseFloat(heightInputRaw)||0) : undefined;
+    const heightM = heightInputRaw.trim()!=='' ? (parseFlexibleFloat(heightInputRaw)||0) : undefined;
     const heightRef = heightM!=null ? (document.getElementById('mt-height-ref').value||'floor') : undefined;
     if(isNew){
       const id=uid();
       markerTypes.push({id,abbr,desc,extra,size,portsPerSide,kind,heightM,heightRef});
       selectedMarkerTypeId=id;
     } else {
+      const heightChanged = existing.heightM!==heightM || existing.heightRef!==heightRef;
       existing.abbr=abbr;existing.desc=desc;existing.extra=extra;
       existing.size=size;existing.portsPerSide=portsPerSide;existing.kind=kind;
       existing.heightM=heightM;existing.heightRef=heightRef;
+      if(heightChanged){
+        const overridden=markers.filter(m=>m.mtypeId===existing.id && m.heightM!=null);
+        if(overridden.length>0 && confirm(t('confirm_apply_height_to_existing').replace('{n}',overridden.length))){
+          overridden.forEach(m=>{ delete m.heightM; delete m.heightRef; });
+        }
+      }
     }
     renderMarkerTypesList();redraw();
     modal.classList.remove('show');modalCb=null;
   },true);
+  const mtHeightInput=document.getElementById('mt-height');
+  if(mtHeightInput) addWheelStep(mtHeightInput, 0.05, 0);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -6847,14 +6947,14 @@ function updatePropsPanel(){
       heightHtml=`<div class="prop-group" style="margin-top:8px">
         <div class="prop-label">${t('marker_height_label')}</div>
         <div style="display:flex;gap:6px;margin-top:4px">
-          <input type="number" id="marker-height-input" class="prop-input" min="0" step="0.05" style="flex:1"
+          <input type="text" inputmode="decimal" id="marker-height-input" class="prop-input" style="flex:1"
             placeholder="${typeDefaultM}" value="${hasOwn?obj.heightM:''}">
           <select id="marker-height-ref" class="prop-input" style="width:auto">
             <option value="floor"${(obj.heightRef||typeDefaultRef)==='floor'?' selected':''}>${t('height_ref_floor')}</option>
             <option value="ceiling"${(obj.heightRef||typeDefaultRef)==='ceiling'?' selected':''}>${t('height_ref_ceiling')}</option>
           </select>
         </div>
-        <div style="font-size:10px;color:#666;margin-top:3px">${hasOwn?t('marker_height_hint_own'):t('marker_height_hint_default').replace('{v}', typeDefaultM+' '+t(typeDefaultRef==='ceiling'?'height_ref_ceiling':'height_ref_floor'))}</div>
+        <div id="marker-height-hint" style="font-size:10px;color:#666;margin-top:3px">${hasOwn?t('marker_height_hint_own'):t('marker_height_hint_default').replace('{v}', typeDefaultM+' '+t(typeDefaultRef==='ceiling'?'height_ref_ceiling':'height_ref_floor'))}</div>
       </div>`;
     }
 
@@ -6881,18 +6981,28 @@ function updatePropsPanel(){
     {
       const heightInput=document.getElementById('marker-height-input');
       const heightRefSel=document.getElementById('marker-height-ref');
-      const saveMarkerHeight=()=>{
-        saveHistory();
-        const v=parseFloat(heightInput.value);
+      const applyMarkerHeight=()=>{
+        const v=parseFlexibleFloat(heightInput.value);
         if(!isNaN(v) && heightInput.value.trim()!==''){
           obj.heightM=v; obj.heightRef=heightRefSel.value;
         } else {
           delete obj.heightM; delete obj.heightRef;
         }
-        updatePropsPanel();
+        // Update just the hint text in place — rebuilding the whole panel
+        // here (as this used to do via updatePropsPanel()) destroys and
+        // recreates this very input mid-keystroke, kicking focus out from
+        // under whatever the user just typed.
+        const hintEl=document.getElementById('marker-height-hint');
+        if(hintEl){
+          hintEl.textContent = obj.heightM!=null
+            ? t('marker_height_hint_own')
+            : t('marker_height_hint_default').replace('{v}', typeDefaultM+' '+t(typeDefaultRef==='ceiling'?'height_ref_ceiling':'height_ref_floor'));
+        }
       };
-      heightInput?.addEventListener('input', saveMarkerHeight);
-      heightRefSel?.addEventListener('change', saveMarkerHeight);
+      heightInput?.addEventListener('input', applyMarkerHeight);
+      heightInput?.addEventListener('change', ()=>{ saveHistory(); }); // one undo step per finished edit, not per keystroke
+      if(heightInput) addWheelStep(heightInput, 0.05, 0);
+      heightRefSel?.addEventListener('change', ()=>{ saveHistory(); applyMarkerHeight(); });
     }
 
     if(mt?.kind==='bus'){
@@ -7654,7 +7764,7 @@ function updateCurrentColorCableUI(overrideColor){
   if(heightInput && heightRefSel){
     heightInput.dataset.activeHex=hex;
     const own=colorRouteHeight[hex];
-    heightInput.value = own ? own.m : '';
+    if(document.activeElement!==heightInput) heightInput.value = own ? own.m : '';
     heightRefSel.value = own ? own.ref : defaultRouteHeightRef;
     const fallbackTxt = `${defaultRouteHeightM} ${t(defaultRouteHeightRef==='ceiling'?'height_ref_ceiling':'height_ref_floor')}`;
     if(heightHint) heightHint.textContent = own
@@ -7675,7 +7785,7 @@ function saveCurrentColorHeight(){
   const heightInput=document.getElementById('current-color-height');
   const heightRefSel=document.getElementById('current-color-height-ref');
   const hex=heightInput.dataset.activeHex || currentColor;
-  const v=parseFloat(heightInput.value);
+  const v=parseFlexibleFloat(heightInput.value);
   if(!isNaN(v) && heightInput.value.trim()!==''){
     colorRouteHeight[hex]={m:v, ref:heightRefSel.value};
   } else {
@@ -7685,6 +7795,7 @@ function saveCurrentColorHeight(){
   updateResults();
 }
 document.getElementById('current-color-height').addEventListener('input', saveCurrentColorHeight);
+addWheelStep(document.getElementById('current-color-height'), 0.05, 0);
 document.getElementById('current-color-height-ref').addEventListener('change', saveCurrentColorHeight);
 updateCurrentColorCableUI();
 
@@ -8379,6 +8490,32 @@ document.getElementById('btn-route-optimize').addEventListener('click', openRout
 // Shows what a floor/ceiling height equals on the OTHER plane — e.g.
 // "2.80 от потолка = 0.00 от пола". Same conversion works both directions
 // since it's a simple mirror around the ceiling height.
+// Accepts either "." or "," as the decimal separator — people type both
+// depending on keyboard layout, and a plain parseFloat only understands ".".
+function parseFlexibleFloat(str){
+  if(str==null) return NaN;
+  return parseFloat(String(str).trim().replace(',', '.'));
+}
+
+// Lets the user scroll the mouse wheel over a height input (while it's
+// focused, so page/modal scrolling elsewhere is never hijacked) to nudge
+// the value up or down by `step`, instead of having to type every time.
+// Fires the input's own 'input' event afterward so existing save-on-input
+// handlers pick the change up exactly as if it were typed.
+function addWheelStep(inputEl, step, min){
+  inputEl.addEventListener('wheel', function(e){
+    if(document.activeElement!==inputEl) return;
+    e.preventDefault();
+    const cur=parseFlexibleFloat(inputEl.value);
+    const base=isNaN(cur)?0:cur;
+    let next=base + (e.deltaY<0 ? step : -step);
+    next=Math.round(next*1000)/1000; // avoid float noise like 0.30000000004
+    if(min!=null) next=Math.max(min, next);
+    inputEl.value=String(next);
+    inputEl.dispatchEvent(new Event('input',{bubbles:true}));
+  }, {passive:false});
+}
+
 function heightConversionText(m, ref){
   if(m==null || isNaN(m)) return '';
   const other=ceilingHeightM-m;
@@ -8387,7 +8524,7 @@ function heightConversionText(m, ref){
   return `${m} ${t(ownRefKey)} = ${other.toFixed(2)} ${t(otherRefKey)}`;
 }
 function updateHeightsModalConversion(){
-  const v=parseFloat(document.getElementById('default-route-height-input').value);
+  const v=parseFlexibleFloat(document.getElementById('default-route-height-input').value);
   const ref=document.getElementById('default-route-height-ref').value;
   document.getElementById('default-route-height-conversion').textContent=heightConversionText(v,ref);
 }
@@ -8403,15 +8540,17 @@ function closeHeightsModal(){
 }
 document.getElementById('btn-heights').addEventListener('click', openHeightsModal);
 document.getElementById('ceiling-height-input').addEventListener('input',function(){
-  const v=parseFloat(this.value);
+  const v=parseFlexibleFloat(this.value);
   if(!isNaN(v)&&v>0){ ceilingHeightM=v; updateResults(); }
   updateHeightsModalConversion();
 });
+addWheelStep(document.getElementById('ceiling-height-input'), 0.05, 1);
 document.getElementById('default-route-height-input').addEventListener('input',function(){
-  const v=parseFloat(this.value);
+  const v=parseFlexibleFloat(this.value);
   if(!isNaN(v)&&v>=0){ defaultRouteHeightM=v; updateResults(); }
   updateHeightsModalConversion();
 });
+addWheelStep(document.getElementById('default-route-height-input'), 0.05, 0);
 document.getElementById('default-route-height-ref').addEventListener('change',function(){
   defaultRouteHeightRef=this.value; updateResults();
   updateHeightsModalConversion();
@@ -9251,27 +9390,20 @@ function drawPortList(ctx, mk, x, y, maxWidth, opts){
       ctx.fillStyle=conn.color; ctx.fill();
       ctx.strokeStyle=T.portDotStroke; ctx.lineWidth=1; ctx.stroke();
       ctx.fillStyle=T.text; ctx.font=font;
-      // Colour dot already shows the circuit visually — the text focuses
-      // on what a dot can't show: the circuit's own label (falling back
-      // to the colour name only if no label was set), the cable mark, what
-      // device sits at the other end, and the run length to get there.
-      const nameOrColor=colorLabels[conn.color]||colorName(conn.color);
-      let label=`${t('port_side_'+side)} [${idx}] — ${nameOrColor}`;
+      // Colour dot already shows the circuit visually, so the text skips
+      // repeating it — leads with a row number instead, then what device
+      // sits at the other end, the cable mark, and the run length broken
+      // into horizontal / vertical / with-allowance.
+      let label=`${shown+1}) ${t('port_side_'+side)} [${idx}]`;
       const otherDevice=otherEndDeviceLabel(mk, conn, boxNumberMap);
       if(otherDevice) label+=` — ${otherDevice}`;
       if(!compact && colorCableTypes[conn.color]) label+=` — ${colorCableTypes[conn.color]}`;
       if(scale!=null){
         const plain=lineLength(conn.line)*scale;
-        const withVert=lineLengthWithVerticalsM(conn.line);
-        if(mt.kind==='bus' && !compact){
-          // The panel's own ports are the trunk runs to each box — the
-          // ones worth knowing the material allowance for too. Skipped in
-          // compact mode — there isn't room, and the plain grid view is
-          // about identifying ports, not the material takeoff.
-          label+=` — ${plain.toFixed(2)} ${t('unit_m')} (${t('with_verticals_short')} ${withVert.toFixed(2)} ${t('unit_m')}, ${t('with_allowance_short')} ${lineFullLengthM(conn.line).toFixed(2)} ${t('unit_m')})`;
-        } else {
-          label+=` — ${plain.toFixed(2)} ${t('unit_m')} (${t('with_verticals_short')} ${withVert.toFixed(2)} ${t('unit_m')})`;
-        }
+        const vertOnly=lineVerticalRunM(conn.line);
+        const full=lineFullLengthM(conn.line);
+        label+=` — ${t('horiz_label')} ${plain.toFixed(2)} ${t('unit_m')}`;
+        label+=` — ${t('vert_label')} ${vertOnly.toFixed(2)} ${t('unit_m')}, ${t('with_allowance_short')} ${full.toFixed(2)} ${t('unit_m')}`;
       }
       ctx.fillText(label, x+dotR*2+6, cy);
       row++; shown++;
@@ -9532,7 +9664,7 @@ document.getElementById('whatsnew-modal').addEventListener('click',e=>{ if(e.tar
 
 // Bump this string whenever new entries are added to the What's New modal —
 // anyone who hasn't seen THIS version yet gets the red dot on the button.
-const WHATSNEW_VERSION='2026-08-17';
+const WHATSNEW_VERSION='2026-08-18';
 function updateWhatsNewDot(){
   const seen=localStorage.getItem('wiringSeenWhatsNew');
   document.getElementById('whatsnew-dot').style.display = (seen===WHATSNEW_VERSION) ? 'none' : 'block';

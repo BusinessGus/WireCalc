@@ -211,7 +211,6 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     <button class="tb-btn" id="btn-ortho" data-i18n-title="tt_ortho" title="Только горизонтальные и вертикальные линии (базовый режим)"><i class="ti ti-border-outer"></i> <span data-i18n="ortho">Ортого</span></button>
     <button class="tb-btn" id="btn-marker"><i class="ti ti-map-pin"></i> <span data-i18n="marker">Значок</span></button>
     <button class="tb-btn" id="btn-select"><i class="ti ti-pointer"></i> <span data-i18n="select">Выбор</span></button>
-    <button class="tb-btn" id="btn-zones" data-i18n-title="tt_zones" title="Отметить зоны произвольной формы, где разрешено вести линии (ПКМ — начать, клик — точки, двойной клик — замкнуть)"><i class="ti ti-map-2"></i> <span data-i18n="zones">Места прокладки</span></button>
     <div class="sep"></div>
     <button class="tb-btn" id="btn-dim" data-i18n-title="tt_dim" title="Выноска: отрезок + расстояние/направление офсета мышкой, без ввода чисел"><i class="ti ti-ruler-measure"></i> <span data-i18n="dim_tool">Выноска</span></button>
     <button class="tb-btn" id="btn-measure" data-i18n-title="tt_measure" title="Измерение: россыпь независимых отрезков с бегущей суммой длины"><i class="ti ti-sum"></i> <span data-i18n="measure_tool">Измерение</span></button>
@@ -260,8 +259,14 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
       <i class="ti ti-ruler" style="font-size:13px"></i> <span data-i18n="heights_btn">Высоты</span>
     </button>
     <div class="sep"></div>
-    <button class="tb-btn" id="btn-route-optimize" data-i18n-title="tt_route_optimize" title="Полная переразводка чертежа по сетке с учётом разрешённых зон — заменяет пути линий целиком" style="background:#1a3a1a;border-color:#2a6a2a;color:#8aff8a">
-      <i class="ti ti-map-2" style="font-size:13px"></i> <span data-i18n="route_optimize">Оптимизация чертежа</span>
+    <button class="tb-btn" id="btn-cable-estimate" data-i18n-title="tt_cable_estimate" title="Сводная таблица метража по маркам кабеля: горизонтальные и вертикальные участки, расход на подключение">
+      <i class="ti ti-cable" style="font-size:13px"></i> <span data-i18n="cable_estimate_btn">Смета по кабелям</span>
+    </button>
+    <button class="tb-btn" id="btn-panel-calc" data-i18n-title="tt_panel_calc" title="Расчёт состава щитка: автоматы, УЗО/дифавтоматы, контактор, реле напряжения — по линиям проекта">
+      <i class="ti ti-plug-connected" style="font-size:13px"></i> <span data-i18n="panel_calc_btn">Щиток</span>
+    </button>
+    <button class="tb-btn" id="btn-overall-estimate" data-i18n-title="tt_overall_estimate" title="Общая смета: кабель, крепёж, подрозетники, коробки и оборудование щитка — всё вместе">
+      <i class="ti ti-sum" style="font-size:13px"></i> <span data-i18n="overall_estimate_btn">Общая смета</span>
     </button>
     <div class="sep"></div>
     <button class="tb-btn" id="btn-site-mode" style="margin-left:auto" data-i18n-title="tt_toggle_mode" title="Переключить режим">PRO-режим</button>
@@ -734,6 +739,50 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 </div>
 
 <!-- What's New modal -->
+<!-- Overall Estimate modal -->
+<div id="overall-estimate-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;align-items:center;justify-content:center;overflow:auto;padding:20px">
+  <div style="background:#1e1e1e;border:1px solid #444;border-radius:12px;max-width:min(94vw,920px);width:100%;max-height:90vh;overflow-y:auto;padding:28px 30px;position:relative">
+    <button id="overall-estimate-close" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#666;font-size:22px;cursor:pointer;line-height:1">✕</button>
+    <h2 data-i18n="overall_estimate_h2" style="font-size:18px;font-weight:700;margin-bottom:18px;color:#e8e8e8">Общая смета</h2>
+    <div id="overall-estimate-body"></div>
+    <div id="overall-shop-request" style="margin-top:20px;padding-top:16px;border-top:1px solid #333"></div>
+    <button id="overall-estimate-close-bottom" data-i18n="wn_close_btn" style="margin-top:20px;width:100%;padding:10px;background:#1a3a5c;border:1px solid #4a9eff;border-radius:7px;color:#7dc4ff;font-size:13px;font-weight:600;cursor:pointer">Понятно</button>
+  </div>
+</div>
+
+<!-- Shop Request modal -->
+<div id="shop-request-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:600;align-items:center;justify-content:center;overflow:auto;padding:20px">
+  <div style="background:#1e1e1e;border:1px solid #444;border-radius:12px;max-width:min(94vw,520px);width:100%;max-height:90vh;overflow-y:auto;padding:28px 30px;position:relative">
+    <button id="shop-request-close" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#666;font-size:22px;cursor:pointer;line-height:1">✕</button>
+    <h2 data-i18n="shop_request_h2" style="font-size:18px;font-weight:700;margin-bottom:14px;color:#e8e8e8">Магазины</h2>
+    <p data-i18n="shop_request_intro" style="font-size:12px;color:#999;margin-bottom:16px">Отметьте магазины, которым хотите отправить запрос — каждому откроется отдельный чат WhatsApp с готовым сообщением.</p>
+    <div id="shop-request-list"></div>
+    <button id="shop-request-send" data-i18n="shop_request_send_btn" style="margin-top:18px;width:100%;padding:10px;background:#1a3a1a;border:1px solid #2a6a2a;border-radius:7px;color:#8aff8a;font-size:13px;font-weight:600;cursor:pointer">Отправить запрос</button>
+    <div id="shop-request-send-links" style="margin-top:14px"></div>
+  </div>
+</div>
+
+
+<!-- Panel Calculation modal -->
+<div id="panel-calc-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;align-items:center;justify-content:center;overflow:auto;padding:20px">
+  <div style="background:#1e1e1e;border:1px solid #444;border-radius:12px;max-width:min(94vw,760px);width:100%;max-height:90vh;overflow-y:auto;padding:28px 30px;position:relative">
+    <button id="panel-calc-close" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#666;font-size:22px;cursor:pointer;line-height:1">✕</button>
+    <h2 data-i18n="panel_calc_h2" style="font-size:18px;font-weight:700;margin-bottom:18px;color:#e8e8e8">Расчёт щитка</h2>
+    <div id="panel-calc-body"></div>
+    <button id="panel-calc-close-bottom" data-i18n="wn_close_btn" style="margin-top:20px;width:100%;padding:10px;background:#1a3a5c;border:1px solid #4a9eff;border-radius:7px;color:#7dc4ff;font-size:13px;font-weight:600;cursor:pointer">Понятно</button>
+  </div>
+</div>
+
+<!-- Cable Estimate modal -->
+<div id="cable-estimate-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;align-items:center;justify-content:center;overflow:auto;padding:20px">
+  <div style="background:#1e1e1e;border:1px solid #444;border-radius:12px;max-width:min(94vw,900px);width:100%;max-height:90vh;overflow-y:auto;padding:28px 30px;position:relative">
+    <button id="cable-estimate-close" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#666;font-size:22px;cursor:pointer;line-height:1">✕</button>
+    <h2 data-i18n="cable_estimate_h2" style="font-size:18px;font-weight:700;margin-bottom:20px;color:#e8e8e8">Смета по кабелям</h2>
+    <div id="cable-estimate-table-wrap"></div>
+    <button id="cable-estimate-close-bottom" data-i18n="wn_close_btn" style="margin-top:20px;width:100%;padding:10px;background:#1a3a5c;border:1px solid #4a9eff;border-radius:7px;color:#7dc4ff;font-size:13px;font-weight:600;cursor:pointer">Понятно</button>
+  </div>
+</div>
+
 <div id="whatsnew-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;align-items:center;justify-content:center;overflow:auto;padding:20px">
   <div style="background:#1e1e1e;border:1px solid #444;border-radius:12px;max-width:640px;width:100%;max-height:90vh;overflow-y:auto;padding:28px 30px;position:relative">
     <button id="whatsnew-close" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#666;font-size:22px;cursor:pointer;line-height:1">✕</button>
@@ -1046,7 +1095,7 @@ const translations = {
     msg_mode_pro_on:'PRO-режим включён: доступны значки с портами, зоны прокладки и оптимизация чертежа.',
     msg_mode_base_on:'Базовый режим: только точечные значки и ручное рисование линий.',
     msg_autofixup_on:'Авто-оптимизация включена: порты/стабы/выравнивание пересчитываются после каждого действия.',
-    msg_autofixup_off:'Авто-оптимизация выключена: правьте чертёж вручную. Кнопка «Оптимизация чертежа» по-прежнему работает по нажатию.',
+    msg_autofixup_off:'Авто-оптимизация выключена: правьте чертёж вручную. Кнопка «Оптимизировать порты» в свойствах коробки по-прежнему работает по нажатию.',
     msg_route_applied:'Чертёж переразведён по результатам оптимизации (включая выбор портов).',
     msg_no_boxes_for_ports:'Нет коробок/щитов с подключёнными линиями — схему портов делать не из чего.',
     msg_initial_hint:'Есть фото? «Фон» → «Масштаб». Нет фото? «Масштаб» → «Стены» для контура комнаты.',
@@ -1182,6 +1231,63 @@ const translations = {
     ctx_add_point:'Добавить точку', msg_point_added:'Точка добавлена — потяните её, чтобы изменить путь линии.',
     unit_m:'м', show:'Показать', hide:'Скрыть',
     res_by_cable_mark:'По маркам кабеля', res_section_lines:'Линии', res_section_markers:'Значки',
+    res_summary_table:'Сводная таблица', res_total_col:'Итог:',
+    tt_cable_estimate:'Сводная таблица метража по маркам кабеля: горизонтальные и вертикальные участки, расход на подключение',
+    cable_estimate_btn:'Смета по кабелям', cable_estimate_h2:'Смета по кабелям',
+    tt_panel_calc:'Расчёт состава щитка: автоматы, УЗО/дифавтоматы, контактор, реле напряжения — по линиям проекта',
+    panel_calc_btn:'Щиток', panel_calc_h2:'Расчёт щитка',
+    panel_no:'Нет', panel_yes:'Да',
+    panel_phases_label:'Фазы',
+    panel_input_breaker_label:'Вводной автомат',
+    panel_voltage_relay_label:'Реле напряжения',
+    panel_contactor_label:'Контактор',
+    panel_scheme_label:'Защита линий', panel_scheme_rcd:'УЗО + однополюсные автоматы', panel_scheme_diff:'Дифавтоматы', panel_scheme_breakers_only:'Только однополюсные автоматы',
+    panel_col_qty:'Кол-во', panel_col_modules:'Модули', panel_col_total_modules:'Итого модулей',
+    tt_overall_estimate:'Общая смета: кабель, крепёж, подрозетники, коробки и оборудование щитка — всё вместе',
+    overall_estimate_btn:'Общая смета', overall_estimate_h2:'Общая смета',
+    overall_horiz_label:'Крепление горизонтальных участков', overall_vert_label:'Крепление вертикальных участков',
+    overall_gun_label:'Есть монтажный пистолет?', overall_margin_label:'Запас',
+    overall_mount_corr_pvc:'Гофра ПВХ', overall_mount_corr_pnd:'Гофра ПНД',
+    overall_mount_groove:'Штроба в стене', overall_mount_dowel_ceiling:'Дюбель-хомуты в потолок',
+    overall_mount_groove_dowel:'Штроба и дюбель-хомуты', overall_mount_tie_pad:'Площадки под стяжку',
+    overall_mount_channel:'Кабель-канал',
+    overall_corr_size_label:'Размер гофры/клипсы', overall_dowel_mark_label:'Марка дюбель-хомута', overall_channel_size_label:'Сечение кабель-канала',
+    overall_cable_title:'Линии по маркам кабеля', overall_col_horiz:'По горизонтали', overall_col_vert:'По вертикали', overall_col_note:'Пояснение',
+    overall_col_allowance:'Расход на подключение', overall_col_margin_extra:'Запас', overall_col_total:'Итого',
+    overall_mount_title:'Способ крепления по линиям', overall_axis_horizontal:'Горизонтальные', overall_axis_vertical:'Вертикальные',
+    overall_col_metres:'Метров', overall_col_method:'Метод крепежа', overall_col_size:'Размерность', overall_col_rate:'Расход/м',
+    overall_note_ph:'например: ВВГ НГ (LS)',
+    overall_summary_title:'Общая смета',
+    overall_item_cable:'Кабель', overall_item_backbox:'Подрозетники',
+    overall_item_box_pro:'Коробка наружной установки', overall_item_box_pro_none:'Коробок на схеме не найдено',
+    overall_item_box_base:'Коробки (врезные в стену)', overall_ports_total:'портов всего',
+    overall_item_box_extra_info:'Дополнительная информация о коробках', overall_box_extra_ph:'например: 100*100*50',
+    shop_request_h2:'Магазины', shop_request_intro:'Отметьте магазины, которым хотите отправить запрос — каждому откроется отдельный чат WhatsApp с готовым сообщением.',
+    shop_request_send_btn:'Отправить запрос', shop_request_city_label:'Ваш город',
+    shop_request_open_btn:'Сделать запрос расчёта стоимости материалов по WhatsApp (это не страшно))',
+    shop_request_loading:'Загрузка списка магазинов…', shop_request_no_cities:'Список магазинов пока не настроен.',
+    shop_request_no_shops:'Для вашего города магазины пока не добавлены.', shop_request_none_selected:'Отметьте хотя бы один магазин.',
+    shop_request_sent_one:'Открыт чат WhatsApp с сообщением — осталось отправить.',
+    shop_request_tap_each:'Откройте каждый чат по очереди и отправьте сообщение (браузер не даёт открыть все сразу):',
+    shop_request_msg_header:'Здравствуйте! Формирую заявку через калькулятор проводки provodka.org, прошу посчитать стоимость этих материалов для монтажа:',
+    shop_request_msg_footer:'При необходимости могу прислать схему для сверки количества (сделана на provodka.org). Буду благодарен(на) за расчёт и накладную. Спасибо!',
+    overall_box_count_ph:'количество', overall_box_size_ph:'размер, например 100×100',
+    overall_item_corr_pvc:'Гофра ПВХ', overall_item_corr_pnd:'Гофра ПНД', overall_item_clips:'Клипса',
+    overall_clip_gun_suffix:'для прямого монтажа', overall_item_dowel:'Дюбель-хомут', overall_item_tiepad:'Площадка под стяжку',
+    overall_item_channel:'Кабель-канал',
+    panel_rcd_count_label:'Количество УЗО и номинал',
+    panel_neutral_bus_label:'Нулевые шины', panel_neutral_bus_own:'Штатные (в щитке)', panel_neutral_bus_separate:'Ставим свои',
+    panel_mount_label:'Тип щитка', panel_mount_flush:'врезной', panel_mount_surface:'наружной установки',
+    panel_circuits_title:'Линии', panel_no_circuits:'Сначала укажите марки кабеля у цветов линий (вкладка «Свойства»).',
+    panel_summary_title:'Смета по оборудованию', panel_pcs:'шт',
+    panel_item_contactor:'Контактор', panel_item_voltage_relay:'Реле напряжения',
+    panel_item_input_breaker:'Автомат вводной', panel_pole_three:'трёхполюсный', panel_pole_one:'однополюсный',
+    panel_item_rcd:'УЗО', panel_rating_unset:'(номинал не указан)',
+    panel_item_breaker_1p:'Автомат однополюсный', panel_item_diffavtomat:'Дифавтомат',
+    panel_item_neutral_bar:'Нулевая шина на {n}+ гнёзд',
+    panel_item_enclosure:'Щиток', panel_modules_suffix:'на {n}+ модулей',
+    res_row_horizontal:'Горизонтальных участков', res_row_vertical:'Вертикальных участков',
+    res_row_allowance:'Расход на подключение', res_row_total:'Итог:',
     res_lines_prefix:'Линии',
     no_connected_lines:'Нет подключённых линий', conn_connected:'Подключён',
     tt_toggle_conn_type:'Переключить тип', partner_fallback:'Партнёр', unit_cm:'см', unit_pcs:'шт',
@@ -1318,7 +1424,7 @@ const translations = {
     msg_mode_pro_on:'PRO mode enabled: multi-port markers, routing zones, and drawing optimization are now available.',
     msg_mode_base_on:'Base mode: point markers only, manual line drawing.',
     msg_autofixup_on:'Auto-optimization enabled: ports/stubs/alignment recompute after every action.',
-    msg_autofixup_off:'Auto-optimization disabled: edit the drawing manually. The "Optimize drawing" button still works on click.',
+    msg_autofixup_off:'Auto-optimization disabled: edit the drawing manually. The "Optimize ports" button in a box\'s properties still works on click.',
     msg_route_applied:'Drawing re-routed based on the optimization results (including port choices).',
     msg_no_boxes_for_ports:'No boxes/panels with connected lines — nothing to build a port diagram from.',
     msg_initial_hint:'Have a photo? "Background" → "Scale". No photo? "Scale" → "Walls" for the room outline.',
@@ -1454,6 +1560,63 @@ const translations = {
     ctx_add_point:'Add point', msg_point_added:'Point added — drag it to reshape the line.',
     unit_m:'m', show:'Show', hide:'Hide',
     res_by_cable_mark:'By cable type', res_section_lines:'Lines', res_section_markers:'Markers',
+    res_summary_table:'Summary table', res_total_col:'Total:',
+    tt_cable_estimate:'Summary table of metres by cable mark: horizontal and vertical runs, connection allowance',
+    cable_estimate_btn:'Cable estimate', cable_estimate_h2:'Cable estimate',
+    tt_panel_calc:'Distribution panel composition: breakers, RCDs/diffavtomats, contactor, voltage relay — based on the project\'s circuits',
+    panel_calc_btn:'Panel', panel_calc_h2:'Panel calculation',
+    panel_no:'No', panel_yes:'Yes',
+    panel_phases_label:'Phases',
+    panel_input_breaker_label:'Input breaker',
+    panel_voltage_relay_label:'Voltage relay',
+    panel_contactor_label:'Contactor',
+    panel_scheme_label:'Circuit protection', panel_scheme_rcd:'RCD + single-pole breakers', panel_scheme_diff:'Diffavtomats (RCBOs)', panel_scheme_breakers_only:'Single-pole breakers only',
+    panel_col_qty:'Qty', panel_col_modules:'Modules', panel_col_total_modules:'Total modules',
+    tt_overall_estimate:'Overall estimate: cable, mounting hardware, back-boxes, junction boxes, and panel equipment — combined',
+    overall_estimate_btn:'Overall estimate', overall_estimate_h2:'Overall estimate',
+    overall_horiz_label:'Horizontal run mounting', overall_vert_label:'Vertical run mounting',
+    overall_gun_label:'Mounting gun available?', overall_margin_label:'Margin',
+    overall_mount_corr_pvc:'PVC corrugated conduit', overall_mount_corr_pnd:'PND corrugated conduit',
+    overall_mount_groove:'Wall chase (groove)', overall_mount_dowel_ceiling:'Dowel clamps into ceiling',
+    overall_mount_groove_dowel:'Chase + dowel clamps', overall_mount_tie_pad:'Cable tie mounting pads',
+    overall_mount_channel:'Cable trunking',
+    overall_corr_size_label:'Conduit/clip size', overall_dowel_mark_label:'Dowel clamp mark', overall_channel_size_label:'Trunking cross-section',
+    overall_cable_title:'Circuits by cable mark', overall_col_horiz:'Horizontal', overall_col_vert:'Vertical', overall_col_note:'Note',
+    overall_col_allowance:'Connection allowance', overall_col_margin_extra:'Margin', overall_col_total:'Total',
+    overall_mount_title:'Mounting method per circuit', overall_axis_horizontal:'Horizontal', overall_axis_vertical:'Vertical',
+    overall_col_metres:'Metres', overall_col_method:'Mounting method', overall_col_size:'Size', overall_col_rate:'Rate/m',
+    overall_note_ph:'e.g. VVGng (LS)',
+    overall_summary_title:'Overall estimate',
+    overall_item_cable:'Cable', overall_item_backbox:'Back-boxes',
+    overall_item_box_pro:'Surface-mount box', overall_item_box_pro_none:'No boxes found on the scheme',
+    overall_item_box_base:'Boxes (flush-mount)', overall_ports_total:'ports total',
+    overall_item_box_extra_info:'Additional info about the boxes', overall_box_extra_ph:'e.g. 100*100*50',
+    shop_request_h2:'Shops', shop_request_intro:'Check the shops you want to send a request to — each one opens its own WhatsApp chat with the message ready to send.',
+    shop_request_send_btn:'Send request', shop_request_city_label:'Your city',
+    shop_request_open_btn:"Request a materials price quote via WhatsApp (it's easy))",
+    shop_request_loading:'Loading shop list…', shop_request_no_cities:'The shop list is not set up yet.',
+    shop_request_no_shops:'No shops added for your city yet.', shop_request_none_selected:'Check at least one shop.',
+    shop_request_sent_one:'A WhatsApp chat with the message is open — just send it.',
+    shop_request_tap_each:'Open each chat in turn and send the message (the browser will not let all of them open at once):',
+    shop_request_msg_header:"Hello! I'm putting together this order via the provodka.org wiring calculator — could you quote the price for these installation materials:",
+    shop_request_msg_footer:"If it helps, I can send the wiring scheme to double-check the quantities (made on provodka.org). I'd appreciate a quote and an invoice. Thank you!",
+    overall_box_count_ph:'quantity', overall_box_size_ph:'size, e.g. 100×100',
+    overall_item_corr_pvc:'PVC corrugated conduit', overall_item_corr_pnd:'PND corrugated conduit', overall_item_clips:'Clip',
+    overall_clip_gun_suffix:'for direct mounting', overall_item_dowel:'Dowel clamp', overall_item_tiepad:'Cable tie mounting pad',
+    overall_item_channel:'Cable trunking',
+    panel_rcd_count_label:'Number of RCDs and rating',
+    panel_neutral_bus_label:'Neutral bars', panel_neutral_bus_own:'Panel\'s own', panel_neutral_bus_separate:'Add separate ones',
+    panel_mount_label:'Panel type', panel_mount_flush:'flush-mount', panel_mount_surface:'surface-mount',
+    panel_circuits_title:'Circuits', panel_no_circuits:'Set a cable mark for at least one colour first (Properties tab).',
+    panel_summary_title:'Equipment estimate', panel_pcs:'pcs',
+    panel_item_contactor:'Contactor', panel_item_voltage_relay:'Voltage relay',
+    panel_item_input_breaker:'Input breaker', panel_pole_three:'3-pole', panel_pole_one:'1-pole',
+    panel_item_rcd:'RCD', panel_rating_unset:'(rating not set)',
+    panel_item_breaker_1p:'Single-pole breaker', panel_item_diffavtomat:'Diffavtomat (RCBO)',
+    panel_item_neutral_bar:'Neutral bar, {n}+ terminals',
+    panel_item_enclosure:'Enclosure', panel_modules_suffix:'{n}+ modules',
+    res_row_horizontal:'Horizontal runs', res_row_vertical:'Vertical runs',
+    res_row_allowance:'Connection allowance', res_row_total:'Total:',
     res_lines_prefix:'Lines',
     no_connected_lines:'No connected lines', conn_connected:'Connected',
     tt_toggle_conn_type:'Toggle type', partner_fallback:'Partner', unit_cm:'cm', unit_pcs:'pc',
@@ -1590,7 +1753,7 @@ const translations = {
     msg_mode_pro_on:'Modo PRO activado: ya están disponibles los marcadores con puertos, las zonas de tendido y la optimización del plano.',
     msg_mode_base_on:'Modo básico: solo marcadores puntuales y trazado manual de líneas.',
     msg_autofixup_on:'Auto-optimización activada: los puertos/derivaciones/alineación se recalculan tras cada acción.',
-    msg_autofixup_off:'Auto-optimización desactivada: edite el plano manualmente. El botón «Optimizar plano» sigue funcionando al pulsarlo.',
+    msg_autofixup_off:'Auto-optimización desactivada: edite el plano manualmente. El botón «Optimizar puertos» en las propiedades de la caja sigue funcionando al pulsarlo.',
     msg_route_applied:'Plano vuelto a trazar según los resultados de la optimización (incluida la elección de puertos).',
     msg_no_boxes_for_ports:'No hay cajas/paneles con líneas conectadas — no hay nada con qué construir el esquema de puertos.',
     msg_initial_hint:'¿Tiene una foto? «Fondo» → «Escala». ¿No tiene foto? «Escala» → «Paredes» para el contorno del local.',
@@ -1726,6 +1889,63 @@ const translations = {
     ctx_add_point:'Añadir punto', msg_point_added:'Punto añadido — arrástrelo para cambiar el trazado de la línea.',
     unit_m:'m', show:'Mostrar', hide:'Ocultar',
     res_by_cable_mark:'Por tipo de cable', res_section_lines:'Líneas', res_section_markers:'Marcadores',
+    res_summary_table:'Tabla resumen', res_total_col:'Total:',
+    tt_cable_estimate:'Tabla resumen de metros por marca de cable: tramos horizontales y verticales, margen de conexión',
+    cable_estimate_btn:'Presupuesto de cables', cable_estimate_h2:'Presupuesto de cables',
+    tt_panel_calc:'Composición del cuadro eléctrico: interruptores, diferenciales/magnetotérmicos combinados, contactor, relé de tensión — según los circuitos del proyecto',
+    panel_calc_btn:'Cuadro', panel_calc_h2:'Cálculo del cuadro',
+    panel_no:'No', panel_yes:'Sí',
+    panel_phases_label:'Fases',
+    panel_input_breaker_label:'Interruptor general',
+    panel_voltage_relay_label:'Relé de tensión',
+    panel_contactor_label:'Contactor',
+    panel_scheme_label:'Protección de circuitos', panel_scheme_rcd:'Diferencial + interruptores unipolares', panel_scheme_diff:'Magnetotérmicos diferenciales', panel_scheme_breakers_only:'Solo interruptores unipolares',
+    panel_col_qty:'Cant.', panel_col_modules:'Módulos', panel_col_total_modules:'Total de módulos',
+    tt_overall_estimate:'Presupuesto general: cable, sujeción, cajas de empotrar, cajas de derivación y equipo del cuadro — todo junto',
+    overall_estimate_btn:'Presupuesto general', overall_estimate_h2:'Presupuesto general',
+    overall_horiz_label:'Sujeción de tramos horizontales', overall_vert_label:'Sujeción de tramos verticales',
+    overall_gun_label:'¿Dispone de pistola de fijación?', overall_margin_label:'Margen',
+    overall_mount_corr_pvc:'Tubo corrugado PVC', overall_mount_corr_pnd:'Tubo corrugado PEAD',
+    overall_mount_groove:'Rozas en pared', overall_mount_dowel_ceiling:'Grapas de fijación al techo',
+    overall_mount_groove_dowel:'Roza + grapas de fijación', overall_mount_tie_pad:'Bases para bridas',
+    overall_mount_channel:'Canaleta',
+    overall_corr_size_label:'Diámetro de tubo/grapa', overall_dowel_mark_label:'Modelo de grapa', overall_channel_size_label:'Sección de canaleta',
+    overall_cable_title:'Circuitos por marca de cable', overall_col_horiz:'Horizontal', overall_col_vert:'Vertical', overall_col_note:'Nota',
+    overall_col_allowance:'Margen de conexión', overall_col_margin_extra:'Margen', overall_col_total:'Total',
+    overall_mount_title:'Método de sujeción por circuito', overall_axis_horizontal:'Horizontal', overall_axis_vertical:'Vertical',
+    overall_col_metres:'Metros', overall_col_method:'Método de sujeción', overall_col_size:'Tamaño', overall_col_rate:'Consumo/m',
+    overall_note_ph:'p. ej.: VVGng (LS)',
+    overall_summary_title:'Presupuesto general',
+    overall_item_cable:'Cable', overall_item_backbox:'Cajas de empotrar',
+    overall_item_box_pro:'Caja de superficie', overall_item_box_pro_none:'No se encontraron cajas en el esquema',
+    overall_item_box_base:'Cajas (empotradas)', overall_ports_total:'puertos en total',
+    overall_item_box_extra_info:'Información adicional sobre las cajas', overall_box_extra_ph:'p. ej.: 100*100*50',
+    shop_request_h2:'Tiendas', shop_request_intro:'Marque las tiendas a las que quiere enviar la solicitud — cada una abrirá su propio chat de WhatsApp con el mensaje listo para enviar.',
+    shop_request_send_btn:'Enviar solicitud', shop_request_city_label:'Su ciudad',
+    shop_request_open_btn:'Solicitar presupuesto de materiales por WhatsApp (es fácil))',
+    shop_request_loading:'Cargando lista de tiendas…', shop_request_no_cities:'La lista de tiendas aún no está configurada.',
+    shop_request_no_shops:'Todavía no hay tiendas añadidas para su ciudad.', shop_request_none_selected:'Marque al menos una tienda.',
+    shop_request_sent_one:'Se abrió un chat de WhatsApp con el mensaje — solo falta enviarlo.',
+    shop_request_tap_each:'Abra cada chat por turno y envíe el mensaje (el navegador no permite abrirlos todos a la vez):',
+    shop_request_msg_header:'¡Hola! Estoy preparando este pedido con la calculadora de cableado provodka.org — ¿podría cotizar el precio de estos materiales de instalación:',
+    shop_request_msg_footer:'Si le sirve, puedo enviarle el esquema para verificar las cantidades (hecho en provodka.org). Le agradecería un presupuesto y una factura. ¡Gracias!',
+    overall_box_count_ph:'cantidad', overall_box_size_ph:'tamaño, p. ej. 100×100',
+    overall_item_corr_pvc:'Tubo corrugado PVC', overall_item_corr_pnd:'Tubo corrugado PEAD', overall_item_clips:'Grapa',
+    overall_clip_gun_suffix:'para montaje directo', overall_item_dowel:'Grapa de fijación', overall_item_tiepad:'Base para brida',
+    overall_item_channel:'Canaleta',
+    panel_rcd_count_label:'Cantidad de diferenciales y valor',
+    panel_neutral_bus_label:'Peines de neutro', panel_neutral_bus_own:'Los del propio cuadro', panel_neutral_bus_separate:'Instalar aparte',
+    panel_mount_label:'Tipo de cuadro', panel_mount_flush:'empotrado', panel_mount_surface:'de superficie',
+    panel_circuits_title:'Circuitos', panel_no_circuits:'Primero indique la marca de cable para al menos un color (pestaña «Propiedades»).',
+    panel_summary_title:'Presupuesto de material', panel_pcs:'uds',
+    panel_item_contactor:'Contactor', panel_item_voltage_relay:'Relé de tensión',
+    panel_item_input_breaker:'Interruptor general', panel_pole_three:'tripolar', panel_pole_one:'unipolar',
+    panel_item_rcd:'Diferencial', panel_rating_unset:'(valor no indicado)',
+    panel_item_breaker_1p:'Interruptor unipolar', panel_item_diffavtomat:'Magnetotérmico diferencial',
+    panel_item_neutral_bar:'Peine de neutro, {n}+ bornes',
+    panel_item_enclosure:'Cuadro', panel_modules_suffix:'de {n}+ módulos',
+    res_row_horizontal:'Tramos horizontales', res_row_vertical:'Tramos verticales',
+    res_row_allowance:'Margen de conexión', res_row_total:'Total:',
     res_lines_prefix:'Líneas',
     no_connected_lines:'Sin líneas conectadas', conn_connected:'Conectado',
     tt_toggle_conn_type:'Cambiar tipo', partner_fallback:'Socio', unit_cm:'cm', unit_pcs:'ud',
@@ -1862,7 +2082,7 @@ const translations = {
     msg_mode_pro_on:'PRO режимі қосылды: порттары бар белгішелер, төсеу аймақтары және сызбаны оңтайландыру қолжетімді.',
     msg_mode_base_on:'Негізгі режим: тек нүктелік белгішелер және сызықтарды қолмен сызу.',
     msg_autofixup_on:'Авто-оңтайландыру қосылды: порттар/тұғырлар/туралау әр әрекеттен кейін қайта есептеледі.',
-    msg_autofixup_off:'Авто-оңтайландыру өшірілді: сызбаны қолмен түзетіңіз. «Сызбаны оңтайландыру» түймесі шерту бойынша жұмыс істей береді.',
+    msg_autofixup_off:'Авто-оңтайландыру өшірілді: сызбаны қолмен түзетіңіз. Қорап қасиеттеріндегі «Порттарды оңтайландыру» түймесі шерту бойынша жұмыс істей береді.',
     msg_route_applied:'Сызба оңтайландыру нәтижелері бойынша қайта тартылды (порт таңдауын қоса).',
     msg_no_boxes_for_ports:'Қосылған сызықтары бар қораптар/щиттер жоқ — порт схемасын жасайтын ештеңе жоқ.',
     msg_initial_hint:'Фотосурет бар ма? «Фон» → «Масштаб». Фото жоқ па? Бөлме контуры үшін «Масштаб» → «Қабырғалар».',
@@ -1998,6 +2218,63 @@ const translations = {
     ctx_add_point:'Нүкте қосу', msg_point_added:'Нүкте қосылды — сызық жолын өзгерту үшін оны тартыңыз.',
     unit_m:'м', show:'Көрсету', hide:'Жасыру',
     res_by_cable_mark:'Кабель маркалары бойынша', res_section_lines:'Сызықтар', res_section_markers:'Белгішелер',
+    res_summary_table:'Жиынтық кесте', res_total_col:'Жиыны:',
+    tt_cable_estimate:'Кабель маркалары бойынша метраждың жиынтық кестесі: көлденең және тік учаскелер, қосылуға шығын',
+    cable_estimate_btn:'Кабель сметасы', cable_estimate_h2:'Кабель сметасы',
+    tt_panel_calc:'Щиток құрамын есептеу: автоматтар, УЗО/дифавтоматтар, контактор, кернеу релесі — жоба сызықтары бойынша',
+    panel_calc_btn:'Щиток', panel_calc_h2:'Щитокты есептеу',
+    panel_no:'Жоқ', panel_yes:'Иә',
+    panel_phases_label:'Фазалар',
+    panel_input_breaker_label:'Кіріс автоматы',
+    panel_voltage_relay_label:'Кернеу релесі',
+    panel_contactor_label:'Контактор',
+    panel_scheme_label:'Сызықтарды қорғау', panel_scheme_rcd:'УЗО + бір полюсті автоматтар', panel_scheme_diff:'Дифавтоматтар', panel_scheme_breakers_only:'Тек бір полюсті автоматтар',
+    panel_col_qty:'Саны', panel_col_modules:'Модульдер', panel_col_total_modules:'Барлығы модуль',
+    tt_overall_estimate:'Жалпы смета: кабель, бекітпе, астаушалар, қораптар және щиток жабдығы — барлығы бірге',
+    overall_estimate_btn:'Жалпы смета', overall_estimate_h2:'Жалпы смета',
+    overall_horiz_label:'Көлденең учаскелерді бекіту', overall_vert_label:'Тік учаскелерді бекіту',
+    overall_gun_label:'Монтаждық тапанша бар ма?', overall_margin_label:'Қор',
+    overall_mount_corr_pvc:'ПВХ гофрасы', overall_mount_corr_pnd:'ПНД гофрасы',
+    overall_mount_groove:'Қабырғадағы штроба', overall_mount_dowel_ceiling:'Төбеге дюбель-қысқыш',
+    overall_mount_groove_dowel:'Штроба және дюбель-қысқыш', overall_mount_tie_pad:'Тарту үшін алаңша',
+    overall_mount_channel:'Кабель-арна',
+    overall_corr_size_label:'Гофра/қысқыш өлшемі', overall_dowel_mark_label:'Дюбель-қысқыш маркасы', overall_channel_size_label:'Кабель-арна қимасы',
+    overall_cable_title:'Кабель маркалары бойынша сызықтар', overall_col_horiz:'Көлденеңінен', overall_col_vert:'Тігінен', overall_col_note:'Түсініктеме',
+    overall_col_allowance:'Қосылуға шығын', overall_col_margin_extra:'Қор', overall_col_total:'Жиыны',
+    overall_mount_title:'Сызық бойынша бекіту тәсілі', overall_axis_horizontal:'Көлденең', overall_axis_vertical:'Тік',
+    overall_col_metres:'Метр', overall_col_method:'Бекіту тәсілі', overall_col_size:'Өлшемі', overall_col_rate:'Шығын/м',
+    overall_note_ph:'мысалы: ВВГнг (LS)',
+    overall_summary_title:'Жалпы смета',
+    overall_item_cable:'Кабель', overall_item_backbox:'Астаушалар',
+    overall_item_box_pro:'Сыртқы орнату қорабы', overall_item_box_pro_none:'Схемада қораптар табылмады',
+    overall_item_box_base:'Қораптар (ендірме)', overall_ports_total:'барлығы порт',
+    overall_item_box_extra_info:'Қораптар туралы қосымша ақпарат', overall_box_extra_ph:'мысалы: 100*100*50',
+    shop_request_h2:'Дүкендер', shop_request_intro:'Сұрау жібергіңіз келетін дүкендерді белгілеңіз — әрқайсысына дайын хабарламасы бар жеке WhatsApp чаты ашылады.',
+    shop_request_send_btn:'Сұрау жіберу', shop_request_city_label:'Сіздің қалаңыз',
+    shop_request_open_btn:'Материалдар құнын есептеуге WhatsApp арқылы сұрау жіберу (бұл қауіпсіз))',
+    shop_request_loading:'Дүкендер тізімі жүктелуде…', shop_request_no_cities:'Дүкендер тізімі әлі теңшелмеген.',
+    shop_request_no_shops:'Сіздің қалаңыз үшін дүкендер әлі қосылмаған.', shop_request_none_selected:'Кем дегенде бір дүкенді белгілеңіз.',
+    shop_request_sent_one:'Хабарламасы бар WhatsApp чаты ашылды — жіберу ғана қалды.',
+    shop_request_tap_each:'Әр чатты кезекпен ашып, хабарламаны жіберіңіз (браузер барлығын бірден ашуға рұқсат бермейді):',
+    shop_request_msg_header:'Сәлеметсіз бе! provodka.org сым калькуляторы арқылы тапсырыс жасап жатырмын, осы монтаж материалдарының құнын есептеп бере аласыз ба:',
+    shop_request_msg_footer:'Қажет болса, мөлшерді тексеру үшін схеманы жібере аламын (provodka.org сайтында жасалған). Есептеу мен жүкқұжат үшін алғыс білдіремін. Рахмет!',
+    overall_box_count_ph:'саны', overall_box_size_ph:'өлшемі, мысалы 100×100',
+    overall_item_corr_pvc:'ПВХ гофрасы', overall_item_corr_pnd:'ПНД гофрасы', overall_item_clips:'Қысқыш',
+    overall_clip_gun_suffix:'тікелей орнатуға арналған', overall_item_dowel:'Дюбель-қысқыш', overall_item_tiepad:'Тарту алаңшасы',
+    overall_item_channel:'Кабель-арна',
+    panel_rcd_count_label:'УЗО саны және номиналы',
+    panel_neutral_bus_label:'Нөлдік шиналар', panel_neutral_bus_own:'Щитоктың өз шиналары', panel_neutral_bus_separate:'Өз шиналарымызды қоямыз',
+    panel_mount_label:'Щиток түрі', panel_mount_flush:'ендірме', panel_mount_surface:'сыртқы орнату',
+    panel_circuits_title:'Сызықтар', panel_no_circuits:'Алдымен кем дегенде бір түстің кабель маркасын көрсетіңіз («Қасиеттер» қойындысы).',
+    panel_summary_title:'Жабдық сметасы', panel_pcs:'дана',
+    panel_item_contactor:'Контактор', panel_item_voltage_relay:'Кернеу релесі',
+    panel_item_input_breaker:'Кіріс автоматы', panel_pole_three:'үш полюсті', panel_pole_one:'бір полюсті',
+    panel_item_rcd:'УЗО', panel_rating_unset:'(номинал көрсетілмеген)',
+    panel_item_breaker_1p:'Бір полюсті автомат', panel_item_diffavtomat:'Дифавтомат',
+    panel_item_neutral_bar:'{n}+ ұяшыққа нөлдік шина',
+    panel_item_enclosure:'Щиток', panel_modules_suffix:'{n}+ модульге',
+    res_row_horizontal:'Көлденең учаскелер', res_row_vertical:'Тік учаскелер',
+    res_row_allowance:'Қосылуға шығын', res_row_total:'Жиыны:',
     res_lines_prefix:'Сызықтар',
     no_connected_lines:'Қосылған сызықтар жоқ', conn_connected:'Қосылған',
     tt_toggle_conn_type:'Түрді ауыстыру', partner_fallback:'Серіктес', unit_cm:'см', unit_pcs:'дана',
@@ -2154,6 +2431,42 @@ function routeHeightForColor(hex){
   const o=colorRouteHeight[hex];
   return o ? heightToFloorRel(o.m,o.ref) : heightToFloorRel(defaultRouteHeightM,defaultRouteHeightRef);
 }
+
+// Distribution panel (щиток) calculation state — top-level configuration
+// plus a per-colour breaker-rating override map. Ratings are free text
+// (not a dropdown) per spec, and persist across scheme changes (e.g.
+// switching RCD+breakers -> diffavtomats doesn't clear what was typed).
+let panelPhases = 1;                 // 1 | 3
+let panelHasInputBreaker = false;
+let panelInputBreakerRating = '63А';
+let panelHasVoltageRelay = false;
+let panelHasContactor = false;
+let panelContactorRating = '63А';
+let panelVoltageRelayRating = '63А';
+let panelProtectionScheme = 'rcd';   // 'rcd' | 'diff' | 'breakers-only'
+let panelRcdCount = 1;
+let panelRcdRating = '40А';
+let panelNeutralBusChoice = 'own';   // 'own' | 'separate'
+let panelMountType = 'flush';        // 'flush' | 'surface' — врезной / наружной установки
+let colorBreakerRating = {};         // {hex: 'С16'} — user-editable, one per circuit (colour)
+
+// Overall estimate (общая смета) — mounting method choices, consumption
+// defaults, and manual overrides for items that can't be auto-derived
+// (back-box count, base-mode box size) or that the user commonly adjusts.
+let overallHasMountingGun = false;
+let overallMarginPct = 15;
+let overallBackBoxCountOverride = null; // null = auto (count of point-kind markers)
+let overallBoxSizeText = '';            // base-mode only: user-entered box dimension
+let overallBoxExtraInfo = '';           // both modes: free-text extra info (e.g. physical dimensions like "100*100*50")
+let overallBoxBaseCount = null;         // base-mode only: user-entered box count (no reliable auto-detection there)
+let cableMarkNotes = {};                // {markLabel: 'free text note'} — per cable-mark comments in the overall estimate
+// Per (axis, cable mark) mounting config — each row of the middle table in
+// the Overall Estimate modal gets its own method/size/consumption-rate,
+// since e.g. a thicker cable might need a bigger conduit and a different
+// clip-per-metre rate than a thinner one, even on the same axis.
+// Key: `${axis}|${mark}` where axis is 'horizontal'|'vertical'.
+// Value: {method, size, rate}
+let overallRowConfig = {};
 // walls: {id, wx1,wy1,wx2,wy2} — visual room outline, no metres calculation
 let walls = [];
 
@@ -7412,7 +7725,9 @@ function safeFileName(name){
 }
 function doSaveProject(){
   const name=getProjectName();
-  const data={version:10,pro:true,projectName:name,scale,segments,lines,markers,walls,measurements,markerTypes,colorLabels,colorCableTypes,hiddenColors:[...hiddenColors],bg:bgImgDataUrl,bgX,bgY,bgS,bgOpacity,markerSnapRadius,crossingPenaltyCm,autoFixupEnabled,zones,ceilingHeightM,defaultRouteHeightM,defaultRouteHeightRef,colorRouteHeight};
+  const data={version:10,pro:true,projectName:name,scale,segments,lines,markers,walls,measurements,markerTypes,colorLabels,colorCableTypes,hiddenColors:[...hiddenColors],bg:bgImgDataUrl,bgX,bgY,bgS,bgOpacity,markerSnapRadius,crossingPenaltyCm,autoFixupEnabled,zones,ceilingHeightM,defaultRouteHeightM,defaultRouteHeightRef,colorRouteHeight,
+    panelPhases,panelHasInputBreaker,panelInputBreakerRating,panelHasVoltageRelay,panelHasContactor,panelContactorRating,panelVoltageRelayRating,panelProtectionScheme,panelRcdCount,panelRcdRating,panelNeutralBusChoice,panelMountType,colorBreakerRating,
+    overallHasMountingGun,overallMarginPct,overallBackBoxCountOverride,overallBoxSizeText,overallBoxBaseCount,overallBoxExtraInfo,cableMarkNotes,overallRowConfig};
   const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download=safeFileName(name)+'.wiring';a.click();
@@ -7443,6 +7758,27 @@ document.getElementById('project-in').addEventListener('change',e=>{
       defaultRouteHeightM=d.defaultRouteHeightM!=null?d.defaultRouteHeightM:0;
       defaultRouteHeightRef=d.defaultRouteHeightRef||'ceiling';
       colorRouteHeight=d.colorRouteHeight||{};
+      panelPhases=d.panelPhases||1;
+      panelHasInputBreaker=!!d.panelHasInputBreaker;
+      panelInputBreakerRating=d.panelInputBreakerRating||'63А';
+      panelHasVoltageRelay=!!d.panelHasVoltageRelay;
+      panelHasContactor=!!d.panelHasContactor;
+      panelContactorRating=d.panelContactorRating||'63А';
+      panelVoltageRelayRating=d.panelVoltageRelayRating||'63А';
+      panelProtectionScheme=d.panelProtectionScheme||'rcd';
+      panelRcdCount=d.panelRcdCount!=null?d.panelRcdCount:1;
+      panelRcdRating=d.panelRcdRating||'40А';
+      panelNeutralBusChoice=d.panelNeutralBusChoice||'own';
+      panelMountType=d.panelMountType||'flush';
+      colorBreakerRating=d.colorBreakerRating||{};
+      overallHasMountingGun=!!d.overallHasMountingGun;
+      overallMarginPct=d.overallMarginPct!=null?d.overallMarginPct:15;
+      overallBackBoxCountOverride=d.overallBackBoxCountOverride!=null?d.overallBackBoxCountOverride:null;
+      overallBoxSizeText=d.overallBoxSizeText||'';
+      overallBoxBaseCount=d.overallBoxBaseCount!=null?d.overallBoxBaseCount:null;
+      overallBoxExtraInfo=d.overallBoxExtraInfo||'';
+      cableMarkNotes=d.cableMarkNotes||{};
+      overallRowConfig=d.overallRowConfig||{};
       // Restore project name if present in the file
       if(d.projectName) document.getElementById('project-name').value=d.projectName;
       if(d.bgOpacity!=null){
@@ -7501,53 +7837,29 @@ document.getElementById('project-in').addEventListener('change',e=>{
 // ═══════════════════════════════════════════════════════
 // RESULTS
 // ═══════════════════════════════════════════════════════
-function updateResults(){
-  // PRO: use lines (pts[]) instead of segments
-  // lineLength() returns world-px; multiply by scale (m/world-px) to get metres.
-  // seg.real is already in metres (set at segment creation time).
-  const linesByColor={};
-  lines.forEach(line=>{
-    const lenMetres=scale!==null ? lineLength(line)*scale : 0;
-    linesByColor[line.color]=(linesByColor[line.color]||0)+lenMetres;
-  });
-  // Also count base segments for backward compat
-  segments.forEach(s=>{linesByColor[s.color]=(linesByColor[s.color]||0)+(s.real||0);});
-
-  // Markers: group by type, sum ONLY the per-instance base norm (extra×count).
-  // Connected-line lengths are NOT added here anymore — that material is cable,
-  // already counted in full under "Линии" and broken out per marker type under
-  // "По маркам кабеля" below. A marker's own total here represents only the
-  // fixed installation allowance the user defined for that device type (box,
-  // clamps, termination work — not the cable run itself).
-  const mkByType={};
-  markerTypes.forEach(mt=>{mkByType[mt.id]={mt,count:0,base:0}; });
-  markers.forEach(mk=>{
-    if(!mkByType[mk.mtypeId]) return;
-    const g=mkByType[mk.mtypeId];
-    g.count++;
-    g.base+=g.mt.extra;
-  });
-
-  // By cable mark: total length of each named cable type, broken down by WHERE it's used —
-  // plain line length vs each marker type's consumption. The marker-type contribution is
-  // NOT the physical length of the connected cable run — it's (number of connections of
-  // this cable mark to this marker type) × (that marker type's per-instance norm, mt.extra).
-  // E.g. norm=0.5m per socket connection, 3 sockets connected with this mark → 1.5m total,
-  // regardless of how long the actual cable runs to each socket are.
-  const cableMarkData={}; // cableLabel -> { lineTotal, byMarkerType: { mtId: {count, metres} } }
+// By cable mark: total length of each named cable type, broken down by WHERE it's used —
+// plain line length vs each marker type's consumption. The marker-type contribution is
+// NOT the physical length of the connected cable run — it's (number of connections of
+// this cable mark to this marker type) × (that marker type's per-instance norm, mt.extra).
+// E.g. norm=0.5m per socket connection, 3 sockets connected with this mark → 1.5m total,
+// regardless of how long the actual cable runs to each socket are.
+// Returns: { [cableLabel]: { lineTotal, verticalTotal, byMarkerType: { mtId: {count, metres} } } }
+function computeCableMarkData(){
+  const cableMarkData={};
   // Base segments
   segments.forEach(seg=>{
     const cable=colorCableTypes[seg.color];
     if(!cable) return;
-    if(!cableMarkData[cable]) cableMarkData[cable]={lineTotal:0, byMarkerType:{}};
+    if(!cableMarkData[cable]) cableMarkData[cable]={lineTotal:0, verticalTotal:0, byMarkerType:{}};
     cableMarkData[cable].lineTotal += (seg.real||0);
   });
   // PRO lines — convert world-px to metres
   lines.forEach(line=>{
     const cable=colorCableTypes[line.color];
     if(!cable) return;
-    if(!cableMarkData[cable]) cableMarkData[cable]={lineTotal:0, byMarkerType:{}};
+    if(!cableMarkData[cable]) cableMarkData[cable]={lineTotal:0, verticalTotal:0, byMarkerType:{}};
     cableMarkData[cable].lineTotal += scale!==null ? lineLength(line)*scale : 0;
+    cableMarkData[cable].verticalTotal += scale!==null ? lineVerticalRunM(line) : 0;
     // Count connections to markers for extra material norm
     [line.connStart,line.connEnd].forEach(conn=>{
       if(!conn||conn.type==='transit') return;
@@ -7576,6 +7888,319 @@ function updateResults(){
       g.byMarkerType[mt.id].metres += mt.extra;
     });
   });
+  return cableMarkData;
+}
+
+// Builds the cross-tab summary table's HTML: rows = horizontal / vertical /
+// connection allowance / total, columns = each cable mark in use plus a
+// grand-total column. No colours — this table is about cable marks, not
+// circuits. Used by the "Смета по кабелям" modal.
+function buildCableEstimateTableHtml(){
+  const cableMarkData=computeCableMarkData();
+  const cableKeys=Object.keys(cableMarkData);
+  if(!cableKeys.length) return `<p style="font-size:12px;color:#555">${t('no_data')}</p>`;
+  let sumH=0,sumV=0,sumA=0;
+  const perCable=cableKeys.map(cable=>{
+    const g=cableMarkData[cable];
+    const allowance=Object.values(g.byMarkerType).reduce((a,b)=>a+b.metres,0);
+    sumH+=g.lineTotal; sumV+=g.verticalTotal; sumA+=allowance;
+    return {cable, h:g.lineTotal, v:g.verticalTotal, a:allowance, total:g.lineTotal+g.verticalTotal+allowance};
+  });
+  const grandSum=sumH+sumV+sumA;
+  const fmt=v=>v.toFixed(2);
+  return `<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:13px;white-space:nowrap;width:100%">
+    <tr>
+      <td style="padding:6px 12px"></td>
+      ${perCable.map(c=>`<td style="padding:6px 12px;font-weight:700;color:#ccc;text-align:right">${c.cable}</td>`).join('')}
+      <td style="padding:6px 12px 6px 20px;font-weight:700;color:#7dc4ff;text-align:right;border-left:1px solid #333">${t('res_total_col')}</td>
+    </tr>
+    <tr>
+      <td style="padding:6px 12px;color:#999">${t('res_row_horizontal')}</td>
+      ${perCable.map(c=>`<td style="padding:6px 12px;text-align:right">${fmt(c.h)}</td>`).join('')}
+      <td style="padding:6px 12px 6px 20px;text-align:right;border-left:1px solid #333;color:#7dc4ff">${fmt(sumH)}</td>
+    </tr>
+    <tr>
+      <td style="padding:6px 12px;color:#999">${t('res_row_vertical')}</td>
+      ${perCable.map(c=>`<td style="padding:6px 12px;text-align:right">${fmt(c.v)}</td>`).join('')}
+      <td style="padding:6px 12px 6px 20px;text-align:right;border-left:1px solid #333;color:#7dc4ff">${fmt(sumV)}</td>
+    </tr>
+    <tr>
+      <td style="padding:6px 12px;color:#999">${t('res_row_allowance')}</td>
+      ${perCable.map(c=>`<td style="padding:6px 12px;text-align:right">${fmt(c.a)}</td>`).join('')}
+      <td style="padding:6px 12px 6px 20px;text-align:right;border-left:1px solid #333;color:#7dc4ff">${fmt(sumA)}</td>
+    </tr>
+    <tr><td colspan="${perCable.length+2}" style="padding:4px 0;border-top:1px solid #333"></td></tr>
+    <tr>
+      <td style="padding:6px 12px;font-weight:700;color:#ccc">${t('res_row_total')}</td>
+      ${perCable.map(c=>`<td style="padding:6px 12px;text-align:right;font-weight:700;color:#e8e8e8">${fmt(c.total)}</td>`).join('')}
+      <td style="padding:6px 12px 6px 20px;text-align:right;border-left:1px solid #333;font-weight:700;color:#7dc4ff">${fmt(grandSum)}</td>
+    </tr>
+  </table></div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// DISTRIBUTION PANEL (ЩИТОК) CALCULATION
+// ═══════════════════════════════════════════════════════
+
+// Guesses a default breaker rating from a cable mark string, matching the
+// cross-section as a whole token (never inside a longer number, e.g. "4"
+// must not match inside "14"). Only 1.5/2.5/4 mm² have a stated default —
+// anything else is left blank for the user to type in themselves.
+function guessBreakerFromCableMark(mark){
+  if(!mark) return '';
+  const s=String(mark).replace(/,/g,'.');
+  if(/(^|[^0-9.])1\.5([^0-9]|$)/.test(s)) return 'С10';
+  if(/(^|[^0-9.])2\.5([^0-9]|$)/.test(s)) return 'С16';
+  if(/(^|[^0-9.])4(\.0)?([^0-9]|$)/.test(s)) return 'С25';
+  return '';
+}
+
+// One "line" here means one circuit (colour) with a cable mark assigned —
+// matches how the rest of the app already groups things (a colour is a
+// circuit from the panel out, not an individual drawn segment).
+function panelCircuitList(){
+  return Object.keys(colorCableTypes)
+    .filter(hex=>colorCableTypes[hex])
+    .map(hex=>{
+      const mark=colorCableTypes[hex];
+      if(colorBreakerRating[hex]==null) colorBreakerRating[hex]=guessBreakerFromCableMark(mark);
+      return {hex, name:colorLabels[hex]||colorName(hex), mark, rating:colorBreakerRating[hex]};
+    });
+}
+
+// Module counts per the given rules — everything hinges on phase count for
+// the input breaker / voltage relay / contactor; RCDs, diffavtomats, and
+// single-pole breakers are a flat 2 / 2 / 1 modules each regardless of phase.
+function panelModuleCounts(circuits){
+  const n=circuits.length;
+  const inputBreakerModules = panelHasInputBreaker ? (panelPhases===3?3:1) : 0;
+  const voltageRelayModules = panelHasVoltageRelay ? (panelPhases===3?4:3) : 0;
+  const contactorModules   = panelHasContactor    ? (panelPhases===3?4:2) : 0;
+  let circuitModules;
+  if(panelProtectionScheme==='rcd') circuitModules = panelRcdCount*2 + n*1;      // shared RCDs (2 modules each) + one single-pole breaker per circuit
+  else if(panelProtectionScheme==='diff') circuitModules = n*2;                  // one diffavtomat per circuit, 2 modules each
+  else circuitModules = n*1;                                                     // 'breakers-only' — single-pole breakers, no RCD
+  // Neutral bars — 2 modules each, same rule as the equipment list uses
+  let neutralBarQty=0;
+  if(panelNeutralBusChoice==='own'){
+    if(panelProtectionScheme==='rcd' && panelRcdCount>0) neutralBarQty=panelRcdCount;
+  } else {
+    neutralBarQty = 2 + (panelProtectionScheme==='rcd' ? panelRcdCount : 0);
+  }
+  const neutralBarModules = neutralBarQty*2;
+  const total = inputBreakerModules+voltageRelayModules+contactorModules+circuitModules+neutralBarModules;
+  return {inputBreakerModules,voltageRelayModules,contactorModules,circuitModules,neutralBarModules,total};
+}
+
+// Final equipment list — groups per-circuit breakers/diffavtomats by their
+// (free-text) rating so e.g. ten circuits all rated С16 show as one line
+// "Автомат однополюсный С16 × 10", matching the requested format. Ordered
+// per spec: input breaker, voltage relay, contactor, RCD, circuit breakers/
+// diffavtomats, neutral bars, enclosure. Each item carries its own
+// per-unit module count for the summary table's "modules" column.
+function panelEquipmentList(){
+  const circuits=panelCircuitList();
+  const mc=panelModuleCounts(circuits);
+  const items=[];
+  if(panelHasInputBreaker){
+    const poleLabel = panelPhases===3 ? t('panel_pole_three') : t('panel_pole_one');
+    items.push({name:`${t('panel_item_input_breaker')} ${poleLabel} ${panelInputBreakerRating}`.trim(), qty:1, modulesEach:mc.inputBreakerModules});
+  }
+  if(panelHasVoltageRelay){
+    items.push({name:`${t('panel_item_voltage_relay')} ${panelVoltageRelayRating}`.trim(), qty:1, modulesEach:mc.voltageRelayModules});
+  }
+  if(panelHasContactor){
+    items.push({name:`${t('panel_item_contactor')} ${panelContactorRating}`.trim(), qty:1, modulesEach:mc.contactorModules});
+  }
+  if(panelProtectionScheme==='rcd' && panelRcdCount>0){
+    items.push({name:`${t('panel_item_rcd')} ${panelRcdRating}`.trim(), qty:panelRcdCount, modulesEach:2});
+  }
+  // Group circuit breakers/diffavtomats by rating
+  const byRating={};
+  circuits.forEach(c=>{
+    const r=(c.rating||'').trim() || t('panel_rating_unset');
+    byRating[r]=(byRating[r]||0)+1;
+  });
+  const breakerLabel = panelProtectionScheme==='diff' ? t('panel_item_diffavtomat') : t('panel_item_breaker_1p');
+  const breakerModulesEach = panelProtectionScheme==='diff' ? 2 : 1;
+  Object.keys(byRating).forEach(rating=>{
+    items.push({name:`${breakerLabel} ${rating}`.trim(), qty:byRating[rating], modulesEach:breakerModulesEach});
+  });
+  // Neutral bars — terminal count is always circuits + 2 spare, shown as
+  // "N+ terminals" the same way the enclosure's module count is shown as
+  // "N+ modules". Bars themselves don't consume DIN-rail breaker slots.
+  const busTerminals = circuits.length + 2;
+  const busLabel = t('panel_item_neutral_bar').replace('{n}', busTerminals);
+  if(panelNeutralBusChoice==='own'){
+    if(panelProtectionScheme==='rcd' && panelRcdCount>0){
+      items.push({name:busLabel, qty:panelRcdCount, modulesEach:2});
+    }
+  } else {
+    const qty = 2 + (panelProtectionScheme==='rcd' ? panelRcdCount : 0);
+    items.push({name:busLabel, qty, modulesEach:2});
+  }
+  // Enclosure
+  const mountLabel = panelMountType==='flush' ? t('panel_mount_flush') : t('panel_mount_surface');
+  items.push({name:`${t('panel_item_enclosure')} ${mountLabel} ${t('panel_modules_suffix').replace('{n}', mc.total)}`, qty:1, modulesEach:0});
+  return {items, moduleCounts:mc, circuits};
+}
+
+// ═══════════════════════════════════════════════════════
+// OVERALL ESTIMATE (общая смета) — cable + mounting hardware +
+// back-boxes + junction boxes + panel equipment, combined.
+// ═══════════════════════════════════════════════════════
+
+// Mounting methods — the same list for both axes (a horizontal or a
+// vertical run can equally be a wall chase with dowel-clamps, corrugated
+// conduit, etc). "size" holds the free-text dimension (conduit diameter,
+// dowel-clamp mark, channel cross-section — whatever's relevant); "rate"
+// is the secondary-fastener consumption per metre (clips, dowel-clamps,
+// tie-pads) — 0 for methods with no separate countable fastener.
+function defaultRateForMethod(method){
+  switch(method){
+    case 'corr-pvc': case 'corr-pnd': return 3;
+    case 'groove-dowel': return 4;
+    case 'tie-pad': return 4;
+    default: return 0; // 'cable-channel' — no separate fastener
+  }
+}
+function defaultSizeForMethod(method){
+  switch(method){
+    case 'corr-pvc': case 'corr-pnd': return '20';
+    case 'groove-dowel': return '6-12';
+    case 'cable-channel': return '16*16';
+    default: return '';
+  }
+}
+function getOverallRowConfig(axis, mark){
+  const key=`${axis}|${mark}`;
+  if(!overallRowConfig[key]){
+    overallRowConfig[key]={method:'corr-pvc', size:defaultSizeForMethod('corr-pvc'), rate:defaultRateForMethod('corr-pvc')};
+  }
+  return overallRowConfig[key];
+}
+
+// Junction boxes (Кр-type, kind='multi') — PRO mode groups by actual port
+// configuration since that's known from the scheme (boxes always have 4
+// sides, so total ports = portsPerSide × 4); base mode has no such
+// structured box type, so count and size are both left to the user.
+function overallBoxRows(){
+  if(!canUsePro()){
+    return {mode:'base'};
+  }
+  const groups={};
+  markers.forEach(mk=>{
+    const mt=markerTypes.find(t=>t.id===mk.mtypeId);
+    if(mt?.kind!=='multi') return;
+    const totalPorts=(mt.portsPerSide||0)*4;
+    const key=`${mt.desc}|${totalPorts}`;
+    if(!groups[key]) groups[key]={desc:mt.desc, totalPorts, count:0};
+    groups[key].count++;
+  });
+  return {mode:'pro', rows:Object.values(groups)};
+}
+
+function defaultBackBoxCount(){
+  let n=0;
+  markers.forEach(mk=>{
+    const mt=markerTypes.find(t=>t.id===mk.mtypeId);
+    if(mt?.kind==='point') n++;
+  });
+  return n;
+}
+
+// Overall estimate — cable rows show the full breakdown the user asked
+// for (horizontal / vertical / connection allowance / margin extra /
+// total), and a separate per-(axis,mark) purchase table drives the
+// aggregated mounting-hardware totals. Rounding rule, reverse-engineered
+// from the worked example and verified against every number in it: each
+// row's OWN margined metres get rounded UP to a whole number first (that's
+// "how much conduit/channel to buy for this run"), and the fastener count
+// for that row is computed FROM the rounded metres, not the raw ones.
+// The per-mark cable total is a separate figure — raw horizontal+vertical
+// +allowance summed first, THEN margined, THEN rounded up once.
+function computeOverallEstimate(){
+  const cableMarkData=computeCableMarkData();
+  const marks=Object.keys(cableMarkData);
+  const marginMult=1+(overallMarginPct||0)/100;
+
+  const cableRows=marks.map(mark=>{
+    const g=cableMarkData[mark];
+    const allowance=Object.values(g.byMarkerType).reduce((a,b)=>a+b.metres,0);
+    const rawTotal=g.lineTotal+g.verticalTotal+allowance;
+    const marginedTotal=rawTotal*marginMult;
+    return {
+      mark,
+      horizontal:g.lineTotal,
+      vertical:g.verticalTotal,
+      allowance,
+      marginExtra:marginedTotal-rawTotal,
+      total:Math.ceil(marginedTotal),
+      note:cableMarkNotes[mark]||'',
+    };
+  });
+
+  // Per-row (axis, mark) purchase quantities, each using its own config
+  const rowPurchases=[];
+  marks.forEach(mark=>{
+    const g=cableMarkData[mark];
+    [['horizontal',g.lineTotal],['vertical',g.verticalTotal]].forEach(([axis,raw])=>{
+      if(raw<=0.001) return;
+      const cfg=getOverallRowConfig(axis,mark);
+      const roundedMetres=Math.ceil(raw*marginMult);
+      const fastenerQty = cfg.rate>0 ? Math.ceil(roundedMetres*cfg.rate) : 0;
+      rowPurchases.push({axis,mark,method:cfg.method,size:cfg.size,rate:cfg.rate,rawMetres:raw,roundedMetres,fastenerQty});
+    });
+  });
+
+  // Aggregate by (method,size) — separate running totals for the primary
+  // material's metres (conduit/channel; groove and tie-pad have none) and
+  // the secondary fastener's count.
+  const materialTotals={};
+  rowPurchases.forEach(rp=>{
+    const key=`${rp.method}|${rp.size}`;
+    if(!materialTotals[key]) materialTotals[key]={method:rp.method,size:rp.size,metres:0,fastenerQty:0};
+    if(rp.method==='corr-pvc'||rp.method==='corr-pnd'||rp.method==='cable-channel') materialTotals[key].metres+=rp.roundedMetres;
+    materialTotals[key].fastenerQty+=rp.fastenerQty;
+  });
+
+  const backBoxCount = overallBackBoxCountOverride!=null ? overallBackBoxCountOverride : defaultBackBoxCount();
+  const boxes = overallBoxRows();
+  const panel = panelEquipmentList();
+
+  return {cableRows, rowPurchases, materialTotals, backBoxCount, boxes, panel, marginMult};
+}
+
+function updateResults(){
+  // PRO: use lines (pts[]) instead of segments
+  // lineLength() returns world-px; multiply by scale (m/world-px) to get metres.
+  // seg.real is already in metres (set at segment creation time).
+  const linesByColor={};
+  lines.forEach(line=>{
+    const lenMetres=scale!==null ? lineLength(line)*scale : 0;
+    linesByColor[line.color]=(linesByColor[line.color]||0)+lenMetres;
+  });
+  // Also count base segments for backward compat
+  segments.forEach(s=>{linesByColor[s.color]=(linesByColor[s.color]||0)+(s.real||0);});
+
+  // Markers: group by type, sum ONLY the per-instance base norm (extra×count).
+  // Connected-line lengths are NOT added here anymore — that material is cable,
+  // already counted in full under "Линии" and broken out per marker type under
+  // "По маркам кабеля" below. A marker's own total here represents only the
+  // fixed installation allowance the user defined for that device type (box,
+  // clamps, termination work — not the cable run itself).
+  const mkByType={};
+  markerTypes.forEach(mt=>{mkByType[mt.id]={mt,count:0,base:0}; });
+  markers.forEach(mk=>{
+    if(!mkByType[mk.mtypeId]) return;
+    const g=mkByType[mk.mtypeId];
+    g.count++;
+    g.base+=g.mt.extra;
+  });
+
+  // By cable mark: total length of each named cable type, broken down by WHERE it's used —
+  // plain line length vs each marker type's consumption. See computeCableMarkData for details.
+  const cableMarkData=computeCableMarkData();
 
   const el=document.getElementById('results-list');
   const lineKeys=Object.keys(linesByColor);
@@ -7598,13 +8223,15 @@ function updateResults(){
       // The marker contribution (norm × count of connections) is EXTRA material on top of
       // the physical cable run — it's not a portion carved out of lineTotal, since it
       // represents installation allowance (box, clamps, termination), not cable length.
-      const grandTotal = g.lineTotal + markerContribTotal;
+      // Includes the vertical run too, same rule as the ports diagram's "full length".
+      const grandTotal = g.lineTotal + g.verticalTotal + markerContribTotal;
       html+=`<div class="res-row">
         <i class="ti ti-cable" style="font-size:14px;color:#aaa;flex-shrink:0"></i>
         <span class="res-name">${cable}</span>
         <span class="res-val">${grandTotal.toFixed(2)} ${t('unit_m')}</span>
       </div>`;
       if(g.lineTotal>0.001) html+=`<div class="res-sub">${t('res_lines_prefix')}: ${g.lineTotal.toFixed(2)} ${t('unit_m')}</div>`;
+      if(g.verticalTotal>0.001) html+=`<div class="res-sub">${t('res_row_vertical')}: ${g.verticalTotal.toFixed(2)} ${t('unit_m')}</div>`;
       Object.keys(g.byMarkerType).forEach(mtId=>{
         const mt=markerTypes.find(t=>t.id===mtId);
         if(!mt) return;
@@ -8485,7 +9112,7 @@ function closeRouteOptModal(){
   redraw();
 }
 
-document.getElementById('btn-route-optimize').addEventListener('click', openRouteOptModal);
+document.getElementById('btn-route-optimize')?.addEventListener('click', openRouteOptModal);
 
 // Shows what a floor/ceiling height equals on the OTHER plane — e.g.
 // "2.80 от потолка = 0.00 от пола". Same conversion works both directions
@@ -9658,6 +10285,526 @@ document.getElementById('guide-close').addEventListener('click',()=>{ document.g
 document.getElementById('guide-close-bottom').addEventListener('click',()=>{ document.getElementById('guide-modal').style.display='none'; });
 document.getElementById('guide-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) e.currentTarget.style.display='none'; });
 
+document.getElementById('cable-estimate-close').addEventListener('click',()=>{ document.getElementById('cable-estimate-modal').style.display='none'; });
+document.getElementById('cable-estimate-close-bottom').addEventListener('click',()=>{ document.getElementById('cable-estimate-modal').style.display='none'; });
+document.getElementById('cable-estimate-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) e.currentTarget.style.display='none'; });
+// ═══════════════════════════════════════════════════════
+// Panel calculation modal — reactive rendering.
+// Split into three independently-refreshable pieces so that typing into a
+// rating field never rebuilds (and so never steals focus from) the very
+// input being typed into — same lesson learned from the marker-height bug.
+//   renderPanelTop()     — config controls; rebuilt on select 'change' only
+//   (circuit list)       — rendered once when the modal opens, never rebuilt
+//                           while it's open (only the summary reacts to it)
+//   renderPanelSummary() — equipment totals; rebuilt on ANY change
+// ═══════════════════════════════════════════════════════
+function renderPanelTop(){
+  const wrap=document.getElementById('panel-cfg-top');
+  if(!wrap) return;
+  const yn=(id,val)=>`<select id="${id}" class="prop-input" style="width:90px"><option value="0" ${!val?'selected':''}>${t('panel_no')}</option><option value="1" ${val?'selected':''}>${t('panel_yes')}</option></select>`;
+  wrap.innerHTML=`
+    <div class="panel-cfg-row" style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <label style="flex:1;font-size:12px;color:#aaa">${t('panel_phases_label')}</label>
+      <select id="pc-phases" class="prop-input" style="width:90px">
+        <option value="1" ${panelPhases===1?'selected':''}>1</option>
+        <option value="3" ${panelPhases===3?'selected':''}>3</option>
+      </select>
+    </div>
+    <div class="panel-cfg-row" style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <label style="flex:1;font-size:12px;color:#aaa">${t('panel_input_breaker_label')}</label>
+      ${yn('pc-input-breaker',panelHasInputBreaker)}
+      ${panelHasInputBreaker?`<input type="text" id="pc-input-breaker-rating" class="prop-input" style="width:70px" value="${panelInputBreakerRating}">`:''}
+    </div>
+    <div class="panel-cfg-row" style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <label style="flex:1;font-size:12px;color:#aaa">${t('panel_voltage_relay_label')}</label>
+      ${yn('pc-voltage-relay',panelHasVoltageRelay)}
+      ${panelHasVoltageRelay?`<input type="text" id="pc-voltage-relay-rating" class="prop-input" style="width:70px" value="${panelVoltageRelayRating}">`:''}
+    </div>
+    <div class="panel-cfg-row" style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <label style="flex:1;font-size:12px;color:#aaa">${t('panel_contactor_label')}</label>
+      ${yn('pc-contactor',panelHasContactor)}
+      ${panelHasContactor?`<input type="text" id="pc-contactor-rating" class="prop-input" style="width:70px" value="${panelContactorRating}">`:''}
+    </div>
+    <div class="panel-cfg-row" style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <label style="flex:1;font-size:12px;color:#aaa">${t('panel_scheme_label')}</label>
+      <select id="pc-scheme" class="prop-input" style="width:auto">
+        <option value="rcd" ${panelProtectionScheme==='rcd'?'selected':''}>${t('panel_scheme_rcd')}</option>
+        <option value="diff" ${panelProtectionScheme==='diff'?'selected':''}>${t('panel_scheme_diff')}</option>
+        <option value="breakers-only" ${panelProtectionScheme==='breakers-only'?'selected':''}>${t('panel_scheme_breakers_only')}</option>
+      </select>
+    </div>
+    ${panelProtectionScheme==='rcd'?`
+    <div class="panel-cfg-row" style="display:flex;align-items:center;gap:10px;margin-bottom:8px;padding-left:20px">
+      <label style="flex:1;font-size:12px;color:#aaa">${t('panel_rcd_count_label')}</label>
+      <input type="number" id="pc-rcd-count" class="prop-input" min="0" step="1" style="width:70px" value="${panelRcdCount}">
+      <input type="text" id="pc-rcd-rating" class="prop-input" style="width:70px" value="${panelRcdRating}">
+    </div>`:''}
+    <div class="panel-cfg-row" style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <label style="flex:1;font-size:12px;color:#aaa">${t('panel_neutral_bus_label')}</label>
+      <select id="pc-neutral-bus" class="prop-input" style="width:auto">
+        <option value="own" ${panelNeutralBusChoice==='own'?'selected':''}>${t('panel_neutral_bus_own')}</option>
+        <option value="separate" ${panelNeutralBusChoice==='separate'?'selected':''}>${t('panel_neutral_bus_separate')}</option>
+      </select>
+    </div>
+    <div class="panel-cfg-row" style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <label style="flex:1;font-size:12px;color:#aaa">${t('panel_mount_label')}</label>
+      <select id="pc-mount" class="prop-input" style="width:auto">
+        <option value="flush" ${panelMountType==='flush'?'selected':''}>${t('panel_mount_flush')}</option>
+        <option value="surface" ${panelMountType==='surface'?'selected':''}>${t('panel_mount_surface')}</option>
+      </select>
+    </div>`;
+
+  document.getElementById('pc-phases').addEventListener('change',function(){ panelPhases=parseInt(this.value,10); renderPanelSummary(); });
+  document.getElementById('pc-input-breaker').addEventListener('change',function(){ panelHasInputBreaker=this.value==='1'; renderPanelTop(); renderPanelSummary(); });
+  document.getElementById('pc-voltage-relay').addEventListener('change',function(){ panelHasVoltageRelay=this.value==='1'; renderPanelTop(); renderPanelSummary(); });
+  document.getElementById('pc-contactor').addEventListener('change',function(){ panelHasContactor=this.value==='1'; renderPanelTop(); renderPanelSummary(); });
+  document.getElementById('pc-scheme').addEventListener('change',function(){ panelProtectionScheme=this.value; renderPanelTop(); renderPanelSummary(); });
+  document.getElementById('pc-neutral-bus').addEventListener('change',function(){ panelNeutralBusChoice=this.value; renderPanelSummary(); });
+  document.getElementById('pc-mount').addEventListener('change',function(){ panelMountType=this.value; renderPanelSummary(); });
+  document.getElementById('pc-voltage-relay-rating')?.addEventListener('input',function(){ panelVoltageRelayRating=this.value; renderPanelSummary(); });
+  document.getElementById('pc-input-breaker-rating')?.addEventListener('input',function(){ panelInputBreakerRating=this.value; renderPanelSummary(); });
+  document.getElementById('pc-contactor-rating')?.addEventListener('input',function(){ panelContactorRating=this.value; renderPanelSummary(); });
+  document.getElementById('pc-rcd-count')?.addEventListener('input',function(){ panelRcdCount=Math.max(0,parseInt(this.value,10)||0); renderPanelSummary(); });
+  document.getElementById('pc-rcd-rating')?.addEventListener('input',function(){ panelRcdRating=this.value; renderPanelSummary(); });
+}
+
+function renderPanelCircuitList(){
+  const wrap=document.getElementById('panel-circuits-list');
+  if(!wrap) return;
+  const circuits=panelCircuitList();
+  if(!circuits.length){
+    wrap.innerHTML=`<p style="font-size:12px;color:#555">${t('panel_no_circuits')}</p>`;
+    return;
+  }
+  wrap.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12px">
+    ${circuits.map(c=>`
+      <tr>
+        <td style="padding:4px 8px 4px 0;color:#ccc">${c.name}</td>
+        <td style="padding:4px 8px;color:#888">${c.mark}</td>
+        <td style="padding:4px 0;text-align:right">
+          <input type="text" class="prop-input pc-rating-input" data-hex="${c.hex}" style="width:80px;text-align:center" value="${c.rating}">
+        </td>
+      </tr>`).join('')}
+  </table>`;
+  wrap.querySelectorAll('.pc-rating-input').forEach(inp=>{
+    inp.addEventListener('input',function(){
+      colorBreakerRating[this.dataset.hex]=this.value;
+      renderPanelSummary();
+    });
+  });
+}
+
+function renderPanelSummary(){
+  const wrap=document.getElementById('panel-summary');
+  if(!wrap) return;
+  const {items, moduleCounts}=panelEquipmentList();
+  wrap.innerHTML=`<div class="res-section" style="margin-top:16px">${t('panel_summary_title')}</div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <tr style="color:#888">
+        <td style="padding:4px 8px 4px 0"></td>
+        <td style="padding:4px 8px;text-align:right">${t('panel_col_qty')}</td>
+        <td style="padding:4px 0;text-align:right">${t('panel_col_modules')}</td>
+      </tr>
+      ${items.map(i=>`<tr style="border-bottom:1px solid #2a2a2a">
+        <td style="padding:4px 8px 4px 0;color:#ccc">${i.name}</td>
+        <td style="padding:4px 8px;text-align:right;color:#7dc4ff;font-weight:600">${i.qty} ${t('panel_pcs')}</td>
+        <td style="padding:4px 0;text-align:right;color:#999">${i.modulesEach>0?i.modulesEach:'—'}</td>
+      </tr>`).join('')}
+      <tr>
+        <td style="padding:6px 8px 4px 0;font-weight:700;color:#ccc">${t('panel_col_total_modules')}</td>
+        <td></td>
+        <td style="padding:6px 0 4px;text-align:right;font-weight:700;color:#7dc4ff">${moduleCounts.total}</td>
+      </tr>
+    </table>`;
+}
+
+function openPanelCalcModal(){
+  const body=document.getElementById('panel-calc-body');
+  body.innerHTML=`
+    <div id="panel-cfg-top"></div>
+    <div class="res-section" style="margin-top:16px">${t('panel_circuits_title')}</div>
+    <div id="panel-circuits-list"></div>
+    <div id="panel-summary"></div>`;
+  renderPanelTop();
+  renderPanelCircuitList();
+  renderPanelSummary();
+  document.getElementById('panel-calc-modal').style.display='flex';
+}
+// ═══════════════════════════════════════════════════════
+// Overall estimate modal — same reactive-rendering split as the panel
+// calc modal: top config rebuilds on select 'change' only; the cable-by-
+// mark list is rendered once per modal-open; the summary rebuilds on any
+// change, including from note/count fields, without ever rebuilding the
+// input the user is actively typing into.
+// ═══════════════════════════════════════════════════════
+function renderOverallTop(){
+  const wrap=document.getElementById('overall-cfg-top');
+  if(!wrap) return;
+  wrap.innerHTML=`
+    <div class="panel-cfg-row" style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <label style="flex:1;font-size:12px;color:#aaa">${t('overall_gun_label')}</label>
+      <select id="oe-gun" class="prop-input" style="width:90px">
+        <option value="0" ${!overallHasMountingGun?'selected':''}>${t('panel_no')}</option>
+        <option value="1" ${overallHasMountingGun?'selected':''}>${t('panel_yes')}</option>
+      </select>
+    </div>
+    <div class="panel-cfg-row" style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <label style="flex:1;font-size:12px;color:#aaa">${t('overall_margin_label')}</label>
+      <input type="number" id="oe-margin" class="prop-input" min="0" step="1" style="width:70px" value="${overallMarginPct}"> %
+    </div>`;
+  document.getElementById('oe-gun').addEventListener('change',function(){ overallHasMountingGun=this.value==='1'; renderOverallSummary(); });
+  document.getElementById('oe-margin').addEventListener('input',function(){ overallMarginPct=Math.max(0,parseFloat(this.value)||0); renderOverallCableList(); renderOverallSummary(); });
+}
+
+const OVERALL_METHOD_OPTIONS=['corr-pvc','corr-pnd','groove-dowel','tie-pad','cable-channel'];
+const OVERALL_METHOD_LABEL_KEY={
+  'corr-pvc':'overall_mount_corr_pvc','corr-pnd':'overall_mount_corr_pnd',
+  'groove-dowel':'overall_mount_groove_dowel','tie-pad':'overall_mount_tie_pad','cable-channel':'overall_mount_channel',
+};
+
+// Per-(axis,mark) mounting table — every row has its own editable method,
+// size, and fastener-consumption rate, matching the exact layout the user
+// specified. Rebuilt once per modal-open; each field only refreshes the
+// summary on change/input, never the table itself, so typing into one
+// row's rate never disturbs another row or steals focus mid-edit.
+function renderOverallMountTable(){
+  const wrap=document.getElementById('overall-mount-table');
+  if(!wrap) return;
+  const cableMarkData=computeCableMarkData();
+  const marks=Object.keys(cableMarkData);
+  if(!marks.length){
+    wrap.innerHTML=`<p style="font-size:12px;color:#555">${t('panel_no_circuits')}</p>`;
+    return;
+  }
+  const rows=[];
+  marks.forEach(mark=>{
+    const g=cableMarkData[mark];
+    if(g.lineTotal>0.001) rows.push({axis:'horizontal', axisLabel:t('overall_axis_horizontal'), mark, metres:g.lineTotal});
+    if(g.verticalTotal>0.001) rows.push({axis:'vertical', axisLabel:t('overall_axis_vertical'), mark, metres:g.verticalTotal});
+  });
+  wrap.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:560px">
+    <tr style="color:#888">
+      <td style="padding:4px 6px 4px 0"></td><td style="padding:4px 6px"></td>
+      <td style="padding:4px 6px;text-align:right">${t('overall_col_metres')}</td>
+      <td style="padding:4px 6px">${t('overall_col_method')}</td>
+      <td style="padding:4px 6px">${t('overall_col_size')}</td>
+      <td style="padding:4px 6px;text-align:right">${t('overall_col_rate')}</td>
+    </tr>
+    ${rows.map(r=>{
+      const cfg=getOverallRowConfig(r.axis,r.mark);
+      const rowKey=`${r.axis}|${r.mark}`;
+      return `<tr style="border-bottom:1px solid #2a2a2a">
+        <td style="padding:4px 6px 4px 0;color:#999">${r.axisLabel}</td>
+        <td style="padding:4px 6px;color:#ccc">${r.mark}</td>
+        <td style="padding:4px 6px;text-align:right;color:#999">${r.metres.toFixed(2)}</td>
+        <td style="padding:4px 6px">
+          <select class="prop-input oe-row-method" data-key="${rowKey}" style="width:auto">
+            ${OVERALL_METHOD_OPTIONS.map(m=>`<option value="${m}" ${cfg.method===m?'selected':''}>${t(OVERALL_METHOD_LABEL_KEY[m])}</option>`).join('')}
+          </select>
+        </td>
+        <td style="padding:4px 6px">
+          <input type="text" class="prop-input oe-row-size" data-key="${rowKey}" style="width:80px" value="${cfg.size}">
+        </td>
+        <td style="padding:4px 6px;text-align:right">
+          <input type="number" class="prop-input oe-row-rate" data-key="${rowKey}" min="0" step="0.05" style="width:60px" value="${cfg.rate}">
+        </td>
+      </tr>`;
+    }).join('')}
+  </table></div>`;
+  wrap.querySelectorAll('.oe-row-method').forEach(sel=>{
+    sel.addEventListener('change',function(){
+      const cfg=overallRowConfig[this.dataset.key];
+      cfg.method=this.value;
+      cfg.size=defaultSizeForMethod(this.value);
+      cfg.rate=defaultRateForMethod(this.value);
+      renderOverallMountTable(); renderOverallSummary();
+    });
+  });
+  wrap.querySelectorAll('.oe-row-size').forEach(inp=>{
+    inp.addEventListener('input',function(){ overallRowConfig[this.dataset.key].size=this.value; renderOverallSummary(); });
+  });
+  wrap.querySelectorAll('.oe-row-rate').forEach(inp=>{
+    inp.addEventListener('input',function(){ overallRowConfig[this.dataset.key].rate=Math.max(0,parseFloat(this.value)||0); renderOverallSummary(); });
+  });
+}
+
+function renderOverallCableList(){
+  const wrap=document.getElementById('overall-cable-list');
+  if(!wrap) return;
+  const {cableRows}=computeOverallEstimate();
+  if(!cableRows.length){
+    wrap.innerHTML=`<p style="font-size:12px;color:#555">${t('panel_no_circuits')}</p>`;
+    return;
+  }
+  wrap.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:600px">
+    <tr style="color:#888">
+      <td style="padding:4px 6px 4px 0"></td>
+      <td style="padding:4px 6px;text-align:right">${t('overall_col_horiz')}</td>
+      <td style="padding:4px 6px;text-align:right">${t('overall_col_vert')}</td>
+      <td style="padding:4px 6px;text-align:right">${t('overall_col_allowance')}</td>
+      <td style="padding:4px 6px;text-align:right">${t('overall_col_margin_extra')}</td>
+      <td style="padding:4px 6px;text-align:right;color:#7dc4ff">${t('overall_col_total')}</td>
+      <td style="padding:4px 0 4px 8px">${t('overall_col_note')}</td>
+    </tr>
+    ${cableRows.map(r=>`
+      <tr>
+        <td style="padding:4px 6px 4px 0;color:#ccc">${r.mark}</td>
+        <td style="padding:4px 6px;text-align:right;color:#999">${r.horizontal.toFixed(2)}</td>
+        <td style="padding:4px 6px;text-align:right;color:#999">${r.vertical.toFixed(2)}</td>
+        <td style="padding:4px 6px;text-align:right;color:#999">${r.allowance.toFixed(2)}</td>
+        <td style="padding:4px 6px;text-align:right;color:#999">+${r.marginExtra.toFixed(2)}</td>
+        <td style="padding:4px 6px;text-align:right;color:#7dc4ff;font-weight:600">${r.total} ${t('unit_m')}</td>
+        <td style="padding:4px 0 4px 8px">
+          <input type="text" class="prop-input oe-note-input" data-mark="${r.mark}" style="width:100%" value="${r.note}" placeholder="${t('overall_note_ph')}">
+        </td>
+      </tr>`).join('')}
+  </table></div>`;
+  wrap.querySelectorAll('.oe-note-input').forEach(inp=>{
+    inp.addEventListener('input',function(){ cableMarkNotes[this.dataset.mark]=this.value; });
+  });
+}
+
+// Plain-text version of the same items renderOverallSummary shows — used
+// to build the WhatsApp message to shops. Editable fields (back-box count,
+// base-mode box count/size, extra info) are resolved to their current
+// actual values here, since a text message has no inputs to show.
+function buildEstimateMessageLines(){
+  const est=computeOverallEstimate();
+  const lines=[];
+  est.cableRows.forEach(r=>{
+    lines.push(`${t('overall_item_cable')} ${r.mark} — ${r.total} ${t('unit_m')}`);
+  });
+  lines.push(`${t('overall_item_backbox')} — ${est.backBoxCount} ${t('panel_pcs')}`);
+  if(est.boxes.mode==='pro'){
+    est.boxes.rows.forEach(b=>{
+      lines.push(`${t('overall_item_box_pro')} ${b.desc} (${b.totalPorts} ${t('overall_ports_total')}) — ${b.count} ${t('panel_pcs')}`);
+    });
+  } else if(overallBoxBaseCount!=null || overallBoxSizeText.trim()!==''){
+    const parts=[t('overall_item_box_base')];
+    if(overallBoxBaseCount!=null) parts.push(`${overallBoxBaseCount} ${t('panel_pcs')}`);
+    if(overallBoxSizeText.trim()!=='') parts.push(overallBoxSizeText.trim());
+    lines.push(parts.join(' — '));
+  }
+  if(overallBoxExtraInfo.trim()!==''){
+    lines.push(`${t('overall_item_box_extra_info')}: ${overallBoxExtraInfo.trim()}`);
+  }
+  const methodItemKey={'corr-pvc':'overall_item_corr_pvc','corr-pnd':'overall_item_corr_pnd','cable-channel':'overall_item_channel'};
+  const fastenerItemKey={'corr-pvc':'overall_item_clips','corr-pnd':'overall_item_clips','groove-dowel':'overall_item_dowel','tie-pad':'overall_item_tiepad'};
+  Object.values(est.materialTotals).forEach(m=>{
+    if(m.metres>0.001 && methodItemKey[m.method]){
+      lines.push(`${t(methodItemKey[m.method])} ${m.size}`.trim()+` — ${m.metres} ${t('unit_m')}`);
+    }
+    if(m.fastenerQty>0.001 && fastenerItemKey[m.method]){
+      const gunSuffix = (m.method==='corr-pvc'||m.method==='corr-pnd') && overallHasMountingGun ? ` ${t('overall_clip_gun_suffix')}` : '';
+      lines.push(`${t(fastenerItemKey[m.method])}${gunSuffix} ${m.size}`.trim()+` — ${Math.ceil(m.fastenerQty)} ${t('panel_pcs')}`);
+    }
+  });
+  est.panel.items.forEach(i=>{ lines.push(`${i.name} — ${i.qty} ${t('panel_pcs')}`); });
+  return lines;
+}
+
+// Header/footer text can be overridden by the site owner at any time via
+// partners.json (key "_shop_request_message": {header, footer}) — takes
+// effect for every visitor immediately, no new pro.html upload needed.
+// Falls back to the built-in translated text if that key isn't set.
+function buildEstimateMessageText(){
+  const lines=buildEstimateMessageLines();
+  const override = partnersConfig && partnersConfig._shop_request_message;
+  const header = (override && override.header) || t('shop_request_msg_header');
+  const footer = (override && override.footer) || t('shop_request_msg_footer');
+  return `${header}\n\n${lines.join('\n')}\n\n${footer}`;
+}
+
+// ═══════════════════════════════════════════════════════
+// Shop request via WhatsApp — city select + partner checklist.
+// Reuses the existing partners.json / city-detection infrastructure
+// already built for the ad-slot feature.
+// ═══════════════════════════════════════════════════════
+function renderOverallShopRequest(){
+  const wrap=document.getElementById('overall-shop-request');
+  if(!wrap) return;
+  wrap.innerHTML=`<div style="font-size:12px;color:#666">${t('shop_request_loading')}</div>`;
+  partnersConfigReady.then(async ()=>{
+    await ensureCityDetected();
+    const cityKeys=Object.keys(partnersConfig||{}).filter(k=>k!=='_city_aliases'&&k!=='default');
+    const selectedCity = userCity && cityKeys.includes(userCity) ? userCity : (cityKeys[0]||null);
+    wrap.innerHTML=`
+      <div class="panel-cfg-row" style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <label style="flex:1;font-size:12px;color:#aaa">${t('shop_request_city_label')}</label>
+        <select id="oe-city" class="prop-input" style="width:auto">
+          ${cityKeys.map(c=>`<option value="${c}" ${c===selectedCity?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <button id="oe-shop-request-btn" style="width:100%;padding:10px;background:#1a3a1a;border:1px solid #2a6a2a;border-radius:7px;color:#8aff8a;font-size:13px;font-weight:600;cursor:pointer">${t('shop_request_open_btn')}</button>`;
+    if(!cityKeys.length){
+      wrap.innerHTML=`<div style="font-size:12px;color:#666">${t('shop_request_no_cities')}</div>`;
+      return;
+    }
+    document.getElementById('oe-shop-request-btn').addEventListener('click',()=>{
+      openShopRequestModal(document.getElementById('oe-city').value);
+    });
+  });
+}
+
+function openShopRequestModal(cityKey){
+  const shops=(partnersConfig&&partnersConfig[cityKey])||[];
+  const listWrap=document.getElementById('shop-request-list');
+  document.getElementById('shop-request-send-links').innerHTML='';
+  if(!shops.length){
+    listWrap.innerHTML=`<p style="font-size:12px;color:#555">${t('shop_request_no_shops')}</p>`;
+  } else {
+    listWrap.innerHTML=shops.filter(s=>s.whatsapp).map((s,i)=>`
+      <label style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #2a2a2a;cursor:pointer">
+        <input type="checkbox" class="oe-shop-check" data-idx="${i}" checked style="width:16px;height:16px">
+        <span style="color:#ccc;font-size:13px">${s.name||t('partner_fallback')}</span>
+      </label>`).join('');
+  }
+  document.getElementById('shop-request-send').dataset.city=cityKey;
+  document.getElementById('shop-request-modal').style.display='flex';
+}
+
+document.getElementById('shop-request-send').addEventListener('click',function(){
+  const cityKey=this.dataset.city;
+  const shops=((partnersConfig&&partnersConfig[cityKey])||[]).filter(s=>s.whatsapp);
+  const checked=[...document.querySelectorAll('.oe-shop-check:checked')].map(el=>shops[parseInt(el.dataset.idx,10)]).filter(Boolean);
+  const linksWrap=document.getElementById('shop-request-send-links');
+  if(!checked.length){ linksWrap.innerHTML=`<p style="font-size:12px;color:#e08a8a">${t('shop_request_none_selected')}</p>`; return; }
+
+  const msg=buildEstimateMessageText();
+  if(checked.length===1){
+    // A single shop can be opened directly from this click — browsers
+    // allow one popup per direct user interaction.
+    window.open(`https://wa.me/${checked[0].whatsapp}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
+    linksWrap.innerHTML=`<p style="font-size:12px;color:#8aff8a">${t('shop_request_sent_one')}</p>`;
+    return;
+  }
+  // Multiple shops: browsers block additional popups triggered outside a
+  // direct click, so list them as individual links the person taps one at
+  // a time rather than trying (and failing) to open them all at once.
+  linksWrap.innerHTML=`<p style="font-size:12px;color:#999;margin-bottom:8px">${t('shop_request_tap_each')}</p>` +
+    checked.map(s=>`<a href="https://wa.me/${s.whatsapp}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener"
+      style="display:flex;align-items:center;gap:8px;padding:9px 12px;margin-bottom:6px;background:#1a3a1a;border:1px solid #2a6a2a;border-radius:7px;color:#8aff8a;font-size:12px;font-weight:600;text-decoration:none">
+      <i class="ti ti-brand-whatsapp" style="font-size:15px"></i> ${s.name||t('partner_fallback')}
+    </a>`).join('');
+});
+
+document.getElementById('shop-request-close').addEventListener('click',()=>{ document.getElementById('shop-request-modal').style.display='none'; });
+document.getElementById('shop-request-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) e.currentTarget.style.display='none'; });
+
+function renderOverallSummary(){
+  const wrap=document.getElementById('overall-summary');
+  if(!wrap) return;
+  const est=computeOverallEstimate();
+  const rows=[];
+
+  // Cable, by mark
+  est.cableRows.forEach(r=>{
+    rows.push({name:`${t('overall_item_cable')} ${r.mark}`, qty:`${r.total} ${t('unit_m')}`});
+  });
+
+  // Back-boxes (editable)
+  rows.push({name:t('overall_item_backbox'), editableCount:'backbox', qty:est.backBoxCount});
+
+  // Junction boxes
+  if(est.boxes.mode==='pro'){
+    est.boxes.rows.forEach(b=>{
+      rows.push({name:`${t('overall_item_box_pro')} ${b.desc} (${b.totalPorts} ${t('overall_ports_total')})`, qty:b.count});
+    });
+    if(!est.boxes.rows.length) rows.push({name:t('overall_item_box_pro_none'), qty:''});
+  } else {
+    rows.push({name:t('overall_item_box_base'), editableBoxBase:true, qty:''});
+  }
+  rows.push({name:t('overall_item_box_extra_info'), editableBoxExtraInfo:true, qty:''});
+
+  // Mounting hardware, aggregated by (method,size)
+  const methodItemKey={'corr-pvc':'overall_item_corr_pvc','corr-pnd':'overall_item_corr_pnd','cable-channel':'overall_item_channel'};
+  const fastenerItemKey={'corr-pvc':'overall_item_clips','corr-pnd':'overall_item_clips','groove-dowel':'overall_item_dowel','tie-pad':'overall_item_tiepad'};
+  Object.values(est.materialTotals).forEach(m=>{
+    if(m.metres>0.001 && methodItemKey[m.method]){
+      rows.push({name:`${t(methodItemKey[m.method])} ${m.size}`.trim(), qty:`${m.metres} ${t('unit_m')}`});
+    }
+    if(m.fastenerQty>0.001 && fastenerItemKey[m.method]){
+      const gunSuffix = (m.method==='corr-pvc'||m.method==='corr-pnd') && overallHasMountingGun ? ` ${t('overall_clip_gun_suffix')}` : '';
+      rows.push({name:`${t(fastenerItemKey[m.method])}${gunSuffix} ${m.size}`.trim(), qty:Math.ceil(m.fastenerQty)});
+    }
+  });
+
+  // Panel equipment
+  est.panel.items.forEach(i=>{ rows.push({name:i.name, qty:`${i.qty} ${t('panel_pcs')}`}); });
+
+  wrap.innerHTML=`<div class="res-section" style="margin-top:16px">${t('overall_summary_title')}</div>
+    ${rows.map(r=>{
+      if(r.editableCount==='backbox'){
+        return `<div class="res-row" style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #2a2a2a">
+          <span style="color:#ccc">${r.name}</span>
+          <input type="number" id="oe-backbox-count" class="prop-input" min="0" step="1" style="width:70px;text-align:right" value="${r.qty}">
+        </div>`;
+      }
+      if(r.editableBoxBase){
+        return `<div class="res-row" style="padding:4px 0;border-bottom:1px solid #2a2a2a">
+          <div style="color:#ccc;margin-bottom:4px">${r.name}</div>
+          <div style="display:flex;gap:8px">
+            <input type="number" id="oe-box-base-count" class="prop-input" min="0" step="1" style="width:70px" placeholder="${t('overall_box_count_ph')}" value="${overallBoxBaseCount!=null?overallBoxBaseCount:''}">
+            <input type="text" id="oe-box-base-size" class="prop-input" style="flex:1" placeholder="${t('overall_box_size_ph')}" value="${overallBoxSizeText}">
+          </div>
+        </div>`;
+      }
+      if(r.editableBoxExtraInfo){
+        return `<div class="res-row" style="padding:4px 0;border-bottom:1px solid #2a2a2a">
+          <div style="color:#ccc;margin-bottom:4px">${r.name}</div>
+          <input type="text" id="oe-box-extra-info" class="prop-input" style="width:100%" placeholder="${t('overall_box_extra_ph')}" value="${overallBoxExtraInfo}">
+        </div>`;
+      }
+      return `<div class="res-row" style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #2a2a2a">
+        <span style="color:#ccc">${r.name}</span><span style="color:#7dc4ff;font-weight:600">${r.qty}</span>
+      </div>`;
+    }).join('')}`;
+
+  document.getElementById('oe-backbox-count')?.addEventListener('input',function(){
+    overallBackBoxCountOverride=this.value.trim()===''?null:Math.max(0,parseInt(this.value,10)||0);
+  });
+  document.getElementById('oe-box-base-count')?.addEventListener('input',function(){
+    overallBoxBaseCount=this.value.trim()===''?null:Math.max(0,parseInt(this.value,10)||0);
+  });
+  document.getElementById('oe-box-base-size')?.addEventListener('input',function(){
+    overallBoxSizeText=this.value;
+  });
+  document.getElementById('oe-box-extra-info')?.addEventListener('input',function(){
+    overallBoxExtraInfo=this.value;
+  });
+}
+
+function openOverallEstimateModal(){
+  const body=document.getElementById('overall-estimate-body');
+  body.innerHTML=`
+    <div id="overall-cfg-top"></div>
+    <div class="res-section" style="margin-top:16px">${t('overall_mount_title')}</div>
+    <div id="overall-mount-table"></div>
+    <div class="res-section" style="margin-top:16px">${t('overall_cable_title')}</div>
+    <div id="overall-cable-list"></div>
+    <div id="overall-summary"></div>`;
+  renderOverallTop();
+  renderOverallMountTable();
+  renderOverallCableList();
+  renderOverallSummary();
+  renderOverallShopRequest();
+  document.getElementById('overall-estimate-modal').style.display='flex';
+}
+document.getElementById('btn-overall-estimate').addEventListener('click', openOverallEstimateModal);
+document.getElementById('overall-estimate-close').addEventListener('click',()=>{ document.getElementById('overall-estimate-modal').style.display='none'; });
+document.getElementById('overall-estimate-close-bottom').addEventListener('click',()=>{ document.getElementById('overall-estimate-modal').style.display='none'; });
+document.getElementById('overall-estimate-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) e.currentTarget.style.display='none'; });
+
+document.getElementById('btn-panel-calc').addEventListener('click', openPanelCalcModal);
+document.getElementById('panel-calc-close').addEventListener('click',()=>{ document.getElementById('panel-calc-modal').style.display='none'; });
+document.getElementById('panel-calc-close-bottom').addEventListener('click',()=>{ document.getElementById('panel-calc-modal').style.display='none'; });
+document.getElementById('panel-calc-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) e.currentTarget.style.display='none'; });
+
+document.getElementById('btn-cable-estimate').addEventListener('click',()=>{
+  document.getElementById('cable-estimate-table-wrap').innerHTML = buildCableEstimateTableHtml();
+  document.getElementById('cable-estimate-modal').style.display='flex';
+});
+
 document.getElementById('whatsnew-close').addEventListener('click',()=>{ document.getElementById('whatsnew-modal').style.display='none'; });
 document.getElementById('whatsnew-close-bottom').addEventListener('click',()=>{ document.getElementById('whatsnew-modal').style.display='none'; });
 document.getElementById('whatsnew-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) e.currentTarget.style.display='none'; });
@@ -9785,8 +10932,6 @@ const TOUR_STEPS_PRO = [
   { target: null, titleKey:'tourpro_0_title', textKey:'tourpro_0_text' },
   { target: '#tab-markers-cfg', showTab:'markers-cfg', titleKey:'tourpro_1_title', textKey:'tourpro_1_text' },
   { target: '#btn-line', titleKey:'tourpro_2_title', textKey:'tourpro_2_text' },
-  { target: '#btn-zones', titleKey:'tourpro_3_title', textKey:'tourpro_3_text' },
-  { target: '#btn-route-optimize', titleKey:'tourpro_4_title', textKey:'tourpro_4_text' },
   { target: null, titleKey:'tourpro_5_title', textKey:'tourpro_5_text' },
   { target: null, titleKey:'tourpro_6_title', textKey:'tourpro_6_text' },
   { target: '#btn-autofixup', titleKey:'tourpro_7_title', textKey:'tourpro_7_text' },

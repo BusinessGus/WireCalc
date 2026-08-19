@@ -2869,22 +2869,28 @@ function choosePortTowardPoint(mk, targetPt, usedSet, targetFacing){
   }
 
   if(targetFacing){
-    // A cable leaving a facing marker heading, say, west reads best
-    // entering the box from the EAST (opposite) side — trying to use the
-    // box's west side too would mean it immediately doubles back on
-    // itself. Perpendicular sides are the next best fit; the box side
-    // matching the marker's own facing direction is the last resort.
-    const oppositeOfFacing={left:'right',right:'left',up:'bottom',down:'top'};
+    // The box side matching the marker's own facing direction is always
+    // the worst choice (last resort), in every layout: connecting there
+    // means the cable would have to loop back on itself right after
+    // exiting, whichever way the marker happens to sit relative to the
+    // box. But among the OTHER three sides, don't just always force
+    // "opposite of facing" — a marker can sit anywhere relative to the
+    // box regardless of which way it faces (e.g. facing up but sitting
+    // mostly EAST of the box), and forcing "opposite" there routes the
+    // final leg straight through the box's own body. Rank the remaining
+    // sides by the marker's actual position instead, same as the
+    // position-only heuristic below.
     const sameAsFacing={left:'left',right:'right',up:'top',down:'bottom'};
-    const preferred=oppositeOfFacing[targetFacing];
     const lastResort=sameAsFacing[targetFacing];
-    const perpendiculars=(preferred==='left'||preferred==='right')?['top','bottom']:['left','right'];
-    return nearestOnSide(preferred)
-        || nearestOnSide(perpendiculars[0])
-        || nearestOnSide(perpendiculars[1])
-        || nearestOnSide(lastResort)
-        || ports.find(p=>!used.has(`${p.side}_${p.idx??0}`))
-        || ports[0];
+    const dx=targetPt.wx-mk.wx, dy=targetPt.wy-mk.wy;
+    const primaryHorizontal=Math.abs(dx)>=Math.abs(dy);
+    const primarySide  =primaryHorizontal?(dx>=0?'right':'left'):(dy>=0?'bottom':'top');
+    const secondarySide=primaryHorizontal?(dy>=0?'bottom':'top'):(dx>=0?'right':'left');
+    const oppositeSide  ={top:'bottom',bottom:'top',left:'right',right:'left'}[primarySide];
+    const order=[primarySide,secondarySide,oppositeSide].filter(s=>s!==lastResort);
+    order.push(lastResort); // always tried last, never skipped entirely
+    for(const s of order){ const p=nearestOnSide(s); if(p) return p; }
+    return ports.find(p=>!used.has(`${p.side}_${p.idx??0}`)) || ports[0];
   }
 
   const dx=targetPt.wx-mk.wx, dy=targetPt.wy-mk.wy;
@@ -4278,11 +4284,15 @@ function updateLinesForMarker(mk){
   }
 
   // For each line going to a facing marker, penalise using a box side that
-  // doesn't match the user's stated priority: opposite side (best, no
-  // penalty) → perpendicular sides (mild) → same-direction side (worst,
-  // last resort). Kept modest relative to length/crossings so it acts as a
-  // tiebreaker, not something that overrides genuine crossing avoidance.
-  const oppositeOfFacing={left:'right',right:'left',up:'bottom',down:'top'};
+  // isn't the best fit. The same-direction side (matching the marker's own
+  // facing) is always penalised hardest — connecting there means an
+  // immediate loop-back regardless of layout. Among the other three sides,
+  // rank by the marker's ACTUAL position (not just its facing direction —
+  // a marker can sit anywhere relative to the box no matter which way it
+  // faces), same ranking choosePortTowardPoint uses; only the top-ranked
+  // one is penalty-free. Kept modest relative to length/crossings so it
+  // acts as a tiebreaker, not something that overrides genuine crossing
+  // avoidance.
   const sameAsFacing={left:'left',right:'right',up:'top',down:'bottom'};
   function facingPreferencePenalty(){
     let penalty=0;
@@ -4292,9 +4302,12 @@ function updateLinesForMarker(mk){
       if(!otherMk?.facing) return;
       const conn=atEnd?line.connEnd:line.connStart;
       if(!conn?.side||conn.side==='center') return;
-      if(conn.side===oppositeOfFacing[otherMk.facing]) return; // preferred — no penalty
-      if(conn.side===sameAsFacing[otherMk.facing]) penalty+=mToW(3); // last resort
-      else penalty+=mToW(1); // perpendicular — mild
+      const lastResort=sameAsFacing[otherMk.facing];
+      if(conn.side===lastResort){ penalty+=mToW(3); return; }
+      const dx=otherMk.wx-mk.wx, dy=otherMk.wy-mk.wy;
+      const primaryHorizontal=Math.abs(dx)>=Math.abs(dy);
+      const primarySide=primaryHorizontal?(dx>=0?'right':'left'):(dy>=0?'bottom':'top');
+      if(conn.side!==primarySide) penalty+=mToW(1); // still a valid, just not top-ranked, side
     });
     return penalty;
   }

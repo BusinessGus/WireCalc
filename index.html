@@ -757,8 +757,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     <h2 data-i18n="shop_request_h2" style="font-size:18px;font-weight:700;margin-bottom:14px;color:#e8e8e8">Магазины</h2>
     <p data-i18n="shop_request_intro" style="font-size:12px;color:#999;margin-bottom:16px">Отметьте магазины, которым хотите отправить запрос — каждому откроется отдельный чат WhatsApp с готовым сообщением.</p>
     <div id="shop-request-list"></div>
-    <button id="shop-request-send" data-i18n="shop_request_send_btn" style="margin-top:18px;width:100%;padding:10px;background:#1a3a1a;border:1px solid #2a6a2a;border-radius:7px;color:#8aff8a;font-size:13px;font-weight:600;cursor:pointer">Отправить запрос</button>
-    <div id="shop-request-send-links" style="margin-top:14px"></div>
+    <button id="shop-request-add-own" data-i18n="shop_request_add_own_btn" style="margin-top:18px;width:100%;padding:10px;background:#1a3a5c;border:1px solid #4a9eff;border-radius:7px;color:#7dc4ff;font-size:13px;font-weight:600;cursor:pointer">Добавить свой магазин</button>
   </div>
 </div>
 
@@ -1264,6 +1263,7 @@ const translations = {
     overall_item_box_extra_info:'Дополнительная информация о коробках', overall_box_extra_ph:'например: 100*100*50',
     shop_request_h2:'Магазины', shop_request_intro:'Отметьте магазины, которым хотите отправить запрос — каждому откроется отдельный чат WhatsApp с готовым сообщением.',
     shop_request_send_btn:'Отправить запрос', shop_request_city_label:'Ваш город', shop_request_send_one_tt:'Написать этому магазину в WhatsApp',
+    shop_request_add_own_btn:'Добавить свой магазин', shop_request_add_own_msg:'Здравствуйте, я пишу по поводу добавления своего магазина на сайт provodka.org.',
     shop_request_open_btn:'Сделать запрос расчёта стоимости материалов по WhatsApp (это не страшно))',
     shop_request_loading:'Загрузка списка магазинов…', shop_request_no_cities:'Список магазинов пока не настроен.',
     shop_request_no_shops:'Для вашего города магазины пока не добавлены.', shop_request_none_selected:'Отметьте хотя бы один магазин.',
@@ -1593,6 +1593,7 @@ const translations = {
     overall_item_box_extra_info:'Additional info about the boxes', overall_box_extra_ph:'e.g. 100*100*50',
     shop_request_h2:'Shops', shop_request_intro:'Check the shops you want to send a request to — each one opens its own WhatsApp chat with the message ready to send.',
     shop_request_send_btn:'Send request', shop_request_city_label:'Your city', shop_request_send_one_tt:'Message this shop on WhatsApp',
+    shop_request_add_own_btn:'Add your shop', shop_request_add_own_msg:"Hello, I'm writing about adding my shop to provodka.org.",
     shop_request_open_btn:"Request a materials price quote via WhatsApp (it's easy))",
     shop_request_loading:'Loading shop list…', shop_request_no_cities:'The shop list is not set up yet.',
     shop_request_no_shops:'No shops added for your city yet.', shop_request_none_selected:'Check at least one shop.',
@@ -1922,6 +1923,7 @@ const translations = {
     overall_item_box_extra_info:'Información adicional sobre las cajas', overall_box_extra_ph:'p. ej.: 100*100*50',
     shop_request_h2:'Tiendas', shop_request_intro:'Marque las tiendas a las que quiere enviar la solicitud — cada una abrirá su propio chat de WhatsApp con el mensaje listo para enviar.',
     shop_request_send_btn:'Enviar solicitud', shop_request_city_label:'Su ciudad', shop_request_send_one_tt:'Escribir a esta tienda por WhatsApp',
+    shop_request_add_own_btn:'Añadir mi tienda', shop_request_add_own_msg:'Hola, escribo para añadir mi tienda a provodka.org.',
     shop_request_open_btn:'Solicitar presupuesto de materiales por WhatsApp (es fácil))',
     shop_request_loading:'Cargando lista de tiendas…', shop_request_no_cities:'La lista de tiendas aún no está configurada.',
     shop_request_no_shops:'Todavía no hay tiendas añadidas para su ciudad.', shop_request_none_selected:'Marque al menos una tienda.',
@@ -2251,6 +2253,7 @@ const translations = {
     overall_item_box_extra_info:'Қораптар туралы қосымша ақпарат', overall_box_extra_ph:'мысалы: 100*100*50',
     shop_request_h2:'Дүкендер', shop_request_intro:'Сұрау жібергіңіз келетін дүкендерді белгілеңіз — әрқайсысына дайын хабарламасы бар жеке WhatsApp чаты ашылады.',
     shop_request_send_btn:'Сұрау жіберу', shop_request_city_label:'Сіздің қалаңыз', shop_request_send_one_tt:'Осы дүкенге WhatsApp арқылы жазу',
+    shop_request_add_own_btn:'Өз дүкеніңізді қосу', shop_request_add_own_msg:'Сәлеметсіз бе, өз дүкенімді provodka.org сайтына қосу туралы жазып отырмын.',
     shop_request_open_btn:'Материалдар құнын есептеуге WhatsApp арқылы сұрау жіберу (бұл қауіпсіз))',
     shop_request_loading:'Дүкендер тізімі жүктелуде…', shop_request_no_cities:'Дүкендер тізімі әлі теңшелмеген.',
     shop_request_no_shops:'Сіздің қалаңыз үшін дүкендер әлі қосылмаған.', shop_request_none_selected:'Кем дегенде бір дүкенді белгілеңіз.',
@@ -10627,7 +10630,7 @@ function renderOverallShopRequest(){
   wrap.innerHTML=`<div style="font-size:12px;color:#666">${t('shop_request_loading')}</div>`;
   partnersConfigReady.then(async ()=>{
     await ensureCityDetected();
-    const cityKeys=Object.keys(partnersConfig||{}).filter(k=>k!=='_city_aliases'&&k!=='default');
+    const cityKeys=Object.keys(partnersConfig||{}).filter(k=>!k.startsWith('_')&&k!=='default');
     const selectedCity = userCity && cityKeys.includes(userCity) ? userCity : (cityKeys[0]||null);
     wrap.innerHTML=`
       <div class="panel-cfg-row" style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
@@ -10650,24 +10653,22 @@ function renderOverallShopRequest(){
 function openShopRequestModal(cityKey){
   const shops=(partnersConfig&&partnersConfig[cityKey])||[];
   const listWrap=document.getElementById('shop-request-list');
-  document.getElementById('shop-request-send-links').innerHTML='';
   const withWa=shops.filter(s=>s.whatsapp);
   if(!withWa.length){
     listWrap.innerHTML=`<p style="font-size:12px;color:#555">${t('shop_request_no_shops')}</p>`;
   } else {
     const msg=buildEstimateMessageText();
-    // Scrollable so a long shop list never pushes the send button or the
-    // rest of the modal off-screen — the modal itself already scrolls as
-    // a whole, but capping this inner list keeps the action buttons
-    // reachable without hunting for them below dozens of rows.
+    // Scrollable so a long shop list never pushes the buttons below it
+    // off-screen — the modal itself already scrolls as a whole, but
+    // capping this inner list keeps the action buttons reachable without
+    // hunting for them below dozens of rows.
     listWrap.innerHTML=`<div style="max-height:min(50vh,420px);overflow-y:auto;padding-right:4px">
-      ${withWa.map((s,i)=>`
+      ${withWa.map(s=>`
         <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #2a2a2a">
-          <input type="checkbox" class="oe-shop-check" data-idx="${i}" checked style="width:16px;height:16px;flex-shrink:0">
-          <label style="flex:1;min-width:0;cursor:pointer">
+          <div style="flex:1;min-width:0">
             <div style="color:#ccc;font-size:13px">${s.name||t('partner_fallback')}</div>
             ${s.address?`<div style="color:#777;font-size:11px;margin-top:1px">${s.address}</div>`:''}
-          </label>
+          </div>
           <a href="https://wa.me/${s.whatsapp}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener"
             title="${t('shop_request_send_one_tt')}"
             style="flex-shrink:0;display:flex;align-items:center;justify-content:center;width:34px;height:34px;background:#1a3a1a;border:1px solid #2a6a2a;border-radius:7px;color:#8aff8a;text-decoration:none">
@@ -10676,35 +10677,17 @@ function openShopRequestModal(cityKey){
         </div>`).join('')}
     </div>`;
   }
-  document.getElementById('shop-request-send').dataset.city=cityKey;
   document.getElementById('shop-request-modal').style.display='flex';
 }
 
-document.getElementById('shop-request-send').addEventListener('click',function(){
-  const cityKey=this.dataset.city;
-  const shops=((partnersConfig&&partnersConfig[cityKey])||[]).filter(s=>s.whatsapp);
-  const checked=[...document.querySelectorAll('.oe-shop-check:checked')].map(el=>shops[parseInt(el.dataset.idx,10)]).filter(Boolean);
-  const linksWrap=document.getElementById('shop-request-send-links');
-  if(!checked.length){ linksWrap.innerHTML=`<p style="font-size:12px;color:#e08a8a">${t('shop_request_none_selected')}</p>`; return; }
-
-  const msg=buildEstimateMessageText();
-  if(checked.length===1){
-    // A single shop can be opened directly from this click — browsers
-    // allow one popup per direct user interaction.
-    window.open(`https://wa.me/${checked[0].whatsapp}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
-    linksWrap.innerHTML=`<p style="font-size:12px;color:#8aff8a">${t('shop_request_sent_one')}</p>`;
-    return;
-  }
-  // Multiple shops: browsers block additional popups triggered outside a
-  // direct click, so list them as individual links the person taps one at
-  // a time rather than trying (and failing) to open them all at once.
-  linksWrap.innerHTML=`<p style="font-size:12px;color:#999;margin-bottom:8px">${t('shop_request_tap_each')}</p>` +
-    `<div style="max-height:min(40vh,340px);overflow-y:auto;padding-right:4px">` +
-    checked.map(s=>`<a href="https://wa.me/${s.whatsapp}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener"
-      style="display:flex;align-items:center;gap:8px;padding:9px 12px;margin-bottom:6px;background:#1a3a1a;border:1px solid #2a6a2a;border-radius:7px;color:#8aff8a;font-size:12px;font-weight:600;text-decoration:none">
-      <i class="ti ti-brand-whatsapp" style="font-size:15px"></i> ${s.name||t('partner_fallback')}
-    </a>`).join('') +
-    `</div>`;
+// "Добавить свой магазин" — reuses the same site-owner WhatsApp contact
+// already used for ad inquiries and bug reports (partners.json /
+// _ad_slot_whatsapp), so nothing new needs to be configured.
+document.getElementById('shop-request-add-own').addEventListener('click',()=>{
+  const wa=partnersConfig && partnersConfig._ad_slot_whatsapp;
+  if(!wa) return;
+  const msg=t('shop_request_add_own_msg');
+  window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
 });
 
 document.getElementById('shop-request-close').addEventListener('click',()=>{ document.getElementById('shop-request-modal').style.display='none'; });

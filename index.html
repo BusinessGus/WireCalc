@@ -10690,6 +10690,8 @@ function openShopRequestModal(cityKey){
         </div>`).join('')}
     </div>`;
   }
+  const addOwnBtn=document.getElementById('shop-request-add-own');
+  addOwnBtn.style.display = (partnersConfig && partnersConfig._ad_slot_whatsapp) ? '' : 'none';
   document.getElementById('shop-request-modal').style.display='flex';
 }
 

@@ -7974,9 +7974,26 @@ function guessBreakerFromCableMark(mark){
 // One "line" here means one circuit (colour) with a cable mark assigned —
 // matches how the rest of the app already groups things (a colour is a
 // circuit from the panel out, not an individual drawn segment).
+// Colours actually wired to a distribution panel (kind='bus' marker) —
+// handles both PRO lines and base-mode segments, since either could in
+// principle connect to a panel marker.
+function panelConnectedColors(){
+  const colors=new Set();
+  const checkConn=(conn, color)=>{
+    if(!conn?.markerId) return;
+    const mk=markers.find(m=>m.id===conn.markerId);
+    const mt=mk?markerTypes.find(t=>t.id===mk.mtypeId):null;
+    if(mt?.kind==='bus') colors.add(color);
+  };
+  lines.forEach(line=>{ checkConn(line.connStart,line.color); checkConn(line.connEnd,line.color); });
+  segments.forEach(seg=>{ checkConn(seg.connStart,seg.color); checkConn(seg.connEnd,seg.color); });
+  return colors;
+}
+
 function panelCircuitList(){
+  const connectedColors=panelConnectedColors();
   return Object.keys(colorCableTypes)
-    .filter(hex=>colorCableTypes[hex])
+    .filter(hex=>colorCableTypes[hex] && connectedColors.has(hex))
     .map(hex=>{
       const mark=colorCableTypes[hex];
       if(colorBreakerRating[hex]==null) colorBreakerRating[hex]=guessBreakerFromCableMark(mark);
@@ -10424,7 +10441,7 @@ function renderPanelSummary(){
       ${items.map(i=>`<tr style="border-bottom:1px solid #2a2a2a">
         <td style="padding:4px 8px 4px 0;color:#ccc">${i.name}</td>
         <td style="padding:4px 8px;text-align:right;color:#7dc4ff;font-weight:600">${i.qty} ${t('panel_pcs')}</td>
-        <td style="padding:4px 0;text-align:right;color:#999">${i.modulesEach>0?i.modulesEach:'—'}</td>
+        <td style="padding:4px 0;text-align:right;color:#999">${i.modulesEach>0?(i.modulesEach*i.qty):'—'}</td>
       </tr>`).join('')}
       <tr>
         <td style="padding:6px 8px 4px 0;font-weight:700;color:#ccc">${t('panel_col_total_modules')}</td>
@@ -10666,7 +10683,7 @@ function renderOverallShopRequest(){
 function openShopRequestModal(cityKey){
   const shops=(partnersConfig&&partnersConfig[cityKey])||[];
   const listWrap=document.getElementById('shop-request-list');
-  const withWa=shops.filter(s=>s.whatsapp);
+  const withWa=shops.filter(s=>s.whatsapp && !s.placeholderOnly);
   if(!withWa.length){
     listWrap.innerHTML=`<p style="font-size:12px;color:#555">${t('shop_request_no_shops')}</p>`;
   } else {

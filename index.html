@@ -4234,8 +4234,15 @@ function updateLinesForMarker(mk){
   });
   if(!connectedLines.length) return;
 
-  const nLines=Math.min(connectedLines.length,6);
-  const cLines=connectedLines.slice(0,nLines);
+  // nLines used to be capped at 6 here, which silently excluded any lines
+  // beyond the 6th from optimization ENTIRELY — not just from the
+  // exhaustive search, but from being touched at all. A box with 7+
+  // connections would leave its last-added line's port completely
+  // unconsidered, however suboptimal. The cap now only gates which SEARCH
+  // STRATEGY runs (see below) — every connected line is always processed,
+  // via the greedy fallback if there are too many for the exhaustive one.
+  const nLines=connectedLines.length;
+  const cLines=connectedLines;
 
   // Save original pts for all connected lines
   const savedPtsAll=cLines.map(({line})=>line.pts.map(p=>({...p})));

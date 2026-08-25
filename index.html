@@ -3076,6 +3076,93 @@ function buildFacingAwareConnector(markerPt, facing, otherPt){
   return [{wx:markerPt.wx,wy:markerPt.wy}, ...rest];
 }
 
+// Same idea as buildFacingAwareConnectorAdaptive, but for a box's own stub
+// Reconstructs a line's box-side stub as an actual segment — the mandatory
+// clearance run from the box's raw port coordinate out to pts[0]/pts[last]
+// (that first/last point in `pts` IS the stub end; see stretchLineForMarker's
+// own comment: "stub geometry is in conn.stubLen metadata — not in pts").
+// Physically it's still a piece of wire, just one every crossing/clearance
+// check used to skip entirely because it isn't stored as a pts segment.
+// Returns null for the end that isn't a box/bus (nothing to reconstruct —
+// point markers don't have ports or stubs, the line just starts *at* them).
+function boxStubSegmentAt(line, atEnd){
+  const conn = atEnd ? line.connEnd : line.connStart;
+  if(!conn || !conn.markerId || conn.side==null || conn.side==='center') return null;
+  const mk = markers.find(m=>m.id===conn.markerId);
+  if(!mk || !isBoxKind(mk)) return null;
+  const port = getMarkerPorts(mk).find(p=>p.side===conn.side && p.idx===(conn.portIdx??0));
+  if(!port) return null;
+  const pt = atEnd ? (line.pts&&line.pts.length?line.pts[line.pts.length-1]:null) : (line.pts?line.pts[0]:null);
+  if(!pt) return null;
+  return {a:{wx:port.wx,wy:port.wy}, b:{wx:pt.wx,wy:pt.wy}};
+}
+
+// Both ends of a line, as a flat list of 0-2 stub segments (a point-marker
+// end contributes nothing).
+function lineStubSegments(line){
+  const segs=[];
+  const s0=boxStubSegmentAt(line,false); if(s0) segs.push(s0);
+  const s1=boxStubSegmentAt(line,true); if(s1) segs.push(s1);
+  return segs;
+}
+
+
+// Same idea as buildFacingAwareConnectorAdaptive, but for a box's own stub
+// exit (whose direction is fixed by the CHOSEN PORT SIDE, not a marker's
+// `facing` — box/bus markers don't have one). Starts as the plain single-
+// bend shape (matches buildBoxAwareConnector's own choice) and, only if
+// that overlaps something in avoidLines, grows an extra run beyond the
+// mandatory stub in the same 2cm steps, same escalation as the facing
+// version, until clear or capped.
+function buildBoxAwareConnectorAdaptive(stubEnd, target, dir, avoidLines){
+  if(Math.abs(stubEnd.wx-target.wx)<0.5 || Math.abs(stubEnd.wy-target.wy)<0.5){
+    return [{wx:stubEnd.wx,wy:stubEnd.wy},{wx:target.wx,wy:target.wy}]; // already coaxial
+  }
+  const STEP=mToW(0.02), TOL=mToW(0.01);
+  let extraLen=0;
+  let maxExtra=Infinity;
+  if(dir.dx!==0){
+    const aheadDist = dir.dx>0 ? (target.wx-stubEnd.wx) : (stubEnd.wx-target.wx);
+    if(aheadDist>0) maxExtra=aheadDist;
+  } else {
+    const aheadDist = dir.dy>0 ? (target.wy-stubEnd.wy) : (stubEnd.wy-target.wy);
+    if(aheadDist>0) maxExtra=aheadDist;
+  }
+  // Must be enough steps to actually REACH maxExtra when it's finite —
+  // otherwise a conflict that only clears right near the far end (e.g. two
+  // ports 3cm apart on a box that's far from the marker) gets abandoned
+  // before the one shape that would have cleared it is ever tried. A flat
+  // "80 tries" silently assumed clearing never needs more than ~160cm of
+  // extra run, which isn't true once the target itself is farther out than
+  // that. When maxExtra is unbounded (target "behind" the exit direction),
+  // fall back to a fixed generous cap just to stop eventually.
+  const MAX_TRIES = maxExtra===Infinity ? 80 : Math.max(1, Math.ceil(maxExtra/STEP)+2);
+  let path;
+  for(let t=0;t<MAX_TRIES;t++){
+    const clamped=Math.min(extraLen, maxExtra);
+    if(clamped<=0.001){
+      // plain single bend — identical shape to buildBoxAwareConnector
+      const bend = dir.dx!==0 ? {wx:target.wx,wy:stubEnd.wy} : {wx:stubEnd.wx,wy:target.wy};
+      path=[{wx:stubEnd.wx,wy:stubEnd.wy},bend,{wx:target.wx,wy:target.wy}];
+    } else if(dir.dx!==0){
+      const exitX=stubEnd.wx+dir.dx*clamped;
+      path=[{wx:stubEnd.wx,wy:stubEnd.wy},{wx:exitX,wy:stubEnd.wy},{wx:exitX,wy:target.wy},{wx:target.wx,wy:target.wy}];
+    } else {
+      const exitY=stubEnd.wy+dir.dy*clamped;
+      path=[{wx:stubEnd.wx,wy:stubEnd.wy},{wx:stubEnd.wx,wy:exitY},{wx:target.wx,wy:exitY},{wx:target.wx,wy:target.wy}];
+    }
+    if(!(avoidLines&&avoidLines.length)) return path;
+    let blocked=false;
+    for(let i=0;i<path.length-1 && !blocked;i++){
+      if(segmentOverlapsAnyLine(path[i],path[i+1],avoidLines,TOL)) blocked=true;
+    }
+    if(!blocked) return path;
+    if(clamped>=maxExtra) break;
+    extraLen+=STEP;
+  }
+  return path;
+}
+
 // Same connection, but forces the OPPOSITE bend order from the anchor to
 // the target (buildOrthogonalConnector picks whichever axis has the larger
 // offset first; this picks the other one instead). Only used when trying
@@ -3166,7 +3253,6 @@ function buildFacingAwareConnectorAdaptive(markerPt, facing, otherPt, avoidLines
   const dir=FACING_DIRS[facing];
   const STEP=mToW(0.02), TOL=mToW(0.01);
   let exitLen=mToW(0.2);
-  const MAX_TRIES=80; // 20cm + 80*2cm = up to 180cm — generous safety cap
   // Never let the exit run overshoot past the target's own coordinate on
   // the facing axis — beyond that point the final leg would have to double
   // back on itself, which reads as a broken zigzag rather than a clean
@@ -3181,6 +3267,14 @@ function buildFacingAwareConnectorAdaptive(markerPt, facing, otherPt, avoidLines
     const aheadDist = dir.dy>0 ? (otherPt.wy-markerPt.wy) : (markerPt.wy-otherPt.wy);
     if(aheadDist>0) maxExitLen=aheadDist;
   }
+  // Must be enough steps to actually REACH maxExitLen when it's finite —
+  // a flat "80 tries" silently assumed no conflict ever needs more than
+  // ~160cm of extra run to clear, which breaks down once two ports sit
+  // close together on a box that's far from the marker (the one shape that
+  // clears it — turning right at the target's own x/y — is farther out
+  // than that and never gets tried). Unbounded case keeps a fixed cap just
+  // to stop eventually.
+  const MAX_TRIES = maxExitLen===Infinity ? 80 : Math.max(1, Math.ceil((maxExitLen-exitLen)/STEP)+2);
   let path;
   for(let t=0;t<MAX_TRIES;t++){
     const clampedExit=Math.min(exitLen, maxExitLen);
@@ -3942,7 +4036,12 @@ function tryPortSwapForCrossing(mk, cLines, facingCandidates, px, py, before, ba
     const dir=portSideDir(conn.side);
     const stubEnd={wx:port.wx+dir.dx*conn.stubLen, wy:port.wy+dir.dy*conn.stubLen};
     const target={wx:otherMk.wx, wy:otherMk.wy};
-    const avoidLines=cLines.filter(c=>c.line!==cand.line && c.line.pts).map(c=>c.line.pts);
+    const siblingStubs=cLines.filter(c=>c.line!==cand.line).map(c=>{
+      const p=getMarkerPorts(mk).find(pp=>pp.side===c.conn.side&&pp.idx===(c.conn.portIdx??0));
+      const pt=c.atEnd?(c.line.pts&&c.line.pts.length?c.line.pts[c.line.pts.length-1]:null):(c.line.pts?c.line.pts[0]:null);
+      return (p&&pt)?[{wx:p.wx,wy:p.wy},{wx:pt.wx,wy:pt.wy}]:null;
+    }).filter(Boolean);
+    const avoidLines=[...cLines.filter(c=>c.line!==cand.line && c.line.pts).map(c=>c.line.pts), ...siblingStubs];
     const rebuilt=otherMk.facing
       ? buildFacingAwareConnectorAdaptive(target, otherMk.facing, stubEnd, avoidLines)
       : buildWaypointPath([target, stubEnd]);
@@ -3962,6 +4061,10 @@ function tryPortSwapForCrossing(mk, cLines, facingCandidates, px, py, before, ba
     for(let a=0;a<pa.length-1;a++)for(let b=0;b<pb.length-1;b++){
       if(segsIntersect(pa[a].wx,pa[a].wy,pa[a+1].wx,pa[a+1].wy,pb[b].wx,pb[b].wy,pb[b+1].wx,pb[b+1].wy)) n++;
     }
+    const sa=lineStubSegments(A.line), sb=lineStubSegments(B.line);
+    sa.forEach(s=>{ for(let b=0;b<pb.length-1;b++){ if(segsIntersect(s.a.wx,s.a.wy,s.b.wx,s.b.wy,pb[b].wx,pb[b].wy,pb[b+1].wx,pb[b+1].wy)) n++; } });
+    sb.forEach(s=>{ for(let a=0;a<pa.length-1;a++){ if(segsIntersect(pa[a].wx,pa[a].wy,pa[a+1].wx,pa[a+1].wy,s.a.wx,s.a.wy,s.b.wx,s.b.wy)) n++; } });
+    sa.forEach(s1=>sb.forEach(s2=>{ if(segsIntersect(s1.a.wx,s1.a.wy,s1.b.wx,s1.b.wy,s2.a.wx,s2.a.wy,s2.b.wx,s2.b.wy)) n++; }));
     return n;
   }
 
@@ -4017,6 +4120,17 @@ function rebuildLinesAdaptively(mk, cLines){
   });
   if(!facingCandidates.length) return;
 
+  // Every one of THIS box's own connections has a stub on this box's side,
+  // whether or not it's a facing candidate itself (an anchor's stub, or a
+  // non-facing point's stub, is just as real an obstacle as another line's
+  // full path). One box-side lookup, shared by every candidate below.
+  const boxPorts=getMarkerPorts(mk);
+  function stubSegFor(c){
+    const p=boxPorts.find(pp=>pp.side===c.conn.side && pp.idx===(c.conn.portIdx??0));
+    const pt=c.atEnd?(c.line.pts&&c.line.pts.length?c.line.pts[c.line.pts.length-1]:null):(c.line.pts?c.line.pts[0]:null);
+    return (p&&pt)?[{wx:p.wx,wy:p.wy},{wx:pt.wx,wy:pt.wy}]:null;
+  }
+
   function buildOneAvoiding(cand, avoidLines){
     const {line, atEnd}=cand;
     const conn=atEnd?line.connEnd:line.connStart;
@@ -4038,7 +4152,10 @@ function rebuildLinesAdaptively(mk, cLines){
   // enough on its own for the common case.
   for(let i=0;i<facingCandidates.length;i++){
     const cand=facingCandidates[i];
-    const avoidLines=facingCandidates.slice(0,i).map(c=>c.line.pts);
+    const avoidLines=[
+      ...facingCandidates.slice(0,i).map(c=>c.line.pts),
+      ...cLines.filter(c=>c.line!==cand.line).map(stubSegFor).filter(Boolean),
+    ];
     const pts=buildOneAvoiding(cand, avoidLines);
     if(pts){ cand.line.pts=pts; orthogonalizeLine(cand.line); routeAroundMarkers(cand.line); }
   }
@@ -4052,7 +4169,10 @@ function rebuildLinesAdaptively(mk, cLines){
     let changed=false;
     for(const cand of facingCandidates){
       const before=JSON.stringify(cand.line.pts);
-      const avoidLines=facingCandidates.filter(c=>c!==cand).map(c=>c.line.pts);
+      const avoidLines=[
+        ...facingCandidates.filter(c=>c!==cand).map(c=>c.line.pts),
+        ...cLines.filter(c=>c.line!==cand.line).map(stubSegFor).filter(Boolean),
+      ];
       const pts=buildOneAvoiding(cand, avoidLines);
       if(pts){
         cand.line.pts=pts; orthogonalizeLine(cand.line); routeAroundMarkers(cand.line);
@@ -4074,10 +4194,15 @@ function resolveCrossingsWithAlternateShapes(mk, cLines, baselineLengths){
 
   function countPairCrossings(x,y){
     let n=0;
-    const A=facingCandidates[x].line.pts, B=facingCandidates[y].line.pts;
+    const lineA=facingCandidates[x].line, lineB=facingCandidates[y].line;
+    const A=lineA.pts, B=lineB.pts;
     for(let a=0;a<A.length-1;a++)for(let b=0;b<B.length-1;b++){
       if(segsIntersect(A[a].wx,A[a].wy,A[a+1].wx,A[a+1].wy,B[b].wx,B[b].wy,B[b+1].wx,B[b+1].wy)) n++;
     }
+    const sa=lineStubSegments(lineA), sb=lineStubSegments(lineB);
+    sa.forEach(s=>{ for(let b=0;b<B.length-1;b++){ if(segsIntersect(s.a.wx,s.a.wy,s.b.wx,s.b.wy,B[b].wx,B[b].wy,B[b+1].wx,B[b+1].wy)) n++; } });
+    sb.forEach(s=>{ for(let a=0;a<A.length-1;a++){ if(segsIntersect(A[a].wx,A[a].wy,A[a+1].wx,A[a+1].wy,s.a.wx,s.a.wy,s.b.wx,s.b.wy)) n++; } });
+    sa.forEach(s1=>sb.forEach(s2=>{ if(segsIntersect(s1.a.wx,s1.a.wy,s1.b.wx,s1.b.wy,s2.a.wx,s2.a.wy,s2.b.wx,s2.b.wy)) n++; }));
     return n;
   }
   function findCrossingPair(){
@@ -4398,20 +4523,41 @@ function updateLinesForMarker(mk){
   function freshPathForPort(line, atEnd, port){
     const otherConn = atEnd? line.connStart : line.connEnd;
     const otherMk = otherConn?.markerId ? markers.find(m=>m.id===otherConn.markerId) : null;
-    const otherMt = otherMk ? markerTypes.find(t=>t.id===otherMk.mtypeId) : null;
-    if(!otherMk || otherMt?.kind!=='point') return null;
+    if(!otherMk) return null;
+    const otherMt = markerTypes.find(t=>t.id===otherMk.mtypeId);
     const stubLen=stubLenForIdx(port.idx??0);
     const dir=portSideDir(port.side);
     const stubEnd={wx:port.wx+dir.dx*stubLen, wy:port.wy+dir.dy*stubLen};
     const target={wx:otherMk.wx, wy:otherMk.wy};
-    if(otherMk.facing){
-      const rebuilt=buildFacingAwareConnectorAdaptive(target, otherMk.facing, stubEnd);
-      return atEnd ? rebuilt : rebuilt.slice().reverse();
+    if(otherMt?.kind==='point'){
+      if(otherMk.facing){
+        const rebuilt=buildFacingAwareConnectorAdaptive(target, otherMk.facing, stubEnd);
+        return atEnd ? rebuilt : rebuilt.slice().reverse();
+      }
+      const boxAxis=dir.dy===0?'h':'v';
+      return atEnd
+        ? buildBoxAwareConnector(target, stubEnd, boxAxis, 'b')
+        : buildBoxAwareConnector(stubEnd, target, boxAxis, 'a');
     }
-    const boxAxis=dir.dy===0?'h':'v';
-    return atEnd
-      ? buildBoxAwareConnector(target, stubEnd, boxAxis, 'b')
-      : buildBoxAwareConnector(stubEnd, target, boxAxis, 'a');
+    if(isBoxKind(otherMk)){
+      // Anchor (box-to-box) line — task scope is "avoid crossing lines that
+      // belong to these same two boxes", not the whole project: gather
+      // every OTHER line touching mk or otherMk as the obstacles to route
+      // around (their full paths AND their own box stubs — physically a
+      // stub is just as much a piece of wire as the rest of the line),
+      // same escalating-exit mechanism the facing case already uses.
+      const siblingLines=lines.filter(l=>l!==line && (
+        l.connStart?.markerId===mk.id || l.connEnd?.markerId===mk.id ||
+        l.connStart?.markerId===otherMk.id || l.connEnd?.markerId===otherMk.id
+      ));
+      const avoidLines=[
+        ...siblingLines.map(l=>l.pts).filter(Boolean),
+        ...siblingLines.flatMap(l=>lineStubSegments(l).map(s=>[s.a,s.b])),
+      ];
+      const rebuilt=buildBoxAwareConnectorAdaptive(stubEnd, target, dir, avoidLines);
+      return atEnd ? rebuilt.slice().reverse() : rebuilt;
+    }
+    return null;
   }
 
   const savedConnAll=cLines.map(({conn})=>({side:conn.side, portIdx:conn.portIdx}));
@@ -4429,8 +4575,16 @@ function updateLinesForMarker(mk){
   }
 
   // Count total crossings of ALL lines (not just the ones being tested)
+  // Count total crossings of ALL lines (not just the ones being tested) —
+  // including each line's own box stub, reconstructed once per line here
+  // (not per pair) to keep the cost proportional to lines.length rather
+  // than lines.length². Physically a stub is just as much a piece of wire
+  // as the rest of the line — treating it as invisible to crossing counts
+  // meant the port search itself could pick a "free" port that actually
+  // ran another line's stub straight through it.
   function totalCrossings(){
     let n=0;
+    const stubCache=lines.map(l=>lineStubSegments(l));
     for(let i=0;i<lines.length;i++){
       for(let j=i+1;j<lines.length;j++){
         const A=lines[i], B=lines[j];
@@ -4441,6 +4595,22 @@ function updateLinesForMarker(mk){
                              B.pts[b].wx,B.pts[b].wy,B.pts[b+1].wx,B.pts[b+1].wy)) n++;
           }
         }
+        const AS=stubCache[i], BS=stubCache[j];
+        AS.forEach(sa=>{
+          for(let b=0;b<B.pts.length-1;b++){
+            if(segsIntersect(sa.a.wx,sa.a.wy,sa.b.wx,sa.b.wy,
+                             B.pts[b].wx,B.pts[b].wy,B.pts[b+1].wx,B.pts[b+1].wy)) n++;
+          }
+        });
+        BS.forEach(sb=>{
+          for(let a=0;a<A.pts.length-1;a++){
+            if(segsIntersect(A.pts[a].wx,A.pts[a].wy,A.pts[a+1].wx,A.pts[a+1].wy,
+                             sb.a.wx,sb.a.wy,sb.b.wx,sb.b.wy)) n++;
+          }
+        });
+        AS.forEach(sa=>BS.forEach(sb=>{
+          if(segsIntersect(sa.a.wx,sa.a.wy,sa.b.wx,sa.b.wy,sb.a.wx,sb.a.wy,sb.b.wx,sb.b.wy)) n++;
+        }));
       }
     }
     return n;
@@ -4453,13 +4623,18 @@ function updateLinesForMarker(mk){
   // For each line going to a facing marker, penalise using a box side that
   // isn't the best fit. The same-direction side (matching the marker's own
   // facing) is always penalised hardest — connecting there means an
-  // immediate loop-back regardless of layout. Among the other three sides,
-  // rank by the marker's ACTUAL position (not just its facing direction —
-  // a marker can sit anywhere relative to the box no matter which way it
-  // faces), same ranking choosePortTowardPoint uses; only the top-ranked
-  // one is penalty-free. Kept modest relative to length/crossings so it
-  // acts as a tiebreaker, not something that overrides genuine crossing
-  // avoidance.
+  // immediate loop-back regardless of layout. For the other three sides,
+  // penalty scales continuously with how well that side's own outward
+  // direction actually points toward the marker (same dot-product idea
+  // bestPortForLine already uses elsewhere) — not just a binary "is this
+  // THE primary side" check. A binary check gave the two non-primary sides
+  // an IDENTICAL penalty regardless of one of them pointing roughly toward
+  // the marker and the other pointing almost exactly away from it — so once
+  // a box was full enough that the true primary side wasn't available, nothing
+  // stopped the search from picking the side that faces dead away over the
+  // one that's merely not-quite-optimal, producing a visible 180° turn right
+  // at the box exit. Kept modest relative to length/crossings so it acts as
+  // a tiebreaker, not something that overrides genuine crossing avoidance.
   const sameAsFacing={left:'left',right:'right',up:'top',down:'bottom'};
   function facingPreferencePenalty(){
     let penalty=0;
@@ -4472,9 +4647,10 @@ function updateLinesForMarker(mk){
       const lastResort=sameAsFacing[otherMk.facing];
       if(conn.side===lastResort){ penalty+=mToW(3); return; }
       const dx=otherMk.wx-mk.wx, dy=otherMk.wy-mk.wy;
-      const primaryHorizontal=Math.abs(dx)>=Math.abs(dy);
-      const primarySide=primaryHorizontal?(dx>=0?'right':'left'):(dy>=0?'bottom':'top');
-      if(conn.side!==primarySide) penalty+=mToW(1); // still a valid, just not top-ranked, side
+      const dist=Math.hypot(dx,dy)||1;
+      const dir=portSideDir(conn.side);
+      const align=(dir.dx*dx+dir.dy*dy)/dist; // +1 side points straight at the marker, -1 points straight away
+      penalty += mToW(1.25)*(1-align); // 0 when perfectly aligned, up to mToW(2.5) when facing dead away
     });
     return penalty;
   }
@@ -4628,7 +4804,17 @@ function updateLinesForMarker(mk){
   }
 
   const nonAnchorCount=cLines.length-anchorCount;
-  const canExhaustRest=nonAnchorCount<=6 && activePorts.length<=8;
+  // A non-anchor line can never outnumber the ports actually left for it
+  // (nonAnchorCount <= activePorts.length-anchorCount, always — you can't
+  // attach more lines than there are physical ports). So the real
+  // worst case here is bounded by activePorts.length alone: P(8,8)=40320
+  // at most, same order we already accept elsewhere. A separate
+  // "nonAnchorCount<=6" cap was only ever needed back when there was no
+  // anchor decomposition and the full line count could hit the port count
+  // directly — keeping it after anchors existed just forced boxes with
+  // one anchor + 7 point lines into the lower-quality greedy fallback for
+  // no remaining reason.
+  const canExhaustRest=activePorts.length<=8;
 
   anchorCombos.forEach(comboPis=>{
     resetAllToBaseline();

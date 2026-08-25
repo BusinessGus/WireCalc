@@ -273,8 +273,8 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     <button class="tb-btn success" id="btn-tour" style="font-weight:600" data-i18n-title="tt_tour" title="Пошаговое обучение">
       <i class="ti ti-school"></i> <span data-i18n="tour">Обучение</span>
     </button>
-    <button class="tb-btn" id="whatsnew-btn" style="position:relative" data-i18n-title="tt_whatsnew" title="Что нового">
-      <span data-i18n="whatsnew_btn">Что нового</span>
+    <button class="tb-btn" id="whatsnew-btn" style="position:relative" data-i18n-title="tt_whatsnew" title="Последние обновления">
+      <span data-i18n="whatsnew_btn">Последние обновления</span>
       <span id="whatsnew-dot" style="display:none;position:absolute;top:2px;right:2px;width:7px;height:7px;border-radius:50%;background:#ff5050;border:1px solid #1a1a1a"></span>
     </button>
     <button class="tb-btn" id="help-btn"><i class="ti ti-help-circle"></i></button>
@@ -785,9 +785,32 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 <div id="whatsnew-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;align-items:center;justify-content:center;overflow:auto;padding:20px">
   <div style="background:#1e1e1e;border:1px solid #444;border-radius:12px;max-width:640px;width:100%;max-height:90vh;overflow-y:auto;padding:28px 30px;position:relative">
     <button id="whatsnew-close" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#666;font-size:22px;cursor:pointer;line-height:1">✕</button>
-    <h2 data-i18n="whatsnew_h2" style="font-size:18px;font-weight:700;margin-bottom:20px;color:#e8e8e8">Что нового</h2>
+    <h2 data-i18n="whatsnew_h2" style="font-size:18px;font-weight:700;margin-bottom:20px;color:#e8e8e8">Последние обновления</h2>
 
-    <div class="whatsnew-date" data-i18n="wn_r3_date" style="font-size:12px;font-weight:700;color:#7dc4ff;margin-bottom:10px;text-transform:uppercase;letter-spacing:.03em">22 августа 2026</div>
+    <div class="whatsnew-date" data-i18n="wn_r4_date" style="font-size:12px;font-weight:700;color:#7dc4ff;margin-bottom:10px;text-transform:uppercase;letter-spacing:.03em">25 августа 2026</div>
+
+    <div class="guide-step">
+      <div class="guide-body" style="margin-left:0">
+        <div class="guide-title" data-i18n="wn_r4_1_title">Умнее расставляет линии по портам коробок</div>
+        <div class="guide-text" data-i18n-html="wn_r4_1_text">Соединения между коробками теперь распознаются отдельно и выбирают сторону по направлению друг к другу, вместо того чтобы конкурировать за порты наравне с розетками и выключателями. Коробки с 7-8 подключениями получают по-настоящему оптимальную раскладку, а не первую случайно найденную.</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-body" style="margin-left:0">
+        <div class="guide-title" data-i18n="wn_r4_2_title">Починены визуально кривые углы линий</div>
+        <div class="guide-text" data-i18n-html="wn_r4_2_text">Линии, проходившие слишком близко друг к другу под прямым углом (ближе 3 см), могли выглядеть так, будто одна вырастает из середины другой. Такие сближения теперь распознаются и обходятся автоматически.</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-body" style="margin-left:0">
+        <div class="guide-title" data-i18n="wn_r4_3_title">Автоисправление выключено по умолчанию</div>
+        <div class="guide-text" data-i18n-html="wn_r4_3_text">Раньше любое перетаскивание значка тихо перестраивало все линии и коробки в проекте, и правка в одном углу схемы могла неожиданно изменить что-то в другом. Теперь эта фоновая перестройка по умолчанию выключена — включить её можно вручную. На кнопку «Оптимизировать порты» это не влияет, она работает как раньше.</div>
+      </div>
+    </div>
+
+    <div class="whatsnew-date" data-i18n="wn_r3_date" style="font-size:12px;font-weight:700;color:#7dc4ff;margin:22px 0 10px;text-transform:uppercase;letter-spacing:.03em;border-top:1px solid #333;padding-top:18px">22 августа 2026</div>
 
     <div class="guide-step">
       <div class="guide-body" style="margin-left:0">
@@ -1007,7 +1030,12 @@ let markerSnapRadius = 10; // px tolerance for marker H/V alignment snap (0 = of
 // ports, stub depths, box-avoidance and coaxial alignment for anything it
 // touches. Turn off while fine-tuning an already-built drawing by hand — the
 // explicit "Оптимизировать..."/"Собрать в пучки" buttons still work either way.
-let autoFixupEnabled = true;
+let autoFixupEnabled = false; // default off — see chat: the global cleanup pass this
+// gates (every line + every box re-touched on any marker drag, and on file
+// load) was the likely source of edits in one corner of the map visibly
+// shifting things somewhere unrelated. The "Оптимизировать порты" button is
+// unaffected by this — it always runs updateLinesForMarker for its one
+// target marker regardless of this flag.
 
 // ═══════════════════════════════════════════════════════
 // SITE MODE — base (simple point markers + manual lines) vs PRO (multi-port
@@ -1145,8 +1173,8 @@ const translations = {
     welcome_text2:'Кнопка «Обучение» всегда доступна в верхней панели.',
     welcome_later:'Потом', welcome_start:'Пройти обучение',
     guide_h2:'Как пользоваться калькулятором проводки',
-    tt_whatsnew:'Что нового', whatsnew_btn:'Что нового',
-    whatsnew_h2:'Что нового',
+    tt_whatsnew:'Последние обновления', whatsnew_btn:'Последние обновления',
+    whatsnew_h2:'Последние обновления',
     wn_1_title:'Направление у розеток и выключателей',
     wn_1_text:'При простановке значка теперь можно протянуть курсор — так задаётся, с какой стороны кабель подходит к прибору. Поправить направление у уже стоящего значка — ПКМ прямо по нему и протяжка. Линии, ведущие к коробке, теперь честно выходят от значка в заданную сторону.',
     wn_2_title:'«Оптимизировать порты» — теперь по-настоящему убирает пересечения',
@@ -1158,6 +1186,13 @@ const translations = {
     wn_5_title:'Курсор больше не «убегает»',
     wn_5_text:'Исправлено расхождение между тем, где реально происходит клик, и тем, где показывалось перекрестие — особенно заметно было при смене режима (линия/значок/выбор).',
     wn_footer_prompt:'Нашли баг или есть предложение?', wn_footer_link:'Написать разработчику',
+    wn_r4_date:'25 августа 2026',
+    wn_r4_1_title:'Умнее расставляет линии по портам коробок',
+    wn_r4_1_text:'Соединения между коробками теперь распознаются отдельно и выбирают сторону по направлению друг к другу, вместо того чтобы конкурировать за порты наравне с розетками и выключателями. Коробки с 7-8 подключениями получают по-настоящему оптимальную раскладку, а не первую случайно найденную.',
+    wn_r4_2_title:'Починены визуально кривые углы линий',
+    wn_r4_2_text:'Линии, проходившие слишком близко друг к другу под прямым углом (ближе 3 см), могли выглядеть так, будто одна вырастает из середины другой. Такие сближения теперь распознаются и обходятся автоматически.',
+    wn_r4_3_title:'Автоисправление выключено по умолчанию',
+    wn_r4_3_text:'Раньше любое перетаскивание значка тихо перестраивало все линии и коробки в проекте, и правка в одном углу схемы могла неожиданно изменить что-то в другом. Теперь эта фоновая перестройка по умолчанию выключена — включить её можно вручную. На кнопку «Оптимизировать порты» это не влияет, она работает как раньше.',
     wn_r3_date:'22 августа 2026', wn_r3_1_title:'Режимы переименованы: «В штробах» и «По потолку»',
     wn_r3_1_text:'Вместо «Базовый» и «PRO» теперь понятные по смыслу названия: «В штробах» — для скрытой проводки, где расположение портов и пересечения линий не важны (всё спрятано в стене), и «По потолку» — для открытой проводки, где это уже имеет значение. Функционал в обоих режимах остался тем же, изменились только названия.',
     wn_r2_date:'18 августа 2026', wn_r1_date:'17 августа 2026',
@@ -1477,8 +1512,8 @@ const translations = {
     welcome_text2:'The "Tutorial" button is always available in the top bar.',
     welcome_later:'Later', welcome_start:'Start tutorial',
     guide_h2:'How to use the wiring calculator',
-    tt_whatsnew:"What's new", whatsnew_btn:"What's new",
-    whatsnew_h2:"What's new",
+    tt_whatsnew:'Recent updates', whatsnew_btn:'Recent updates',
+    whatsnew_h2:'Recent updates',
     wn_1_title:'Direction for sockets and switches',
     wn_1_text:'When placing a marker, you can now drag the cursor — this sets which side the cable approaches the device from. To fix the direction on an already-placed marker, right-click directly on it and drag. Lines running to the distribution box now genuinely exit the marker in the set direction.',
     wn_2_title:'"Optimize ports" now actually removes crossings',
@@ -1490,6 +1525,13 @@ const translations = {
     wn_5_title:"The cursor no longer drifts",
     wn_5_text:"Fixed a mismatch between where a click actually registered and where the crosshair was shown — most noticeable when switching modes (line/marker/select).",
     wn_footer_prompt:'Found a bug or have a suggestion?', wn_footer_link:'Message the developer',
+    wn_r4_date:'August 25, 2026',
+    wn_r4_1_title:'Smarter port placement on boxes',
+    wn_r4_1_text:'Box-to-box connections are now recognised separately and pick their side based on the direction to the other box, instead of competing for ports on equal footing with sockets and switches. Boxes with 7-8 connections now get a genuinely optimal layout instead of the first one found.',
+    wn_r4_2_title:'Fixed visually crooked line corners',
+    wn_r4_2_text:'Lines that ran too close to each other at a right angle (closer than 3cm) could look like one was sprouting out of the middle of another. These close calls are now detected and routed around automatically.',
+    wn_r4_3_title:'Auto-fixup is now off by default',
+    wn_r4_3_text:'Previously, dragging any marker silently rebuilt every line and box in the project, so an edit in one corner of the drawing could unexpectedly change something elsewhere. That background rebuild is now off by default — you can turn it back on manually. The "Optimise ports" button is unaffected and works as before.',
     wn_r3_date:'August 22, 2026', wn_r3_1_title:'Modes renamed: "In-wall chase" and "Ceiling-run"',
     wn_r3_1_text:'Instead of "Base" and "PRO", the modes now have names that describe what they mean: "In-wall chase" for concealed wiring, where port layout and line crossings don\u2019t matter (it\u2019s all hidden inside the wall), and "Ceiling-run" for exposed wiring, where that does matter. The features in both modes stayed the same — only the names changed.',
     wn_r2_date:'August 18, 2026', wn_r1_date:'August 17, 2026',
@@ -1809,8 +1851,8 @@ const translations = {
     welcome_text2:'El botón «Tutorial» siempre está disponible en la barra superior.',
     welcome_later:'Más tarde', welcome_start:'Empezar tutorial',
     guide_h2:'Cómo usar la calculadora de cableado',
-    tt_whatsnew:'Novedades', whatsnew_btn:'Novedades',
-    whatsnew_h2:'Novedades',
+    tt_whatsnew:'Actualizaciones recientes', whatsnew_btn:'Actualizaciones recientes',
+    whatsnew_h2:'Actualizaciones recientes',
     wn_1_title:'Dirección para enchufes e interruptores',
     wn_1_text:'Al colocar un elemento, ahora puede arrastrar el cursor — esto define de qué lado llega el cable al dispositivo. Para corregir la dirección de un elemento ya colocado, clic derecho directamente sobre él y arrastre. Las líneas hacia la caja de distribución ahora salen del elemento exactamente en la dirección indicada.',
     wn_2_title:'«Optimizar puertos» ahora sí elimina los cruces',
@@ -1822,6 +1864,13 @@ const translations = {
     wn_5_title:'El cursor ya no se desvía',
     wn_5_text:'Se corrigió un desajuste entre el lugar donde realmente ocurría el clic y donde se mostraba la cruceta — era especialmente notorio al cambiar de modo (línea/elemento/selección).',
     wn_footer_prompt:'¿Encontró un error o tiene una sugerencia?', wn_footer_link:'Escribir al desarrollador',
+    wn_r4_date:'25 de agosto de 2026',
+    wn_r4_1_title:'Distribución de puertos en cajas más inteligente',
+    wn_r4_1_text:'Las conexiones entre cajas ahora se reconocen por separado y eligen el lado según la dirección hacia la otra caja, en lugar de competir por los puertos en igualdad con tomas e interruptores. Las cajas con 7-8 conexiones ahora obtienen una distribución realmente óptima, no la primera que se encuentra.',
+    wn_r4_2_title:'Corregidas esquinas de línea visualmente torcidas',
+    wn_r4_2_text:'Las líneas que pasaban demasiado cerca en ángulo recto (a menos de 3 cm) podían parecer que una brotaba del medio de otra. Estos acercamientos ahora se detectan y se evitan automáticamente.',
+    wn_r4_3_title:'Autocorrección desactivada por defecto',
+    wn_r4_3_text:'Antes, arrastrar cualquier marcador reconstruía en silencio todas las líneas y cajas del proyecto, así que un ajuste en una esquina del plano podía cambiar algo inesperadamente en otra. Esa reconstrucción en segundo plano ahora está desactivada por defecto — se puede activar manualmente. El botón «Optimizar puertos» no se ve afectado y funciona como antes.',
     wn_r3_date:'22 de agosto de 2026', wn_r3_1_title:'Modos renombrados: «En roza de pared» y «Por el techo»',
     wn_r3_1_text:'En vez de «Básico» y «PRO», ahora los modos tienen nombres que describen su significado: «En roza de pared» para cableado oculto, donde la disposición de los puertos y los cruces de líneas no importan (todo queda escondido en la pared), y «Por el techo» para cableado visto, donde eso sí importa. Las funciones de ambos modos siguen siendo las mismas — solo cambiaron los nombres.',
     wn_r2_date:'18 de agosto de 2026', wn_r1_date:'17 de agosto de 2026',
@@ -2141,8 +2190,8 @@ const translations = {
     welcome_text2:'«Оқыту» түймесі әрқашан жоғарғы панельде қолжетімді.',
     welcome_later:'Кейінірек', welcome_start:'Оқытудан өту',
     guide_h2:'Сым калькуляторын қалай пайдалану керек',
-    tt_whatsnew:'Не жаңалық бар', whatsnew_btn:'Не жаңалық бар',
-    whatsnew_h2:'Не жаңалық бар',
+    tt_whatsnew:'Соңғы жаңартулар', whatsnew_btn:'Соңғы жаңартулар',
+    whatsnew_h2:'Соңғы жаңартулар',
     wn_1_title:'Розетка мен ажыратқыш үшін бағыт',
     wn_1_text:'Белгішені қою кезінде енді курсорды тартуға болады — осылай кабель құрылғыға қай жақтан келетінін белгілейсіз. Тұрған белгішенің бағытын түзету — тінтуірдің оң жақ түймесімен дәл белгішеге басып тарту. Қораптарға баратын сызықтар енді белгіден нақ берілген бағытта шығады.',
     wn_2_title:'«Порттарды оңтайландыру» енді қиылысуларды нақты жояды',
@@ -2154,6 +2203,13 @@ const translations = {
     wn_5_title:'Курсор енді «қашпайды»',
     wn_5_text:'Шертудің нақты орны мен айқас белгінің көрсетілетін орны арасындағы алшақтық түзетілді — режимді ауыстырғанда (сызық/белгіше/таңдау) әсіресе байқалатын.',
     wn_footer_prompt:'Қате таптыңыз ба немесе ұсынысыңыз бар ма?', wn_footer_link:'Әзірлеушіге жазу',
+    wn_r4_date:'2026 жылғы 25 тамыз',
+    wn_r4_1_title:'Сызықтарды қораптардың порттарына бөлу ақылдырақ болды',
+    wn_r4_1_text:'Қораптар арасындағы қосылымдар енді бөлек танылады және розеткалар мен ажыратқыштармен порт үшін бәсекелеспей, екінші қорапқа қарай бағыт бойынша жағын таңдайды. 7-8 қосылымы бар қораптар енді кездейсоқ емес, шынымен оңтайлы орналасу алады.',
+    wn_r4_2_title:'Сызық бұрыштарының көзге қисық көрінуі түзетілді',
+    wn_r4_2_text:'Бір-біріне тік бұрышпен тым жақын өтетін сызықтар (3 см-ден жақын) бірінің екіншісінің ортасынан шыққанындай көрінетін. Мұндай жақындықтар енді танылып, автоматты түрде айналып өтіледі.',
+    wn_r4_3_title:'Автотүзету әдепкі бойынша өшірулі',
+    wn_r4_3_text:'Бұрын кез келген белгішені жылжыту жобадағы барлық сызықтар мен қораптарды үнсіз қайта құратын. Сондықтан сызбаның бір бұрышындағы түзету екінші жерде күтпеген өзгеріс тудыруы мүмкін еді. Енді бұл фондық қайта құру әдепкі бойынша өшірулі — оны қолмен қосуға болады. «Порттарды оңтайландыру» түймесіне бұл әсер етпейді, ол бұрынғыдай жұмыс істейді.',
     wn_r3_date:'2026 жылғы 22 тамыз', wn_r3_1_title:'Режимдер қайта аталды: «Штроба ішінде» және «Төбе бойымен»',
     wn_r3_1_text:'«Негізгі» және «PRO» орнына енді режимдердің мағынасын түсіндіретін атаулары бар: «Штроба ішінде» — жасырын сым тарту үшін, мұнда порттардың орналасуы мен сызықтардың қиылысуы маңызды емес (бәрі қабырға ішінде жасырын), және «Төбе бойымен» — сыртқы сым тарту үшін, мұнда бұл маңызды. Екі режимдегі функциялар бірдей қалды — тек атаулары өзгерді.',
     wn_r2_date:'2026 жылғы 18 тамыз', wn_r1_date:'2026 жылғы 17 тамыз',
@@ -3041,12 +3097,30 @@ function buildFacingAwareConnectorAlt(markerPt, facing, otherPt){
   return [{wx:markerPt.wx,wy:markerPt.wy}, {wx:anchor.wx,wy:anchor.wy}, bend, {wx:otherPt.wx,wy:otherPt.wy}];
 }
 
+// Minimum distance from point (px,py) to segment (ax,ay)-(bx,by).
+function pointToSegDist(px,py, ax,ay,bx,by){
+  const dx=bx-ax, dy=by-ay;
+  const lenSq=dx*dx+dy*dy;
+  let t = lenSq>0 ? ((px-ax)*dx+(py-ay)*dy)/lenSq : 0;
+  t = Math.max(0, Math.min(1, t));
+  const cx=ax+t*dx, cy=ay+t*dy;
+  return Math.hypot(px-cx, py-cy);
+}
+
 // Does segment a->b "накладывается" (overlap) any segment of any line in
-// avoidLines — either a genuine crossing (perpendicular intersection), or
+// avoidLines — either a genuine crossing (perpendicular intersection),
 // running coaxially with an overlapping range within tolerance (parallel,
-// same track, which reads just as badly on the drawing)?
+// same track, which reads just as badly on the drawing), or — for a
+// PERPENDICULAR pair that doesn't literally cross — passing within a line's
+// own visual footprint of it (< PERP_CLEARANCE, ~3cm = 2cm stroke + 1cm
+// gap). That last case is what a plain segsIntersect() check misses: e.g.
+// a horizontal run's endpoint landing 2cm short of a vertical sibling —
+// mathematically two disjoint segments, but the strokes visually merge,
+// reading as a corner sprouting out of the middle of another line instead
+// of a clean, separated joint.
 function segmentOverlapsAnyLine(a, b, avoidLines, tolerance){
   const abIsH=Math.abs(a.wy-b.wy)<Math.abs(a.wx-b.wx);
+  const PERP_CLEARANCE=mToW(0.03);
   for(const pts of avoidLines){
     for(let i=0;i<pts.length-1;i++){
       const c=pts[i], d=pts[i+1];
@@ -3056,11 +3130,22 @@ function segmentOverlapsAnyLine(a, b, avoidLines, tolerance){
         const abLo=Math.min(a.wx,b.wx), abHi=Math.max(a.wx,b.wx);
         const cdLo=Math.min(c.wx,d.wx), cdHi=Math.max(c.wx,d.wx);
         if(abLo<cdHi-tolerance && cdLo<abHi-tolerance) return true;
+        continue;
       }
       if(!abIsH && !cdIsH && Math.abs(a.wx-c.wx)<tolerance){
         const abLo=Math.min(a.wy,b.wy), abHi=Math.max(a.wy,b.wy);
         const cdLo=Math.min(c.wy,d.wy), cdHi=Math.max(c.wy,d.wy);
         if(abLo<cdHi-tolerance && cdLo<abHi-tolerance) return true;
+        continue;
+      }
+      if(abIsH!==cdIsH){
+        const dist=Math.min(
+          pointToSegDist(a.wx,a.wy,c.wx,c.wy,d.wx,d.wy),
+          pointToSegDist(b.wx,b.wy,c.wx,c.wy,d.wx,d.wy),
+          pointToSegDist(c.wx,c.wy,a.wx,a.wy,b.wx,b.wy),
+          pointToSegDist(d.wx,d.wy,a.wx,a.wy,b.wx,b.wy)
+        );
+        if(dist<PERP_CLEARANCE) return true;
       }
     }
   }
@@ -4221,6 +4306,46 @@ function resolveBoxStubDepths(mk){
   });
 }
 
+// Candidate ports on `mk` for a line that runs to ANOTHER box/bus (`otherMk`),
+// narrowed down from the geometry between the two, instead of every port
+// being a free-for-all candidate in the main search. Box-to-box connections
+// are the trunk of the topology — which side is "toward" the other box is
+// almost never ambiguous, so there's no need to burn search budget on sides
+// that are obviously wrong (e.g. the side facing away from the other box).
+//
+// Rule: take every port on the side matching the DOMINANT axis (primary),
+// plus the single port on the OTHER side (secondary) that sits nearest the
+// corner shared with the primary side. This one rule covers both the
+// perfectly-aligned case (dx≈0 or dy≈0 — the secondary-side pick then just
+// never wins against the primary side's ports, so it behaves exactly like
+// "2 candidates" without a special-cased branch) and the diagonal case
+// (secondary pick is the corner port actually closest to the other box).
+// It's a candidate NARROWING, not a hard pick — totalCost() still decides
+// among them, same as any other port in the main search.
+function boxAnchorCandidatePorts(mk, otherMk, activePorts){
+  const mt=markerTypes.find(t=>t.id===mk.mtypeId);
+  const pps=mt?.portsPerSide||2;
+  const dx=otherMk.wx-mk.wx, dy=otherMk.wy-mk.wy;
+  const vertical=Math.abs(dy)>=Math.abs(dx);
+  const primarySide  =vertical?(dy>=0?'bottom':'top'):(dx>=0?'right':'left');
+  const secondarySide=vertical?(dx>=0?'right':'left'):(dy>=0?'bottom':'top');
+  // idx ordering (see getMarkerPorts): top/bottom grow west→east, left/right grow north→south.
+  let cornerIdx;
+  if(secondarySide==='left'||secondarySide==='right'){
+    cornerIdx = primarySide==='top' ? 0 : pps-1; // north-most or south-most on the secondary side
+  } else {
+    cornerIdx = primarySide==='left' ? 0 : pps-1; // west-most or east-most on the secondary side
+  }
+  const wanted=new Set();
+  for(let i=0;i<pps;i++) wanted.add(primarySide+'_'+i);
+  wanted.add(secondarySide+'_'+cornerIdx);
+  const candidates=activePorts.filter(p=>wanted.has(p.side+'_'+(p.idx??0)));
+  // Fallback: mk might not actually have the primary/secondary side active
+  // (e.g. a bus marker whose orientation only exposes two of the four
+  // sides) — don't strand the anchor with zero candidates.
+  return candidates.length ? candidates : activePorts;
+}
+
 function updateLinesForMarker(mk){
   const ports=getMarkerPorts(mk);
   if(!ports.length) return;
@@ -4234,6 +4359,24 @@ function updateLinesForMarker(mk){
   });
   if(!connectedLines.length) return;
 
+  // Box-to-box connections ("anchors") go first in cLines — their port
+  // candidates are geometrically narrowed (see boxAnchorCandidatePorts)
+  // instead of being thrown into the same free-for-all search as lines to
+  // sockets/switches. This is what keeps the search tractable even on
+  // boxes with many connections, WITHOUT needing to touch the exhaustive-
+  // vs-greedy threshold below: a box with one box-to-box link and 6 point
+  // connections has exactly the same effective search size as a plain
+  // 6-line box did before, because the anchor is resolved separately.
+  const isAnchorEntry=({line,atEnd})=>{
+    const otherConn=atEnd?line.connStart:line.connEnd;
+    const otherMk=otherConn?.markerId?markers.find(m=>m.id===otherConn.markerId):null;
+    return !!(otherMk && isBoxKind(otherMk));
+  };
+  const anchorEntries=connectedLines.filter(isAnchorEntry);
+  const pointEntries =connectedLines.filter(e=>!isAnchorEntry(e));
+  const cLines=[...anchorEntries, ...pointEntries];
+  const anchorCount=anchorEntries.length;
+
   // nLines used to be capped at 6 here, which silently excluded any lines
   // beyond the 6th from optimization ENTIRELY — not just from the
   // exhaustive search, but from being touched at all. A box with 7+
@@ -4241,8 +4384,7 @@ function updateLinesForMarker(mk){
   // unconsidered, however suboptimal. The cap now only gates which SEARCH
   // STRATEGY runs (see below) — every connected line is always processed,
   // via the greedy fallback if there are too many for the exhaustive one.
-  const nLines=connectedLines.length;
-  const cLines=connectedLines;
+  const nLines=cLines.length;
 
   // Save original pts for all connected lines
   const savedPtsAll=cLines.map(({line})=>line.pts.map(p=>({...p})));
@@ -4344,12 +4486,53 @@ function updateLinesForMarker(mk){
     return totalLength() + totalCrossings()*crossingPenaltyWorld() + facingPreferencePenalty();
   }
 
-  let bestAssignment=null, bestCost=Infinity;
+  // TIE-BREAK ONLY — never an independent cost term. When two port
+  // assignments cost exactly the same (see COST_EPS below), prefer the one
+  // whose port order along a side matches the connected markers' actual
+  // order (further south/east marker gets the further south/east port).
+  // Because this is only ever consulted when totalCost() is equal, it can
+  // never win against crossing avoidance or length: if swapping two ports
+  // changes crossings or length, that shows up in totalCost() first and
+  // this function is never reached for that comparison.
+  function orderTieBreakPenalty(){
+    const bySide={};
+    cLines.forEach(({line,atEnd,conn})=>{
+      if(!conn.side||conn.side==='center') return;
+      const otherConn=atEnd?line.connStart:line.connEnd;
+      const otherMk=otherConn?.markerId?markers.find(m=>m.id===otherConn.markerId):null;
+      if(!otherMk) return;
+      (bySide[conn.side]=bySide[conn.side]||[]).push({idx:conn.portIdx??0, otherMk});
+    });
+    let penalty=0;
+    Object.entries(bySide).forEach(([side,arr])=>{
+      if(arr.length<2) return;
+      // idx ordering (see getMarkerPorts): left/right grow north(0)→south(max);
+      // top/bottom grow west(0)→east(max).
+      const axisKey=(side==='left'||side==='right')?'wy':'wx';
+      for(let i=0;i<arr.length;i++){
+        for(let j=i+1;j<arr.length;j++){
+          const a=arr[i], b=arr[j];
+          const idxDiff=a.idx-b.idx, posDiff=a.otherMk[axisKey]-b.otherMk[axisKey];
+          if(idxDiff*posDiff<0) penalty++; // higher idx should mean further south/east — inverted here
+        }
+      }
+    });
+    return penalty;
+  }
+
+  const COST_EPS=1e-6; // floating-point tolerance for "same cost"
+  let bestAssignment=null, bestCost=Infinity, bestTie=Infinity;
+  function isBetter(cost, tie){
+    if(cost<bestCost-COST_EPS) return true;
+    if(cost>bestCost+COST_EPS) return false;
+    return tie<bestTie; // true tie in cost — fall back to position-order preference
+  }
 
   function search(lineIdx, usedPorts, assignment){
     if(lineIdx===cLines.length){
       const cost=totalCost();
-      if(cost<bestCost){ bestCost=cost; bestAssignment=[...assignment]; }
+      const tie=orderTieBreakPenalty();
+      if(isBetter(cost,tie)){ bestCost=cost; bestTie=tie; bestAssignment=[...assignment]; }
       return;
     }
     for(let pi=0;pi<activePorts.length;pi++){
@@ -4370,30 +4553,104 @@ function updateLinesForMarker(mk){
     }
   }
 
-  if(nLines<=6 && activePorts.length<=8){
-    // Restore all lines to original before search
-    cLines.forEach(({line},i)=>line.pts=savedPtsAll[i].map(p=>({...p})));
-    search(0, new Set(), []);
+  // Reset every cLines entry (anchors included) back to its saved baseline —
+  // shared by every combo attempt below, so each one starts from the same
+  // known state regardless of what the previous combo left behind.
+  function resetAllToBaseline(){
+    cLines.forEach(({line,conn},i)=>{
+      line.pts=savedPtsAll[i].map(p=>({...p}));
+      conn.side=savedConnAll[i].side;
+      conn.portIdx=savedConnAll[i].portIdx;
+    });
   }
 
-  if(!bestAssignment){
-    // Greedy fallback
-    const claimed=new Set();
-    bestAssignment=cLines.map(({line},li)=>{
-      line.pts=savedPtsAll[li].map(p=>({...p}));
-      let best=0,bestC=Infinity;
+  // Greedy assignment for cLines[from..cLines.length), given a set of port
+  // indices already claimed (by anchors, or by nothing if there are none).
+  // Same one-shot "best free port right now" logic as the original fallback,
+  // just scoped to start after the anchor lines instead of at index 0.
+  function greedyAssignFrom(from, usedPorts){
+    const claimed=new Set(usedPorts);
+    const picks=[];
+    for(let li=from; li<cLines.length; li++){
+      const {line}=cLines[li];
+      let best=-1, bestC=Infinity;
       activePorts.forEach((port,pi)=>{
         if(claimed.has(pi)) return;
         line.pts=savedPtsAll[li].map(p=>({...p}));
         applyCandidatePort(li, port);
         const c=totalCost();
-        if(c<bestC){bestC=c;best=pi;}
+        if(c<bestC){ bestC=c; best=pi; }
+        line.pts=savedPtsAll[li].map(p=>({...p}));
+        cLines[li].conn.side=savedConnAll[li].side;
+        cLines[li].conn.portIdx=savedConnAll[li].portIdx;
       });
       claimed.add(best);
+      picks.push(best);
+      // Apply for real before moving on — later lines' crossing costs need
+      // to see this line's actual chosen path, not its restored baseline.
       line.pts=savedPtsAll[li].map(p=>({...p}));
-      return best;
+      applyCandidatePort(li, activePorts[best]);
+    }
+    return picks;
+  }
+
+  // Build the candidate port list for each anchor line (indices 0..anchorCount-1
+  // in cLines), narrowed by boxAnchorCandidatePorts. Non-anchor boxes (anchorCount
+  // === 0) just produce an empty list here, which cartesianCombos below turns
+  // into a single empty combo — i.e. the exact same code path as before this
+  // change, same threshold, same behaviour, for any box with no box-to-box lines.
+  function anchorCandidatePortIndices(useFullFallback){
+    return anchorEntries.map(({line,atEnd})=>{
+      const otherConn=atEnd?line.connStart:line.connEnd;
+      const otherMk=markers.find(m=>m.id===otherConn.markerId);
+      const cands=useFullFallback ? activePorts : boxAnchorCandidatePorts(mk, otherMk, activePorts);
+      return cands.map(p=>activePorts.indexOf(p));
     });
   }
+
+  function cartesianCombos(lists){
+    return lists.reduce((acc,list)=>{
+      const next=[];
+      acc.forEach(prefix=>{ list.forEach(pi=>next.push([...prefix,pi])); });
+      return next;
+    }, [[]]);
+  }
+  function distinctCombo(combo){ return new Set(combo).size===combo.length; }
+
+  let anchorCombos=cartesianCombos(anchorCandidatePortIndices(false)).filter(distinctCombo);
+  if(anchorCount>0 && !anchorCombos.length){
+    // Every narrowed candidate collided across anchors (rare — e.g. two
+    // sibling boxes both sitting due north). Don't strand the anchors with
+    // no valid combo at all: fall back to the full port set for this box
+    // only, still solved as combos so a genuinely non-colliding assignment
+    // is still found.
+    anchorCombos=cartesianCombos(anchorCandidatePortIndices(true)).filter(distinctCombo);
+  }
+
+  const nonAnchorCount=cLines.length-anchorCount;
+  const canExhaustRest=nonAnchorCount<=6 && activePorts.length<=8;
+
+  anchorCombos.forEach(comboPis=>{
+    resetAllToBaseline();
+    comboPis.forEach((pi,ai)=>applyCandidatePort(ai, activePorts[pi]));
+    const usedPorts=new Set(comboPis);
+    if(canExhaustRest){
+      search(anchorCount, usedPorts, [...comboPis]);
+    } else {
+      const restPicks=greedyAssignFrom(anchorCount, usedPorts);
+      const cost=totalCost();
+      const tie=orderTieBreakPenalty();
+      if(isBetter(cost,tie)){ bestCost=cost; bestTie=tie; bestAssignment=[...comboPis, ...restPicks]; }
+    }
+  });
+
+  if(!bestAssignment){
+    // Absolute last resort (shouldn't normally be reached — anchorCombos is
+    // never empty by construction above): plain greedy over everything.
+    resetAllToBaseline();
+    bestAssignment=greedyAssignFrom(0, new Set());
+  }
+  resetAllToBaseline();
 
   // Apply best assignment for real
   cLines.forEach(({line,conn},li)=>{

@@ -1097,8 +1097,8 @@ const translations = {
     ok_btn:'Ок',
     marker_height_label:'Высота значка', marker_height_hint_own:'Своё значение для этого значка.',
     marker_height_hint_default:'Сейчас используется значение по умолчанию из типа: {v}.',
-    with_verticals_short:'верт.', with_allowance_short:'с учётом расхода',
-    horiz_label:'по горизонтали', vert_label:'по вертикали',
+    with_verticals_short:'верт.', with_allowance_short:'полная длина',
+    horiz_label:'гор.', vert_label:'верт.',
     panel_cable_counts_label:'Линий по маркам кабеля',
     cable_mark_unset:'марка не указана',
     mt_pps:'Портов на сторону', mt_size:'Размер значка (радиус, px)',
@@ -1325,6 +1325,7 @@ const translations = {
     panel_neutral_bus_label:'Нулевые шины', panel_neutral_bus_own:'Штатные (в щитке)', panel_neutral_bus_separate:'Ставим свои',
     panel_mount_label:'Тип щитка', panel_mount_flush:'врезной', panel_mount_surface:'наружной установки',
     panel_circuits_title:'Линии', panel_no_circuits:'Сначала укажите марки кабеля у цветов линий (вкладка «Свойства»).',
+    panel_disconnected_title:'Не подключено к щитку',
     panel_summary_title:'Смета по оборудованию', panel_pcs:'шт',
     panel_item_contactor:'Контактор', panel_item_voltage_relay:'Реле напряжения',
     panel_item_input_breaker:'Автомат вводной', panel_pole_three:'трёхполюсный', panel_pole_one:'однополюсный',
@@ -1436,8 +1437,8 @@ const translations = {
     ok_btn:'OK',
     marker_height_label:'Marker height', marker_height_hint_own:'This marker has its own value.',
     marker_height_hint_default:'Currently using the type default: {v}.',
-    with_verticals_short:'vert.', with_allowance_short:'with allowance',
-    horiz_label:'horizontal', vert_label:'vertical',
+    with_verticals_short:'vert.', with_allowance_short:'total length',
+    horiz_label:'horiz.', vert_label:'vert.',
     panel_cable_counts_label:'Lines by cable mark',
     cable_mark_unset:'mark not set',
     mt_pps:'Ports per side', mt_size:'Marker size (radius, px)',
@@ -1664,6 +1665,7 @@ const translations = {
     panel_neutral_bus_label:'Neutral bars', panel_neutral_bus_own:'Panel\'s own', panel_neutral_bus_separate:'Add separate ones',
     panel_mount_label:'Panel type', panel_mount_flush:'flush-mount', panel_mount_surface:'surface-mount',
     panel_circuits_title:'Circuits', panel_no_circuits:'Set a cable mark for at least one colour first (Properties tab).',
+    panel_disconnected_title:'Not connected to the panel',
     panel_summary_title:'Equipment estimate', panel_pcs:'pcs',
     panel_item_contactor:'Contactor', panel_item_voltage_relay:'Voltage relay',
     panel_item_input_breaker:'Input breaker', panel_pole_three:'3-pole', panel_pole_one:'1-pole',
@@ -1775,8 +1777,8 @@ const translations = {
     ok_btn:'Aceptar',
     marker_height_label:'Altura del elemento', marker_height_hint_own:'Este elemento tiene su propio valor.',
     marker_height_hint_default:'Actualmente se usa el valor por defecto del tipo: {v}.',
-    with_verticals_short:'vert.', with_allowance_short:'con margen',
-    horiz_label:'horizontal', vert_label:'vertical',
+    with_verticals_short:'vert.', with_allowance_short:'longitud total',
+    horiz_label:'horiz.', vert_label:'vert.',
     panel_cable_counts_label:'Líneas por marca de cable',
     cable_mark_unset:'marca no indicada',
     mt_pps:'Puertos por lado', mt_size:'Tamaño del marcador (radio, px)',
@@ -2003,6 +2005,7 @@ const translations = {
     panel_neutral_bus_label:'Peines de neutro', panel_neutral_bus_own:'Los del propio cuadro', panel_neutral_bus_separate:'Instalar aparte',
     panel_mount_label:'Tipo de cuadro', panel_mount_flush:'empotrado', panel_mount_surface:'de superficie',
     panel_circuits_title:'Circuitos', panel_no_circuits:'Primero indique la marca de cable para al menos un color (pestaña «Propiedades»).',
+    panel_disconnected_title:'No conectado al cuadro',
     panel_summary_title:'Presupuesto de material', panel_pcs:'uds',
     panel_item_contactor:'Contactor', panel_item_voltage_relay:'Relé de tensión',
     panel_item_input_breaker:'Interruptor general', panel_pole_three:'tripolar', panel_pole_one:'unipolar',
@@ -2114,8 +2117,8 @@ const translations = {
     ok_btn:'Жарайды',
     marker_height_label:'Белгіше биіктігі', marker_height_hint_own:'Бұл белгіше үшін өз мәні бар.',
     marker_height_hint_default:'Қазір түрдің әдепкі мәні қолданылады: {v}.',
-    with_verticals_short:'тік.', with_allowance_short:'шығынмен',
-    horiz_label:'көлденеңінен', vert_label:'тігінен',
+    with_verticals_short:'тік.', with_allowance_short:'толық ұзындық',
+    horiz_label:'көлд.', vert_label:'тік.',
     panel_cable_counts_label:'Кабель маркасы бойынша сызықтар',
     cable_mark_unset:'марка көрсетілмеген',
     mt_pps:'Әр жақтағы порттар', mt_size:'Белгіше өлшемі (радиус, px)',
@@ -2342,6 +2345,7 @@ const translations = {
     panel_neutral_bus_label:'Нөлдік шиналар', panel_neutral_bus_own:'Щитоктың өз шиналары', panel_neutral_bus_separate:'Өз шиналарымызды қоямыз',
     panel_mount_label:'Щиток түрі', panel_mount_flush:'ендірме', panel_mount_surface:'сыртқы орнату',
     panel_circuits_title:'Сызықтар', panel_no_circuits:'Алдымен кем дегенде бір түстің кабель маркасын көрсетіңіз («Қасиеттер» қойындысы).',
+    panel_disconnected_title:'Щитокқа қосылмаған',
     panel_summary_title:'Жабдық сметасы', panel_pcs:'дана',
     panel_item_contactor:'Контактор', panel_item_voltage_relay:'Кернеу релесі',
     panel_item_input_breaker:'Кіріс автоматы', panel_pole_three:'үш полюсті', panel_pole_one:'бір полюсті',
@@ -3106,6 +3110,111 @@ function lineStubSegments(line){
   return segs;
 }
 
+// Detects the OTHER kind of clearance problem segsIntersect/segmentOverlapsAnyLine
+// don't cover: two segments that are parallel, SAME orientation, with
+// overlapping range, running closer than `clearance` apart — but far enough
+// apart that they aren't "the same track" (segmentOverlapsAnyLine's coaxial
+// check only fires within ~1cm, meant for noise/rounding, not a genuine
+// nearby-but-distinct run). Returns the perpendicular axis, current gap, and
+// which direction segment AB would need to move to reach `clearance` — or
+// null if these two aren't a parallel-proximity case at all.
+function parallelProximityGap(a,b,c,d,clearance){
+  const abIsH=Math.abs(a.wy-b.wy)<=Math.abs(a.wx-b.wx);
+  const cdIsH=Math.abs(c.wy-d.wy)<=Math.abs(c.wx-d.wx);
+  if(abIsH!==cdIsH) return null;
+  if(abIsH){
+    const abLo=Math.min(a.wx,b.wx), abHi=Math.max(a.wx,b.wx);
+    const cdLo=Math.min(c.wx,d.wx), cdHi=Math.max(c.wx,d.wx);
+    if(abLo>=cdHi || cdLo>=abHi) return null;
+    const gap=Math.abs(a.wy-c.wy);
+    if(gap>=clearance) return null;
+    return {axis:'y', gap, sign:(a.wy>=c.wy?1:-1)};
+  } else {
+    const abLo=Math.min(a.wy,b.wy), abHi=Math.max(a.wy,b.wy);
+    const cdLo=Math.min(c.wy,d.wy), cdHi=Math.max(c.wy,d.wy);
+    if(abLo>=cdHi || cdLo>=abHi) return null;
+    const gap=Math.abs(a.wx-c.wx);
+    if(gap>=clearance) return null;
+    return {axis:'x', gap, sign:(a.wx>=c.wx?1:-1)};
+  }
+}
+
+// After a manual edit settles, make sure the edited line itself doesn't sit
+// closer than the minimum clearance to any OTHER line nearby — scope is
+// deliberately just this one line against its neighbours (see chat: a
+// background sweep of the whole project was explicitly ruled out as
+// something that would get in the way while working). Reuses
+// computeSegmentShift so an anchored end still gets the correct short
+// dogleg instead of dragging the port itself.
+function enforceLineClearance(line){
+  const CLEARANCE=mToW(0.03);
+  const MAX_PASSES=6;
+
+  // A shift that removes one closeness must not trade it for a brand-new
+  // literal crossing somewhere else (this bit me in testing: nudging a
+  // vertical run that started exactly flush with a neighbour's horizontal
+  // range pushed it INTO that range instead of away from it). Checked
+  // against the candidate's full new shape, not just the touched segment.
+  function crossesAnything(pts){
+    for(let i=0;i<pts.length-1;i++){
+      const a=pts[i], b=pts[i+1];
+      for(const other of lines){
+        if(other===line) continue;
+        if(!other.pts) continue;
+        for(let j=0;j<other.pts.length-1;j++){
+          if(segsIntersect(a.wx,a.wy,b.wx,b.wy,other.pts[j].wx,other.pts[j].wy,other.pts[j+1].wx,other.pts[j+1].wy)) return true;
+        }
+        for(const s of lineStubSegments(other)){
+          if(segsIntersect(a.wx,a.wy,b.wx,b.wy,s.a.wx,s.a.wy,s.b.wx,s.b.wy)) return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  for(let pass=0; pass<MAX_PASSES; pass++){
+    if(!line.pts || line.pts.length<2) return;
+    let fixed=false;
+    outer:
+    for(let si=0; si<line.pts.length-1; si++){
+      const a=line.pts[si], b=line.pts[si+1];
+      for(const other of lines){
+        if(other===line) continue;
+        if(!other.pts) continue;
+        const otherSegs=[];
+        for(let j=0;j<other.pts.length-1;j++) otherSegs.push([other.pts[j],other.pts[j+1]]);
+        lineStubSegments(other).forEach(s=>otherSegs.push([s.a,s.b]));
+        for(const [c,d] of otherSegs){
+          const gapInfo=parallelProximityGap(a,b,c,d,CLEARANCE);
+          if(!gapInfo) continue;
+          const mag=CLEARANCE-gapInfo.gap+mToW(0.002); // +2mm margin so we clear the threshold, not land exactly on it
+          // Try the geometrically "obvious" direction (away from the
+          // neighbour's current side) first; fall back to the opposite
+          // only if that would create a new crossing — ties (gap===0,
+          // dead flush) make the "obvious" side ambiguous, and either one
+          // can turn out to run straight into something else.
+          let applied=false;
+          for(const dir of [gapInfo.sign, -gapInfo.sign]){
+            const need=mag*dir;
+            const dWx=gapInfo.axis==='x'?need:0;
+            const dWy=gapInfo.axis==='y'?need:0;
+            const candidate=computeSegmentShift(line, line.pts.map(p=>({...p})), si, dWx, dWy);
+            if(crossesAnything(candidate)) continue;
+            line.pts=candidate;
+            orthogonalizeLine(line);
+            applied=true;
+            break;
+          }
+          if(applied){ fixed=true; break outer; }
+          // Both directions would trade this closeness for a new crossing —
+          // leave it alone rather than make things worse.
+        }
+      }
+    }
+    if(!fixed) return;
+  }
+}
+
 
 // Same idea as buildFacingAwareConnectorAdaptive, but for a box's own stub
 // exit (whose direction is fixed by the CHOSEN PORT SIDE, not a marker's
@@ -3182,6 +3291,45 @@ function buildFacingAwareConnectorAlt(markerPt, facing, otherPt){
   const ddx=Math.abs(otherPt.wx-anchor.wx), ddy=Math.abs(otherPt.wy-anchor.wy);
   const bend=ddx>=ddy?{wx:anchor.wx,wy:otherPt.wy}:{wx:otherPt.wx,wy:anchor.wy}; // opposite of buildOrthogonalConnector's own choice
   return [{wx:markerPt.wx,wy:markerPt.wy}, {wx:anchor.wx,wy:anchor.wy}, bend, {wx:otherPt.wx,wy:otherPt.wy}];
+}
+
+// Shift segment `si` of `line` (defined by orig[si]→orig[si+1]) perpendicular
+// to its own orientation by (dWx,dWy) — the same math the interactive
+// "drag a segment sideways" handler uses, pulled out so it can also be
+// called programmatically (no mouse event) by an automatic clearance fix.
+// Anchored ends (a fixed marker/port) get a short correction dogleg back to
+// their true position instead of moving; a neighbour already on the same
+// axis gets a fresh perpendicular connector instead of being dragged along.
+function computeSegmentShift(line, orig, si, dWx, dWy){
+  const origLast=orig.length-1;
+  const segH=Math.abs(orig[si+1].wy-orig[si].wy)<=Math.abs(orig[si+1].wx-orig[si].wx);
+  const shiftPt=(pt)=> segH ? {wx:pt.wx, wy:pt.wy+dWy} : {wx:pt.wx+dWx, wy:pt.wy};
+  const isCollinear=(i)=>(Math.abs(orig[i+1].wy-orig[i].wy)<=Math.abs(orig[i+1].wx-orig[i].wx))===segH;
+
+  const startAnchored = si===0 && !!line.connStart?.markerId;
+  const endAnchored   = si+1===origLast && !!line.connEnd?.markerId;
+
+  const middle=[];
+  if(startAnchored){
+    middle.push({...orig[0]}, shiftPt(orig[0]));
+  } else if(si>0 && isCollinear(si-1)){
+    middle.push(segH?{wx:orig[si-1].wx,wy:orig[si].wy+dWy}:{wx:orig[si].wx+dWx,wy:orig[si-1].wy});
+    middle.push(shiftPt(orig[si]));
+  } else {
+    middle.push(shiftPt(orig[si]));
+  }
+  if(endAnchored){
+    middle.push(shiftPt(orig[origLast]), {...orig[origLast]});
+  } else if(si+1<origLast && isCollinear(si+1)){
+    middle.push(shiftPt(orig[si+1]));
+    middle.push(segH?{wx:orig[si+2].wx,wy:orig[si+1].wy+dWy}:{wx:orig[si+1].wx+dWx,wy:orig[si+2].wy});
+  } else {
+    middle.push(shiftPt(orig[si+1]));
+  }
+
+  const prefix=orig.slice(0,si).map(pt=>({...pt}));
+  const suffix=orig.slice(si+2).map(pt=>({...pt}));
+  return [...prefix, ...middle, ...suffix];
 }
 
 // Minimum distance from point (px,py) to segment (ax,ay)-(bx,by).
@@ -4546,6 +4694,24 @@ function updateLinesForMarker(mk){
       // around (their full paths AND their own box stubs — physically a
       // stub is just as much a piece of wire as the rest of the line),
       // same escalating-exit mechanism the facing case already uses.
+      //
+      // The far end's target must be OTHER's own assigned port/stub-end —
+      // not otherMk.wx/wy (its bare centre, which `target` above holds).
+      // The render always draws each box's own stub separately and fresh
+      // from its CURRENT port; this path only needs to span the gap
+      // BETWEEN the two stub-ends. Using the centre instead made this path
+      // reach past the real stub-end, into (or through) the other box's
+      // own body — invisible while routeAroundMarkers happened to trim it
+      // back to something close, but not exact, and outright wrong
+      // whenever a box moved and this line was rebuilt from the OTHER
+      // box's own "Optimise ports" (that box's own stub-end never got
+      // recomputed with it, since only mk's own side goes through
+      // updateLinesForMarker here).
+      const otherPort=getMarkerPorts(otherMk).find(p=>p.side===otherConn.side && p.idx===(otherConn.portIdx??0));
+      const otherTarget = otherPort
+        ? {wx:otherPort.wx+portSideDir(otherPort.side).dx*stubLenForIdx(otherPort.idx??0),
+           wy:otherPort.wy+portSideDir(otherPort.side).dy*stubLenForIdx(otherPort.idx??0)}
+        : target; // otherMk has no port assigned for this line yet — fall back to its centre
       const siblingLines=lines.filter(l=>l!==line && (
         l.connStart?.markerId===mk.id || l.connEnd?.markerId===mk.id ||
         l.connStart?.markerId===otherMk.id || l.connEnd?.markerId===otherMk.id
@@ -4554,7 +4720,7 @@ function updateLinesForMarker(mk){
         ...siblingLines.map(l=>l.pts).filter(Boolean),
         ...siblingLines.flatMap(l=>lineStubSegments(l).map(s=>[s.a,s.b])),
       ];
-      const rebuilt=buildBoxAwareConnectorAdaptive(stubEnd, target, dir, avoidLines);
+      const rebuilt=buildBoxAwareConnectorAdaptive(stubEnd, otherTarget, dir, avoidLines);
       return atEnd ? rebuilt.slice().reverse() : rebuilt;
     }
     return null;
@@ -5445,21 +5611,36 @@ function redraw(){
   const LINE_GAP=Math.max(1, mToW(PHYS_LINE_GAP_M)*bgS); // canvas-px, 1cm gap
 
   // Build a list of all (lineIdx, segIdx, axis-key) for quick lookup.
-  // axis-key for a segment: canonical form (min,max) on each axis,
-  // rounded to 1 world-unit to tolerate tiny float differences.
+  // axis-key for a segment: canonical form (min,max) on each axis. Kept as
+  // exact floats now — SAME_TRACK_TOL below is the only tolerance, and it's
+  // tight on purpose (see next comment).
   function axisKey(wx1,wy1,wx2,wy2){
     if(Math.abs(wy2-wy1)<2){
       // Horizontal: key = "H,y,xMin,xMax"
-      const y=Math.round((wy1+wy2)/2);
-      const x0=Math.round(Math.min(wx1,wx2)), x1=Math.round(Math.max(wx1,wx2));
+      const y=(wy1+wy2)/2;
+      const x0=Math.min(wx1,wx2), x1=Math.max(wx1,wx2);
       return{axis:'H',fixed:y,lo:x0,hi:x1};
     } else {
       // Vertical: key = "V,x,yMin,yMax"
-      const x=Math.round((wx1+wx2)/2);
-      const y0=Math.round(Math.min(wy1,wy2)), y1=Math.round(Math.max(wy1,wy2));
+      const x=(wx1+wx2)/2;
+      const y0=Math.min(wy1,wy2), y1=Math.max(wy1,wy2);
       return{axis:'V',fixed:x,lo:y0,hi:y1};
     }
   }
+
+  // How close (in world units) two segments' fixed coordinates need to be
+  // to count as "the same track" and get this visual spread. This used to
+  // be "round both to the nearest whole world unit, then <=2 apart" — at
+  // this project's typical scale that's ~2.4-3.6cm of real, unrounded
+  // slack, which is BIGGER than the 3cm clearance enforceLineClearance /
+  // the port search work to guarantee. Two lines deliberately kept >=3cm
+  // apart were still landing in the same rounding bucket and getting
+  // redrawn at this generic, position-blind pixel offset instead of their
+  // real (already-adequate) separation — so no coordinate-side fix could
+  // ever show up on screen. Tightened to ~0.3cm: enough to absorb genuine
+  // floating-point noise from routing math, not enough to swallow a real,
+  // deliberate gap.
+  const SAME_TRACK_TOL=mToW(0.003);
 
   // For each segment, find all coaxial overlapping segments across all lines.
   // Returns Map<"lineIdx_segIdx" → offsetIndex> where offsetIndex is position
@@ -5479,8 +5660,8 @@ function redraw(){
   });
 
   // Group coaxial overlapping segments
-  // Two segments are coaxial if same axis, same fixed coord (within 2 world units),
-  // and their ranges overlap.
+  // Two segments are coaxial if same axis, same fixed coord (within
+  // SAME_TRACK_TOL), and their ranges overlap.
   const processed=new Set();
   allSegs.forEach(a=>{
     if(processed.has(a.key)) return;
@@ -5488,9 +5669,9 @@ function redraw(){
     allSegs.forEach(b=>{
       if(b.key===a.key||processed.has(b.key)) return;
       if(b.ak.axis!==a.ak.axis) return;
-      if(Math.abs(b.ak.fixed-a.ak.fixed)>2) return;
+      if(Math.abs(b.ak.fixed-a.ak.fixed)>SAME_TRACK_TOL) return;
       // Check range overlap
-      if(b.ak.lo>=a.ak.hi-2||b.ak.hi<=a.ak.lo+2) return;
+      if(b.ak.lo>=a.ak.hi-SAME_TRACK_TOL||b.ak.hi<=a.ak.lo+SAME_TRACK_TOL) return;
       group.push(b);
     });
     if(group.length>1){
@@ -6638,48 +6819,10 @@ drC.addEventListener('mousemove',e=>{
       if(!line) {redraw();return;}
       const si=dragObj.segIdx;
       const orig=dragObj.origPts;
-      const origLast=orig.length-1;
-
       const segH=Math.abs(orig[si+1].wy-orig[si].wy)<=Math.abs(orig[si+1].wx-orig[si].wx);
       const dWx=(p.x-dragObj.startP.x)/bgS;
       const dWy=(p.y-dragObj.startP.y)/bgS;
-      const shiftPt=(pt)=> segH ? {wx:pt.wx, wy:pt.wy+dWy} : {wx:pt.wx+dWx, wy:pt.wy};
-      // Is the segment at index i on the same axis as the one being dragged?
-      const isCollinear=(i)=>(Math.abs(orig[i+1].wy-orig[i].wy)<=Math.abs(orig[i+1].wx-orig[i].wx))===segH;
-
-      const startAnchored = si===0 && !!line.connStart?.markerId;
-      const endAnchored   = si+1===origLast && !!line.connEnd?.markerId;
-
-      // Only pts[si] and pts[si+1] — the two points bounding the segment
-      // actually being dragged — move. Everything outside them stays
-      // exactly where it was: this is the "Добавить точку" use case, a
-      // bounded local detour (same shape routeAroundMarkers uses around a
-      // box), not a walk out to the line's real corners. Whenever the
-      // immediate neighbour was on the SAME axis as the drag, it can't stay
-      // fixed AND connect directly to the moved point without going
-      // diagonal — so a fresh perpendicular connector gets inserted there
-      // instead of (as before) silently dragging that neighbour along too.
-      const middle=[];
-      if(startAnchored){
-        middle.push({...orig[0]}, shiftPt(orig[0]));
-      } else if(si>0 && isCollinear(si-1)){
-        middle.push(segH?{wx:orig[si-1].wx,wy:orig[si].wy+dWy}:{wx:orig[si].wx+dWx,wy:orig[si-1].wy});
-        middle.push(shiftPt(orig[si]));
-      } else {
-        middle.push(shiftPt(orig[si]));
-      }
-      if(endAnchored){
-        middle.push(shiftPt(orig[origLast]), {...orig[origLast]});
-      } else if(si+1<origLast && isCollinear(si+1)){
-        middle.push(shiftPt(orig[si+1]));
-        middle.push(segH?{wx:orig[si+2].wx,wy:orig[si+1].wy+dWy}:{wx:orig[si+1].wx+dWx,wy:orig[si+2].wy});
-      } else {
-        middle.push(shiftPt(orig[si+1]));
-      }
-
-      const prefix=orig.slice(0,si).map(pt=>({...pt}));
-      const suffix=orig.slice(si+2).map(pt=>({...pt}));
-      line.pts=[...prefix, ...middle, ...suffix];
+      line.pts=computeSegmentShift(line, orig, si, dWx, dWy);
       dragObj._segH=segH; dragObj._dWx=dWx; dragObj._dWy=dWy;
     } else if(dragObj.type==='marker'){
       let px=p.x, py=p.y;
@@ -6764,6 +6907,11 @@ drC.addEventListener('mouseup',e=>{
       // without this, repeated drags on the same stretch just kept
       // stacking new connector points on top of old ones.
       simplifyLine(lines[dragObj.lineIdx]);
+      // The edit just settled — make sure it didn't leave this ONE line
+      // running closer than the minimum clearance to some other nearby
+      // line (see chat: scoped to the edited line only, not a project-wide
+      // sweep, so it never fights the person while they're still working).
+      enforceLineClearance(lines[dragObj.lineIdx]);
     }
     saveHistory();isDragging=false;dragObj=null;
     drC.style.cursor=mode==='select'?'pointer':'default';
@@ -8458,6 +8606,23 @@ function panelConnectedColors(){
   return colors;
 }
 
+// Colours used somewhere in the project (by a line or a wall segment) that
+// never touch a bus/panel marker on either end — i.e. never actually reach
+// the щиток being calculated here. Just a heads-up list for the person to
+// notice and fix themselves; no further logic attached (matches every
+// other colour in the project by the same rule panelConnectedColors uses,
+// just inverted).
+function panelDisconnectedColors(){
+  const connected=panelConnectedColors();
+  const allColors=new Set([
+    ...lines.map(l=>l.color),
+    ...segments.map(s=>s.color),
+  ]);
+  return [...allColors]
+    .filter(c=>c && !connected.has(c))
+    .map(hex=>({hex, name:colorLabels[hex]||colorName(hex)}));
+}
+
 function panelCircuitList(){
   const connectedColors=panelConnectedColors();
   return Object.keys(colorCableTypes)
@@ -9868,9 +10033,6 @@ function updateExpSizeInfo(){
 
 let __downloadStaggerIndex=0; // shared across ports-diagram pages AND the main drawing export — every triggered download in one export run gets its own slot, so a browser's multi-download-spam guard never sees them arrive in a tight burst
 function doExport(){
-  if(location.protocol==='file:'){
-    if(!confirm(t('confirm_file_protocol_export'))) return;
-  }
   __downloadStaggerIndex=0;
   if(document.getElementById('exp-ports-diagram')?.checked){
     exportPortsDiagram();
@@ -9912,15 +10074,11 @@ function doExportForTheme(theme){
     // Safari (especially iOS) hard-caps canvas area at 16,777,216px, far
     // below Chrome/Firefox's own limits — a large plan at 4x/8x quality can
     // silently exceed it, and toBlob() then just returns null with no error
-    // at all. Catch this BEFORE spending time building the canvas, not after.
+    // at all. We used to ask for confirmation before proceeding; per user
+    // request that warning is gone — just attempt it, and the existing
+    // "blob came back null" handling below still reports a failure if the
+    // browser genuinely can't produce the image.
     const totalArea=(sceneW*dpr)*(totalH*dpr);
-    const SAFE_CANVAS_AREA=16000000;
-    if(totalArea>SAFE_CANVAS_AREA){
-      bgX=savedBgX; bgY=savedBgY; bgS=savedBgS;
-      if(!confirm(t('confirm_canvas_too_large'))) return;
-      bgX=MARGIN-minWx*bgS;
-      bgY=MARGIN-minWy*bgS;
-    }
     const off=document.createElement('canvas');
     off.width=sceneW*dpr; off.height=totalH*dpr;
     const octx=off.getContext('2d');
@@ -9947,11 +10105,6 @@ function doExportForTheme(theme){
   } else {
     const sceneW=bgC.width, sceneH=bgC.height;
     const totalH = sceneH + legendH;
-    const totalAreaVp=(sceneW*dpr)*(totalH*dpr);
-    const SAFE_CANVAS_AREA_VP=16000000;
-    if(totalAreaVp>SAFE_CANVAS_AREA_VP){
-      if(!confirm(t('confirm_canvas_too_large'))) return;
-    }
     const off=document.createElement('canvas');
     off.width=sceneW*dpr; off.height=totalH*dpr;
     const octx=off.getContext('2d');
@@ -10278,10 +10431,18 @@ function drawScaleBar(octx, W, H, corner){
   const barH=6;
   const pad=10;
   const fmt=(m)=> m>=1 ? (Number.isInteger(m)?m:m.toFixed(2))+' м' : Math.round(m*100)+' см';
+  // Numeric ratio alongside the bar — "1:N" meaning one canvas pixel at the
+  // current zoom stands for N real-world millimetres. Rounded for
+  // readability; this isn't a fixed architectural preset (1:50, 1:100…),
+  // it just reflects whatever the current zoom level actually is.
+  const mmPerPx=(scale*1000)/bgS;
+  const ratioN=Math.round(mmPerPx);
+  const ratioText=ratioN>0 ? `1:${ratioN}` : '';
   octx.font='10px sans-serif';
   const labelW=octx.measureText(fmt(barM)).width;
-  const panelW=barPx+labelW/2+8;
-  const panelH=barH+24;
+  const ratioW=ratioText?octx.measureText(ratioText).width:0;
+  const panelW=Math.max(barPx+labelW/2+8, ratioW+8);
+  const panelH=barH+24+(ratioText?12:0);
 
   // Bottom-right is where the watermark lives — push the bar up above it so
   // they never overlap if the user picks that corner too.
@@ -10289,9 +10450,9 @@ function drawScaleBar(octx, W, H, corner){
 
   let x0, y0;
   if(corner==='br'){ x0=W-pad-barPx-labelW/2; y0=H-pad-14-watermarkClearance; }
-  else if(corner==='tl'){ x0=pad; y0=pad+panelH-10; }
-  else if(corner==='tr'){ x0=W-pad-barPx-labelW/2; y0=pad+panelH-10; }
-  else { x0=pad; y0=H-pad-14; } // 'bl', default
+  else if(corner==='tl'){ x0=pad; y0=pad+panelH-10-(ratioText?12:0); }
+  else if(corner==='tr'){ x0=W-pad-barPx-labelW/2; y0=pad+panelH-10-(ratioText?12:0); }
+  else { x0=pad; y0=H-pad-14-(ratioText?12:0); } // 'bl', default
 
   octx.fillStyle=T.watermarkBg;
   octx.fillRect(x0-4, y0-16, panelW, panelH);
@@ -10306,6 +10467,10 @@ function drawScaleBar(octx, W, H, corner){
   octx.fillStyle=T.text; octx.textAlign='center'; octx.textBaseline='bottom';
   octx.fillText('0', x0, y0-2);
   octx.fillText(fmt(barM), x0+barPx, y0-2);
+  if(ratioText){
+    octx.textAlign='left'; octx.textBaseline='top';
+    octx.fillText(ratioText, x0, y0+barH+4);
+  }
   octx.textAlign='left'; octx.textBaseline='alphabetic';
 }
 
@@ -10895,6 +11060,17 @@ function renderPanelCircuitList(){
   });
 }
 
+function renderPanelDisconnectedList(){
+  const wrap=document.getElementById('panel-disconnected-list');
+  if(!wrap) return;
+  const items=panelDisconnectedColors();
+  if(!items.length){ wrap.innerHTML=''; return; }
+  wrap.innerHTML=`<div class="res-section" style="margin-top:16px">${t('panel_disconnected_title')}</div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      ${items.map(c=>`<tr><td style="padding:4px 8px 4px 0;color:#ccc">${c.name}</td></tr>`).join('')}
+    </table>`;
+}
+
 function renderPanelSummary(){
   const wrap=document.getElementById('panel-summary');
   if(!wrap) return;
@@ -10925,9 +11101,11 @@ function openPanelCalcModal(){
     <div id="panel-cfg-top"></div>
     <div class="res-section" style="margin-top:16px">${t('panel_circuits_title')}</div>
     <div id="panel-circuits-list"></div>
+    <div id="panel-disconnected-list"></div>
     <div id="panel-summary"></div>`;
   renderPanelTop();
   renderPanelCircuitList();
+  renderPanelDisconnectedList();
   renderPanelSummary();
   document.getElementById('panel-calc-modal').style.display='flex';
 }

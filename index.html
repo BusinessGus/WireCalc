@@ -777,6 +777,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
   <div style="background:#1e1e1e;border:1px solid #444;border-radius:12px;max-width:min(94vw,900px);width:100%;max-height:90vh;overflow-y:auto;padding:28px 30px;position:relative">
     <button id="cable-estimate-close" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#666;font-size:22px;cursor:pointer;line-height:1">✕</button>
     <h2 data-i18n="cable_estimate_h2" style="font-size:18px;font-weight:700;margin-bottom:20px;color:#e8e8e8">Смета по кабелям</h2>
+    <div id="cable-estimate-unmarked"></div>
     <div id="cable-estimate-table-wrap"></div>
     <button id="cable-estimate-close-bottom" data-i18n="wn_close_btn" style="margin-top:20px;width:100%;padding:10px;background:#1a3a5c;border:1px solid #4a9eff;border-radius:7px;color:#7dc4ff;font-size:13px;font-weight:600;cursor:pointer">Понятно</button>
   </div>
@@ -787,7 +788,30 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     <button id="whatsnew-close" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#666;font-size:22px;cursor:pointer;line-height:1">✕</button>
     <h2 data-i18n="whatsnew_h2" style="font-size:18px;font-weight:700;margin-bottom:20px;color:#e8e8e8">Последние обновления</h2>
 
-    <div class="whatsnew-date" data-i18n="wn_r4_date" style="font-size:12px;font-weight:700;color:#7dc4ff;margin-bottom:10px;text-transform:uppercase;letter-spacing:.03em">25 августа 2026</div>
+    <div class="whatsnew-date" data-i18n="wn_r5_date" style="font-size:12px;font-weight:700;color:#7dc4ff;margin-bottom:10px;text-transform:uppercase;letter-spacing:.03em">28 августа 2026</div>
+
+    <div class="guide-step">
+      <div class="guide-body" style="margin-left:0">
+        <div class="guide-title" data-i18n="wn_r5_1_title">Щит распределительный сам растёт под подключения</div>
+        <div class="guide-text" data-i18n-html="wn_r5_1_text">Новый значок «ЩР» подстраивает свою ширину и число портов под фактическое количество подключённых линий, наполняясь от закреплённого края (настраивается в свойствах значка), а не занимает фиксированный размер заранее. Провода теперь могут физически проходить рядом со щитом, не обходя его как препятствие.</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-body" style="margin-left:0">
+        <div class="guide-title" data-i18n="wn_r5_2_title">Провода между коробками разводятся заметно умнее</div>
+        <div class="guide-text" data-i18n-html="wn_r5_2_text">Устранены зависания при большом числе связей на одном значке, а порты между линиями теперь при необходимости переставляются местами автоматически, чтобы не удлинять провода без нужды и не заводить их друг за друга.</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-body" style="margin-left:0">
+        <div class="guide-title" data-i18n="wn_r5_3_title">Починены визуальные артефакты на линиях</div>
+        <div class="guide-text" data-i18n-html="wn_r5_3_text">Прямые линии больше не создают «фантомных» точек на стыках с соседними. Диагональные изломы, которые могли появиться при ручном перетаскивании точки линии, теперь автоматически выпрямляются.</div>
+      </div>
+    </div>
+
+    <div class="whatsnew-date" data-i18n="wn_r4_date" style="font-size:12px;font-weight:700;color:#7dc4ff;margin:22px 0 10px;text-transform:uppercase;letter-spacing:.03em;border-top:1px solid #333;padding-top:18px">25 августа 2026</div>
 
     <div class="guide-step">
       <div class="guide-body" style="margin-left:0">
@@ -1186,6 +1210,13 @@ const translations = {
     wn_5_title:'Курсор больше не «убегает»',
     wn_5_text:'Исправлено расхождение между тем, где реально происходит клик, и тем, где показывалось перекрестие — особенно заметно было при смене режима (линия/значок/выбор).',
     wn_footer_prompt:'Нашли баг или есть предложение?', wn_footer_link:'Написать разработчику',
+    wn_r5_date:'28 августа 2026',
+    wn_r5_1_title:'Щит распределительный сам растёт под подключения',
+    wn_r5_1_text:'Новый значок «ЩР» подстраивает свою ширину и число портов под фактическое количество подключённых линий, наполняясь от закреплённого края (настраивается в свойствах значка), а не занимает фиксированный размер заранее. Провода теперь могут физически проходить рядом со щитом, не обходя его как препятствие.',
+    wn_r5_2_title:'Провода между коробками разводятся заметно умнее',
+    wn_r5_2_text:'Устранены зависания при большом числе связей на одном значке, а порты между линиями теперь при необходимости переставляются местами автоматически, чтобы не удлинять провода без нужды и не заводить их друг за друга.',
+    wn_r5_3_title:'Починены визуальные артефакты на линиях',
+    wn_r5_3_text:'Прямые линии больше не создают «фантомных» точек на стыках с соседними. Диагональные изломы, которые могли появиться при ручном перетаскивании точки линии, теперь автоматически выпрямляются.',
     wn_r4_date:'25 августа 2026',
     wn_r4_1_title:'Умнее расставляет линии по портам коробок',
     wn_r4_1_text:'Соединения между коробками теперь распознаются отдельно и выбирают сторону по направлению друг к другу, вместо того чтобы конкурировать за порты наравне с розетками и выключателями. Коробки с 7-8 подключениями получают по-настоящему оптимальную раскладку, а не первую случайно найденную.',
@@ -1290,6 +1321,8 @@ const translations = {
     panel_col_qty:'Кол-во', panel_col_modules:'Модули', panel_col_total_modules:'Итого модулей',
     tt_overall_estimate:'Общая смета: кабель, крепёж, подрозетники, коробки и оборудование щитка — всё вместе',
     overall_estimate_btn:'Общая смета', overall_estimate_h2:'Общая смета',
+    overall_unmarked_title:'Не у всех использованных цветов указана марка кабеля',
+    overall_unmarked_hint:'Их метраж не попадёт в смету, пока для цвета не указана марка. Нажмите на цвет ниже, чтобы сразу перейти к вводу марки в панели свойств.',
     overall_horiz_label:'Крепление горизонтальных участков', overall_vert_label:'Крепление вертикальных участков',
     overall_gun_label:'Есть монтажный пистолет?', overall_margin_label:'Запас',
     overall_mount_corr_pvc:'Гофра ПВХ', overall_mount_corr_pnd:'Гофра ПНД',
@@ -1362,6 +1395,10 @@ const translations = {
     port_free_end:'свободный конец', port_one_port:'1 порт',
     prop_pro_line:'PRO Линия',
     bus_orientation:'Ориентация щита', bus_horizontal:'Горизонт.', bus_vertical:'Верт.',
+    bus_anchor_side:'Якорная сторона', bus_anchor_side_hint:'Ширина щита растёт от этой стороны при добавлении линий — она не сдвигается.',
+    bus_anchor_left:'Слева', bus_anchor_right:'Справа', bus_anchor_top:'Сверху', bus_anchor_bottom:'Снизу',
+    bus_auto_swap:'Оптимизировать при каждом новом подключении',
+    bus_auto_swap_hint:'При добавлении новой линии к щиту может поменять местами порты уже подключённых линий, чтобы уменьшить пересечения — трогает только ближайший к щиту участок, не весь путь линии.',
     optimize_ports_btn:'Оптимизировать порты',
     mtype_base_label:'База', mtype_edit_tt:'Изменить', mtype_del_tt:'Удалить',
     color_dot_tt:'(ПКМ — подпись, 2×клик — марка кабеля)',
@@ -1526,6 +1563,13 @@ const translations = {
     wn_5_title:"The cursor no longer drifts",
     wn_5_text:"Fixed a mismatch between where a click actually registered and where the crosshair was shown — most noticeable when switching modes (line/marker/select).",
     wn_footer_prompt:'Found a bug or have a suggestion?', wn_footer_link:'Message the developer',
+    wn_r5_date:'August 28, 2026',
+    wn_r5_1_title:'Distribution panels now grow to fit their connections',
+    wn_r5_1_text:'The new "ЩР" (panel) marker adjusts its width and port count to however many lines are actually connected, filling in from its anchored edge (configurable in the marker\'s properties) instead of occupying a fixed size up front. Wires can now physically run past the panel without being routed around it as an obstacle.',
+    wn_r5_2_title:'Wiring between boxes is noticeably smarter now',
+    wn_r5_2_text:'Fixed hangs that could occur with many connections on one marker, and ports between lines now automatically swap places when it helps, instead of leaving wires needlessly long or crossed over each other.',
+    wn_r5_3_title:'Fixed visual glitches on lines',
+    wn_r5_3_text:'Straight lines no longer create a "phantom" point where they meet a neighbouring one. Diagonal kinks that could appear after manually dragging a line point are now straightened out automatically.',
     wn_r4_date:'August 25, 2026',
     wn_r4_1_title:'Smarter port placement on boxes',
     wn_r4_1_text:'Box-to-box connections are now recognised separately and pick their side based on the direction to the other box, instead of competing for ports on equal footing with sockets and switches. Boxes with 7-8 connections now get a genuinely optimal layout instead of the first one found.',
@@ -1630,6 +1674,8 @@ const translations = {
     panel_col_qty:'Qty', panel_col_modules:'Modules', panel_col_total_modules:'Total modules',
     tt_overall_estimate:'Overall estimate: cable, mounting hardware, back-boxes, junction boxes, and panel equipment — combined',
     overall_estimate_btn:'Overall estimate', overall_estimate_h2:'Overall estimate',
+    overall_unmarked_title:'Not every colour in use has a cable mark set',
+    overall_unmarked_hint:"Their length won't appear in the estimate until a mark is set for that colour. Click a colour below to jump straight to entering its mark in the properties panel.",
     overall_horiz_label:'Horizontal run mounting', overall_vert_label:'Vertical run mounting',
     overall_gun_label:'Mounting gun available?', overall_margin_label:'Margin',
     overall_mount_corr_pvc:'PVC corrugated conduit', overall_mount_corr_pnd:'PND corrugated conduit',
@@ -1702,6 +1748,10 @@ const translations = {
     port_free_end:'free end', port_one_port:'1 port',
     prop_pro_line:'PRO Line',
     bus_orientation:'Panel orientation', bus_horizontal:'Horiz.', bus_vertical:'Vert.',
+    bus_anchor_side:'Anchor side', bus_anchor_side_hint:'The panel grows away from this side as lines are added — it never moves.',
+    bus_anchor_left:'Left', bus_anchor_right:'Right', bus_anchor_top:'Top', bus_anchor_bottom:'Bottom',
+    bus_auto_swap:'Optimise on every new connection',
+    bus_auto_swap_hint:'When a new line connects to this panel, may swap which ports the already-connected lines use, to cut down crossings — only touches the stretch nearest the panel, never the rest of a line route.',
     optimize_ports_btn:'Optimize ports',
     mtype_base_label:'Base', mtype_edit_tt:'Edit', mtype_del_tt:'Delete',
     color_dot_tt:'(right-click — label, double-click — cable type)',
@@ -1866,6 +1916,13 @@ const translations = {
     wn_5_title:'El cursor ya no se desvía',
     wn_5_text:'Se corrigió un desajuste entre el lugar donde realmente ocurría el clic y donde se mostraba la cruceta — era especialmente notorio al cambiar de modo (línea/elemento/selección).',
     wn_footer_prompt:'¿Encontró un error o tiene una sugerencia?', wn_footer_link:'Escribir al desarrollador',
+    wn_r5_date:'28 de agosto de 2026',
+    wn_r5_1_title:'El cuadro de distribución ahora crece según sus conexiones',
+    wn_r5_1_text:'El nuevo elemento «ЩР» (cuadro) ajusta su ancho y número de puertos a la cantidad real de líneas conectadas, llenándose desde su borde anclado (configurable en las propiedades del elemento), en lugar de ocupar un tamaño fijo de antemano. Los cables ahora pueden pasar físicamente junto al cuadro sin bordearlo como si fuera un obstáculo.',
+    wn_r5_2_title:'El cableado entre cajas es notablemente más inteligente',
+    wn_r5_2_text:'Se corrigieron bloqueos que podían ocurrir con muchas conexiones en un mismo elemento, y ahora los puertos entre líneas se intercambian automáticamente cuando conviene, en vez de dejar cables innecesariamente largos o cruzados entre sí.',
+    wn_r5_3_title:'Corregidos artefactos visuales en las líneas',
+    wn_r5_3_text:'Las líneas rectas ya no crean un punto «fantasma» donde se encuentran con una vecina. Los quiebres diagonales que podían aparecer al arrastrar manualmente un punto de línea ahora se enderezan automáticamente.',
     wn_r4_date:'25 de agosto de 2026',
     wn_r4_1_title:'Distribución de puertos en cajas más inteligente',
     wn_r4_1_text:'Las conexiones entre cajas ahora se reconocen por separado y eligen el lado según la dirección hacia la otra caja, en lugar de competir por los puertos en igualdad con tomas e interruptores. Las cajas con 7-8 conexiones ahora obtienen una distribución realmente óptima, no la primera que se encuentra.',
@@ -1970,6 +2027,8 @@ const translations = {
     panel_col_qty:'Cant.', panel_col_modules:'Módulos', panel_col_total_modules:'Total de módulos',
     tt_overall_estimate:'Presupuesto general: cable, sujeción, cajas de empotrar, cajas de derivación y equipo del cuadro — todo junto',
     overall_estimate_btn:'Presupuesto general', overall_estimate_h2:'Presupuesto general',
+    overall_unmarked_title:'No todos los colores usados tienen una marca de cable indicada',
+    overall_unmarked_hint:'Su longitud no aparecerá en el presupuesto hasta que se indique una marca para ese color. Haga clic en un color abajo para ir directamente a introducir su marca en el panel de propiedades.',
     overall_horiz_label:'Sujeción de tramos horizontales', overall_vert_label:'Sujeción de tramos verticales',
     overall_gun_label:'¿Dispone de pistola de fijación?', overall_margin_label:'Margen',
     overall_mount_corr_pvc:'Tubo corrugado PVC', overall_mount_corr_pnd:'Tubo corrugado PEAD',
@@ -2042,6 +2101,10 @@ const translations = {
     port_free_end:'extremo libre', port_one_port:'1 puerto',
     prop_pro_line:'Línea PRO',
     bus_orientation:'Orientación del panel', bus_horizontal:'Horiz.', bus_vertical:'Vert.',
+    bus_anchor_side:'Lado de anclaje', bus_anchor_side_hint:'El panel crece alejándose de este lado al añadir líneas — nunca se mueve.',
+    bus_anchor_left:'Izquierda', bus_anchor_right:'Derecha', bus_anchor_top:'Arriba', bus_anchor_bottom:'Abajo',
+    bus_auto_swap:'Optimizar en cada nueva conexión',
+    bus_auto_swap_hint:'Al conectar una nueva línea a este cuadro, puede intercambiar los puertos de las líneas ya conectadas para reducir cruces — solo afecta el tramo más cercano al cuadro, nunca el resto del recorrido de la línea.',
     optimize_ports_btn:'Optimizar puertos',
     mtype_base_label:'Base', mtype_edit_tt:'Editar', mtype_del_tt:'Eliminar',
     color_dot_tt:'(clic derecho — etiqueta, doble clic — tipo de cable)',
@@ -2206,6 +2269,13 @@ const translations = {
     wn_5_title:'Курсор енді «қашпайды»',
     wn_5_text:'Шертудің нақты орны мен айқас белгінің көрсетілетін орны арасындағы алшақтық түзетілді — режимді ауыстырғанда (сызық/белгіше/таңдау) әсіресе байқалатын.',
     wn_footer_prompt:'Қате таптыңыз ба немесе ұсынысыңыз бар ма?', wn_footer_link:'Әзірлеушіге жазу',
+    wn_r5_date:'2026 жылғы 28 тамыз',
+    wn_r5_1_title:'Тарату щиті енді қосылымдарға қарай өседі',
+    wn_r5_1_text:'Жаңа «ЩР» белгішесі өз енін және порт санын қосылған сызықтардың нақты санына бейімдейді, бекітілген жиегінен (белгіше қасиеттерінде теңшеледі) толтырыла отырып — алдын ала тіркелген мөлшерді алмайды. Сымдар енді щитті кедергі ретінде айналып өтпей, оның қасынан физикалық түрде өте алады.',
+    wn_r5_2_title:'Қораптар арасындағы сымдау айтарлықтай ақылды болды',
+    wn_r5_2_text:'Бір белгішеде көп қосылым болғанда орын алатын ілініп қалулар түзетілді, ал сызықтар арасындағы порттар қажет болғанда автоматты түрде орын ауыстырады — сымдарды бекерге ұзартпай және бір-бірінен өткізбей.',
+    wn_r5_3_title:'Сызықтардағы көрнекілік ақаулар түзетілді',
+    wn_r5_3_text:'Түзу сызықтар енді көршісімен түйіскен жерде «елес» нүкте жасамайды. Сызық нүктесін қолмен тартқаннан кейін пайда болуы мүмкін диагональ иілулер енді автоматты түрде түзетіледі.',
     wn_r4_date:'2026 жылғы 25 тамыз',
     wn_r4_1_title:'Сызықтарды қораптардың порттарына бөлу ақылдырақ болды',
     wn_r4_1_text:'Қораптар арасындағы қосылымдар енді бөлек танылады және розеткалар мен ажыратқыштармен порт үшін бәсекелеспей, екінші қорапқа қарай бағыт бойынша жағын таңдайды. 7-8 қосылымы бар қораптар енді кездейсоқ емес, шынымен оңтайлы орналасу алады.',
@@ -2310,6 +2380,8 @@ const translations = {
     panel_col_qty:'Саны', panel_col_modules:'Модульдер', panel_col_total_modules:'Барлығы модуль',
     tt_overall_estimate:'Жалпы смета: кабель, бекітпе, астаушалар, қораптар және щиток жабдығы — барлығы бірге',
     overall_estimate_btn:'Жалпы смета', overall_estimate_h2:'Жалпы смета',
+    overall_unmarked_title:'Қолданылған түстердің барлығында кабель маркасы көрсетілмеген',
+    overall_unmarked_hint:'Түс үшін марка көрсетілмейінше, оның ұзындығы сметаға енбейді. Марканы қасиеттер тақтасында бірден енгізу үшін төмендегі түсті басыңыз.',
     overall_horiz_label:'Көлденең учаскелерді бекіту', overall_vert_label:'Тік учаскелерді бекіту',
     overall_gun_label:'Монтаждық тапанша бар ма?', overall_margin_label:'Қор',
     overall_mount_corr_pvc:'ПВХ гофрасы', overall_mount_corr_pnd:'ПНД гофрасы',
@@ -2382,6 +2454,10 @@ const translations = {
     port_free_end:'бос ұш', port_one_port:'1 порт',
     prop_pro_line:'PRO Сызық',
     bus_orientation:'Щит бағыты', bus_horizontal:'Гориз.', bus_vertical:'Тік.',
+    bus_anchor_side:'Бекітілген жағы', bus_anchor_side_hint:'Сызық қосылған сайын щит осы жақтан алыстай өседі — бұл жақ өзгермейді.',
+    bus_anchor_left:'Солда', bus_anchor_right:'Оңда', bus_anchor_top:'Жоғарыда', bus_anchor_bottom:'Төменде',
+    bus_auto_swap:'Әр жаңа қосылымда оңтайландыру',
+    bus_auto_swap_hint:'Щитке жаңа сызық қосылғанда, қиылысуларды азайту үшін бұрыннан қосылған сызықтардың порттарын ауыстыруы мүмкін — тек щитке ең жақын учаскеге әсер етеді, сызықтың қалған жолына тимейді.',
     optimize_ports_btn:'Порттарды оңтайландыру',
     mtype_base_label:'Негізгі', mtype_edit_tt:'Өзгерту', mtype_del_tt:'Жою',
     color_dot_tt:'(оң жақ түйме — жазба, қос шерту — кабель маркасы)',
@@ -2649,7 +2725,14 @@ function getPhysScale(){
 // Physical sizes in metres:
 const PHYS_MARKER_R  = 0.05;  // 5cm radius → 10×10cm box
 const PHYS_BUS_W     = 0.25;  // 25cm half-width → 50cm wide щит
-const PHYS_BUS_H     = 0.05;  // 5cm half-height
+const PHYS_BUS_H     = 0.05;  // 5cm half-height — LEGACY, only the now-unused
+// dead branches (boxClearanceHalfSize/boxHalfWidthAlong's bus cases, both
+// unreachable now — see chat) still read this. Live geometry for a bus
+// marker goes through busGeometry() below, which uses PHYS_BUS_THICKNESS
+// instead — much thinner ("щит-палка", not a physical obstacle to route
+// around; only the cables actually plugged into it get avoided, same as
+// any other line).
+const PHYS_BUS_THICKNESS = 0.01; // 1cm half → 2cm total — just enough to stay a clickable, visible strip
 const PHYS_LINE_W_M  = 0.02;  // 2cm line width
 const PHYS_LINE_GAP_M= 0.01;  // 1cm gap between lines
 
@@ -2667,6 +2750,71 @@ function getLineWpx(){ return Math.max(1, mToW(PHYS_LINE_W_M)*bgS); }
 
 // Get gap between parallel lines in world-pixels
 function getLineGapW(){ return mToW(PHYS_LINE_GAP_M); }
+
+// Number of ports actually in use on the bus's growth-axis sides, plus one
+// free port — replaces the old fixed portsPerSide for 'bus' kind
+// specifically. Takes the larger of two lower bounds:
+//  - a straight COUNT of connections + 1 — guarantees enough room during a
+//    search call even if several lines were just wired up back-to-back and
+//    haven't been through a fresh optimize yet (their portIdx values may
+//    still collide/be stale at that point — an index-based size alone
+//    under-counts this and crashes the search for lack of ports);
+//  - the highest INDEX actually in use + 2 — guarantees an existing line's
+//    port stays valid even after OTHER connections on this bus were removed
+//    (count alone can then undershoot a surviving line's now-"sparse" index).
+function busActivePps(mk){
+  const orient=mk.busOrientation||'horizontal';
+  const sides = orient==='horizontal' ? ['top','bottom'] : ['left','right'];
+  let count=0, maxIdx=-1;
+  lines.forEach(line=>{
+    [line.connStart, line.connEnd].forEach(conn=>{
+      if(conn?.markerId===mk.id && sides.includes(conn.side)){
+        count++;
+        maxIdx=Math.max(maxIdx, conn.portIdx??0);
+      }
+    });
+  });
+  return Math.max(count+1, maxIdx+2);
+}
+
+// Ports-per-side for whichever box/bus kind mk actually is. Use this instead
+// of reading mt.portsPerSide directly anywhere port geometry or port-count
+// math matters — a 'multi' box's count is a fixed type property (unchanged);
+// a 'bus' panel's is computed live from its current connections.
+function activePortsPerSide(mk){
+  const mt=markerTypes.find(t=>t.id===mk.mtypeId);
+  if(mt?.kind==='bus') return busActivePps(mk);
+  return mt?.portsPerSide||2;
+}
+
+// Single source of truth for a bus panel's on-screen rectangle. Width (or
+// height, if vertical) grows with however many ports are actually in use —
+// anchored so an already-placed port never has to move when a new line
+// connects: only the edge OPPOSITE the chosen anchor side moves outward.
+//
+// mk.wx/mk.wy is reinterpreted along the GROWTH axis only for a bus marker:
+// it's the anchored edge's own coordinate there, not the panel's centre.
+// The cross axis (the short, fixed-thickness one) keeps its usual centre
+// meaning, same as every other marker kind. Dragging the marker still just
+// translates wx/wy normally — the anchor edge (and the whole panel with it)
+// moves rigidly, exactly as expected.
+function busGeometry(mk){
+  const orient=mk.busOrientation||'horizontal';
+  const pps=busActivePps(mk);
+  const growHalf=pps*mToW(PHYS_STEP)/2;     // half-length along the growth axis
+  const thinHalf=mToW(PHYS_BUS_THICKNESS);  // half-thickness across — fixed, "palka"
+  let cx=mk.wx, cy=mk.wy, hw, hh;
+  if(orient==='horizontal'){
+    hw=growHalf; hh=thinHalf;
+    const side=mk.busSide||'left';
+    cx = side==='right' ? (mk.wx-hw) : (mk.wx+hw);
+  } else {
+    hw=thinHalf; hh=growHalf;
+    const side=mk.busSide||'top';
+    cy = side==='bottom' ? (mk.wy-hh) : (mk.wy+hh);
+  }
+  return {cx,cy,hw,hh,pps,orient};
+}
 
 function getMarkerPorts(mk){
   const mt=markerTypes.find(t=>t.id===mk.mtypeId);
@@ -2687,23 +2835,31 @@ function getMarkerPorts(mk){
     return ports;
   }
   if(mt.kind==='bus'){
+    const {cx,cy,hw,hh,pps}=busGeometry(mk);
     const orient=mk.busOrientation||'horizontal';
-    // Physical bus: 50cm wide × 10cm tall (horizontal), or 10cm × 50cm (vertical)
-    const hw=orient==='vertical'?mToW(PHYS_MARKER_R):mToW(PHYS_BUS_W);
-    const hh=orient==='vertical'?mToW(PHYS_BUS_W):mToW(PHYS_BUS_H);
-    const pps=mt.portsPerSide||12;
+    const step=mToW(PHYS_STEP);
+    const busSide=mk.busSide || (orient==='horizontal'?'left':'top');
     const ports=[];
     const longSides=orient==='horizontal'?['top','bottom']:['left','right'];
     longSides.forEach(side=>{
-      const span=(side==='top'||side==='bottom')?hw*2:hh*2;
-      const step=span/(pps+1);
       for(let i=0;i<pps;i++){
-        const t=-span/2+step*(i+1);
-        let wx=cx,wy=cy;
-        if(side==='top')    {wx=cx+t; wy=cy-hh;}
-        if(side==='bottom') {wx=cx+t; wy=cy+hh;}
-        if(side==='left')   {wx=cx-hw; wy=cy+t;}
-        if(side==='right')  {wx=cx+hw; wy=cy+t;}
+        let wx=cx, wy=cy;
+        if(orient==='horizontal'){
+          // Growth axis is X. idx 0 must sit right next to the anchored
+          // edge (mk.wx) and grow AWAY from it — computed directly from
+          // mk.wx + idx*step rather than from the derived centre (cx) with
+          // a symmetric ±span/2 offset. The symmetric formula only happens
+          // to put idx 0 at the anchor for busSide==='left'; for 'right'
+          // it puts idx 0 at the FAR edge instead (an already-used low
+          // index would then keep sliding further away every time the
+          // panel grows) — this direct anchor-relative formula is correct
+          // for both, and for both vertical anchors below, uniformly.
+          const gx = busSide==='right' ? (mk.wx - step*(i+0.5)) : (mk.wx + step*(i+0.5));
+          wx=gx; wy = side==='top' ? (cy-hh) : (cy+hh);
+        } else {
+          const gy = busSide==='bottom' ? (mk.wy - step*(i+0.5)) : (mk.wy + step*(i+0.5));
+          wy=gy; wx = side==='left' ? (cx-hw) : (cx+hw);
+        }
         ports.push({wx,wy,side,idx:i});
       }
     });
@@ -3223,12 +3379,57 @@ function enforceLineClearance(line){
 // that overlaps something in avoidLines, grows an extra run beyond the
 // mandatory stub in the same 2cm steps, same escalation as the facing
 // version, until clear or capped.
-function buildBoxAwareConnectorAdaptive(stubEnd, target, dir, avoidLines){
-  if(Math.abs(stubEnd.wx-target.wx)<0.5 || Math.abs(stubEnd.wy-target.wy)<0.5){
-    return [{wx:stubEnd.wx,wy:stubEnd.wy},{wx:target.wx,wy:target.wy}]; // already coaxial
+function buildBoxAwareConnectorAdaptive(stubEnd, target, dir, avoidLines, minExtra, keepVisibleBend){
+  // Threshold here is NOT the tiny "0.5 world units" buildOrthogonalConnector
+  // uses (that one exists only to catch genuine floating-point coincidence).
+  // `target` here is always the OTHER box's own position/stub-end — never a
+  // sibling port on THIS box — so, unlike the facing-candidate case, there's
+  // no adjacent-port pitch this could be confused with: two boxes' positions
+  // are just plain arbitrary, nothing keeps their cross-axis gap off a clean
+  // grid. Matching enforceMinSegment's own MIN exactly closes the gap
+  // between them completely — any bend enforceMinSegment would otherwise
+  // consider "too short to be a real stub run" and clumsily extend into an
+  // unwanted detour is instead recognised as noise right here and skipped.
+  //
+  // keepVisibleBend (щит-only — see chat): a бус panel deliberately gives
+  // every port on both its sides the SAME cross-axis coordinate for a given
+  // index, so a line that happens to land coaxial with its target draws as
+  // a single straight run with nothing marking where the panel actually
+  // is — and since the mirrored port on the OTHER side sits at that exact
+  // same coordinate too, the two together read as one continuous wire
+  // passing straight through, not two separate connections. When set, skip
+  // the coaxial collapse and force a REAL exit of at least COAXIAL_TOL, so
+  // the near-miss gap lands in the path's own MIDDLE segment instead of at
+  // either end — enforceMinSegment leaves an interior short segment alone
+  // (it only clumsily extends one touching an actual connected endpoint),
+  // so this reliably produces a small, deliberate, visible jog right at the
+  // panel rather than either a straight pass-through or a stray detour.
+  const COAXIAL_TOL=mToW(PHYS_STUB_BASE);
+  const dxAbs=Math.abs(stubEnd.wx-target.wx), dyAbs=Math.abs(stubEnd.wy-target.wy);
+  const isNearCoaxial = dxAbs<COAXIAL_TOL || dyAbs<COAXIAL_TOL;
+  if(!keepVisibleBend && isNearCoaxial){
+    // Snap the near-matching axis to be EXACTLY equal, not merely close —
+    // orthogonalizeLine's own idea of "already straight" uses a much
+    // tighter, float-noise-only tolerance (noiseTol()), so hedging with a
+    // near-but-not-exact match here just has it re-insert the very bend
+    // this shortcut exists to skip, right back into the too-short-segment
+    // trap enforceMinSegment then mishandles.
+    if(dxAbs<COAXIAL_TOL){
+      // X nearly matches — draw a true vertical line, sharing stubEnd's X.
+      return [{wx:stubEnd.wx,wy:stubEnd.wy},{wx:stubEnd.wx,wy:target.wy}];
+    } else {
+      // Y nearly matches — draw a true horizontal line, sharing stubEnd's Y.
+      return [{wx:stubEnd.wx,wy:stubEnd.wy},{wx:target.wx,wy:stubEnd.wy}];
+    }
   }
+  // Only force the minimum exit when we're actually IN the near-coaxial
+  // case this flag exists for — a бус connection whose geometry was never
+  // going to collapse anyway (the ordinary, comfortably-not-coaxial case)
+  // must behave exactly as before, or every OTHER line on the panel picks
+  // up a pointless extra jog it never needed.
+  if(keepVisibleBend && isNearCoaxial) minExtra=Math.max(minExtra||0, COAXIAL_TOL);
   const STEP=mToW(0.02), TOL=mToW(0.01);
-  let extraLen=0;
+  let extraLen=Math.max(0, minExtra||0);
   let maxExtra=Infinity;
   if(dir.dx!==0){
     const aheadDist = dir.dx>0 ? (target.wx-stubEnd.wx) : (stubEnd.wx-target.wx);
@@ -3255,10 +3456,26 @@ function buildBoxAwareConnectorAdaptive(stubEnd, target, dir, avoidLines){
       path=[{wx:stubEnd.wx,wy:stubEnd.wy},bend,{wx:target.wx,wy:target.wy}];
     } else if(dir.dx!==0){
       const exitX=stubEnd.wx+dir.dx*clamped;
-      path=[{wx:stubEnd.wx,wy:stubEnd.wy},{wx:exitX,wy:stubEnd.wy},{wx:exitX,wy:target.wy},{wx:target.wx,wy:target.wy}];
+      // If escalation has grown all the way (or nearly) to the target's own
+      // x, the "cross" and "final approach" segments collapse into a
+      // near-duplicate point — build the clean single-bend shape directly
+      // instead of a degenerate 4-point path with two almost-identical
+      // points at the end (this is exactly the shape the port SEARCH can
+      // end up picking as its "winner" once nothing clears any earlier —
+      // still escalated, still technically valid, but visually a stray
+      // near-zero-length stub sitting right at the target).
+      if(Math.abs(exitX-target.wx)<TOL){
+        path=[{wx:stubEnd.wx,wy:stubEnd.wy},{wx:target.wx,wy:stubEnd.wy},{wx:target.wx,wy:target.wy}];
+      } else {
+        path=[{wx:stubEnd.wx,wy:stubEnd.wy},{wx:exitX,wy:stubEnd.wy},{wx:exitX,wy:target.wy},{wx:target.wx,wy:target.wy}];
+      }
     } else {
       const exitY=stubEnd.wy+dir.dy*clamped;
-      path=[{wx:stubEnd.wx,wy:stubEnd.wy},{wx:stubEnd.wx,wy:exitY},{wx:target.wx,wy:exitY},{wx:target.wx,wy:target.wy}];
+      if(Math.abs(exitY-target.wy)<TOL){
+        path=[{wx:stubEnd.wx,wy:stubEnd.wy},{wx:stubEnd.wx,wy:target.wy},{wx:target.wx,wy:target.wy}];
+      } else {
+        path=[{wx:stubEnd.wx,wy:stubEnd.wy},{wx:stubEnd.wx,wy:exitY},{wx:target.wx,wy:exitY},{wx:target.wx,wy:target.wy}];
+      }
     }
     if(!(avoidLines&&avoidLines.length)) return path;
     let blocked=false;
@@ -3355,7 +3572,17 @@ function pointToSegDist(px,py, ax,ay,bx,by){
 // of a clean, separated joint.
 function segmentOverlapsAnyLine(a, b, avoidLines, tolerance){
   const abIsH=Math.abs(a.wy-b.wy)<Math.abs(a.wx-b.wx);
-  const PERP_CLEARANCE=mToW(0.03);
+  // Slightly under the true 3cm clearance target on purpose: adjacent ports
+  // on a box/щит sit EXACTLY 3cm apart by design (2cm stroke + 1cm gap), so
+  // a line's approach into one of them is routinely going to measure as
+  // "3.00cm" (give or take float noise) from its neighbour's stub — using
+  // the exact 3cm threshold turns that structurally-unavoidable, already-
+  // correct spacing into a false "still too close, keep escalating" signal
+  // during the relaxation loop, which can drag an already-clean comb of
+  // lines back into a race to re-avoid each other indefinitely. A small
+  // margin lets the true (harmless) 3cm case through while still catching
+  // anything meaningfully tighter.
+  const PERP_CLEARANCE=mToW(0.027);
   for(const pts of avoidLines){
     for(let i=0;i<pts.length-1;i++){
       const c=pts[i], d=pts[i+1];
@@ -3397,10 +3624,10 @@ function segmentOverlapsAnyLine(a, b, avoidLines, tolerance){
 // PROACTIVELY, as each line is routed, instead of being fixed up
 // afterward. avoidLines is a list of other lines' pts arrays to check
 // against (typically this box's sibling lines, already finalized).
-function buildFacingAwareConnectorAdaptive(markerPt, facing, otherPt, avoidLines){
+function buildFacingAwareConnectorAdaptive(markerPt, facing, otherPt, avoidLines, minExitLen){
   const dir=FACING_DIRS[facing];
   const STEP=mToW(0.02), TOL=mToW(0.01);
-  let exitLen=mToW(0.2);
+  let exitLen=mToW(0.2) + Math.max(0, minExitLen||0);
   // Never let the exit run overshoot past the target's own coordinate on
   // the facing axis — beyond that point the final leg would have to double
   // back on itself, which reads as a broken zigzag rather than a clean
@@ -3571,6 +3798,18 @@ function isBoxKind(mk){
   const mt=markerTypes.find(t=>t.id===mk.mtypeId);
   return mt&&(mt.kind==='multi'||mt.kind==='bus');
 }
+// A щит ('bus') is a point object for routing purposes — it doesn't
+// physically sit in the way of a cable the way a junction box ('multi')
+// does; only the cables actually plugged into it need avoiding (already
+// handled separately, via each line's own stub/path — see
+// lineStubSegments/avoidLines elsewhere). Use this instead of isBoxKind
+// specifically where "is this a physical obstacle to route around" is the
+// question; isBoxKind itself is unchanged and still correct for "does this
+// marker have ports/stubs" everywhere else.
+function blocksRouting(mk){
+  const mt=markerTypes.find(t=>t.id===mk.mtypeId);
+  return mt&&mt.kind==='multi';
+}
 function boxClearanceHalfSize(mk){
   const mt=markerTypes.find(t=>t.id===mk.mtypeId);
   const MIN=mToW(PHYS_STUB_BASE);
@@ -3590,14 +3829,16 @@ function boxClearanceHalfSize(mk){
 // If straight segment i→i+1 of `pts` crosses one or more box markers, lift the
 // WHOLE segment to a single clearance level that gets past all of them at
 // once — one detour for the entire pass, not a separate jog per box.
-// excludeId: a box this exact segment is allowed to touch (its own stub end).
-function routeSegmentAroundBoxes(pts, i, excludeId){
+// excludeIds: box(es) this exact segment is allowed to touch (their own stub
+// ends) — a single id or a Set of ids.
+function routeSegmentAroundBoxes(pts, i, excludeIds){
   const a=pts[i], b=pts[i+1];
   const isH=Math.abs(a.wy-b.wy)<=Math.abs(a.wx-b.wx);
+  const exclude = excludeIds instanceof Set ? excludeIds : new Set(excludeIds?[excludeIds]:[]);
 
   const boxes=[];
   for(const mk of markers){
-    if(mk.id===excludeId || !isBoxKind(mk)) continue;
+    if(exclude.has(mk.id) || !blocksRouting(mk)) continue;
     const {hw,hh}=boxClearanceHalfSize(mk);
     const x0=mk.wx-hw, x1=mk.wx+hw, y0=mk.wy-hh, y1=mk.wy+hh;
     if(isH){
@@ -3648,6 +3889,18 @@ function routeSegmentAroundBoxes(pts, i, excludeId){
 function routeAroundMarkers(line){
   if(!line.pts||line.pts.length<2) return;
   const startingLen=line.pts.length;
+  // Exclude BOTH of this line's own endpoint markers from every segment's
+  // obstacle check — not just "segment 0 excludes connStart, the last
+  // segment excludes connEnd". That index-based assumption breaks the
+  // moment a path collapses to just 2-3 points (a short anchor stub
+  // simplifying away its own middle point, say): the one remaining long
+  // segment then starts right at connStart's own clearance zone but, being
+  // neither "segment 0" nor "the last segment" in the way the old check
+  // expected, wasn't excluding it — routeSegmentAroundBoxes would see the
+  // line's own source box as an obstacle and insert a pointless detour
+  // right next to it. A line should never need to dodge the very marker
+  // it's plugged into, regardless of which segment that happens to be.
+  const ownEndpoints=new Set([line.connStart?.markerId, line.connEnd?.markerId].filter(Boolean));
   let guard=0, changed=true;
   while(changed&&guard<30){
     changed=false; guard++;
@@ -3657,11 +3910,7 @@ function routeAroundMarkers(line){
     // far rather than let it run away.
     if(line.pts.length>startingLen+20) break;
     for(let i=0;i<line.pts.length-1;i++){
-      const excludeId=
-        (i===0 && line.connStart?.markerId) ? line.connStart.markerId :
-        (i===line.pts.length-2 && line.connEnd?.markerId) ? line.connEnd.markerId :
-        null;
-      if(routeSegmentAroundBoxes(line.pts, i, excludeId)){ changed=true; break; }
+      if(routeSegmentAroundBoxes(line.pts, i, ownEndpoints)){ changed=true; break; }
     }
   }
   enforceMinSegment(line);
@@ -3692,10 +3941,9 @@ function declutterLine(line){
       const bcLen=Math.hypot(c.wx-b.wx,c.wy-b.wy);
       if(bcLen>=JOG_LIMIT || abVert!==cdVert) continue;
       const candidate=abVert?{wx:a.wx,wy:d.wy}:{wx:d.wx,wy:a.wy};
-      const exA=(i-1===0 && line.connStart?.markerId)?line.connStart.markerId:null;
-      if(routeSegmentAroundBoxes([{...a},{...candidate}],0,exA)) continue;
-      const exD=(i+2===line.pts.length-1 && line.connEnd?.markerId)?line.connEnd.markerId:null;
-      if(routeSegmentAroundBoxes([{...candidate},{...d}],0,exD)) continue;
+      const ownEndpoints=new Set([line.connStart?.markerId, line.connEnd?.markerId].filter(Boolean));
+      if(routeSegmentAroundBoxes([{...a},{...candidate}],0,ownEndpoints)) continue;
+      if(routeSegmentAroundBoxes([{...candidate},{...d}],0,ownEndpoints)) continue;
       line.pts.splice(i-1,4,a,candidate,d);
       changed=true; anyChange=true;
       break;
@@ -4279,6 +4527,61 @@ function rebuildLinesAdaptively(mk, cLines){
     return (p&&pt)?[{wx:p.wx,wy:p.wy},{wx:pt.wx,wy:pt.wy}]:null;
   }
 
+  // Give every facing candidate a stable, distinct MINIMUM exit length
+  // before any reactive avoidance runs — this is a small channel-routing
+  // problem (many wires sharing the same start rail and the same end rail,
+  // each with its own target position along it), and the right non-crossing
+  // arrangement is well known: the wire that has to travel FARTHEST along
+  // the box's growth axis (the gap between its own marker and its target
+  // port) gets the OUTERMOST lane (the longest exit), so every shorter,
+  // more direct wire can nest safely INSIDE its wider arc without crossing
+  // it. Grouped by which side of the box each candidate actually connects
+  // to — only candidates sharing a side/growth-axis can conflict this way.
+  //
+  // A purely reactive escalation (try the default, grow only if blocked)
+  // has no way to know it should reserve room for a WIDER sibling — with
+  // more than a couple of candidates defaulting to a near-identical exit,
+  // several end up "racing" each other through the relaxation passes,
+  // converging on the very same ceiling instead of a comb of parallel
+  // lanes (a щит with 7+ lines on one side is exactly this scenario).
+  // Sorting by travel width up front sidesteps the race entirely: everyone
+  // starts already correctly ordered, so relaxation only needs to fine-tune.
+  function candConn(c){ return c.atEnd?c.line.connEnd:c.line.connStart; }
+  const laneIndex=new Map();
+  const laneGroups=new Map(); // side -> [{cand, width}]
+  facingCandidates.forEach(cand=>{
+    const conn=candConn(cand);
+    const port=boxPorts.find(p=>p.side===conn.side&&p.idx===(conn.portIdx??0));
+    const otherConn=cand.atEnd?cand.line.connStart:cand.line.connEnd;
+    const otherMk=markers.find(m=>m.id===otherConn?.markerId);
+    if(!port||!otherMk?.facing) return;
+    const dir=FACING_DIRS[otherMk.facing];
+    // Growth axis is whichever one ISN'T the exit direction — matches the
+    // same dir.dx!==0 branching buildFacingAwareConnectorAdaptive itself uses.
+    const srcCoord = dir.dx!==0 ? otherMk.wy : otherMk.wx;
+    const tgtCoord = dir.dx!==0 ? port.wy   : port.wx;
+    const width=Math.abs(srcCoord-tgtCoord);
+    if(!laneGroups.has(conn.side)) laneGroups.set(conn.side,[]);
+    laneGroups.get(conn.side).push({cand,width});
+  });
+  laneGroups.forEach(arr=>{
+    // Only stagger groups large enough that the OLD purely-reactive
+    // approach actually struggles (see the doc comment above — a handful
+    // of candidates settles fine on its own; it's specifically 4+ sharing
+    // a near-identical default that can start racing each other). Below
+    // that, leave every candidate's baseline at 0 (old default exit): with
+    // few candidates, the reactive escalation below already finds a good
+    // arrangement, and sorting by width can occasionally pick a lane order
+    // that runs AGAINST the natural port order for a small, tightly-spaced
+    // group (e.g. two adjacent ports where the narrower-width candidate
+    // happens to be the "outer" one port-wise) — a conflict the old
+    // reactive approach never had a reason to hit.
+    if(arr.length<4) return;
+    arr.sort((a,b)=>a.width-b.width);
+    arr.forEach((e,rank)=>laneIndex.set(e.cand,rank));
+  });
+  const LANE_STEP=mToW(0.03);
+
   function buildOneAvoiding(cand, avoidLines){
     const {line, atEnd}=cand;
     const conn=atEnd?line.connEnd:line.connStart;
@@ -4291,20 +4594,32 @@ function rebuildLinesAdaptively(mk, cLines){
     const dir=portSideDir(conn.side);
     const stubEnd={wx:port.wx+dir.dx*stubLen, wy:port.wy+dir.dy*stubLen};
     const target={wx:otherMk.wx, wy:otherMk.wy};
-    const rebuilt=buildFacingAwareConnectorAdaptive(target, otherMk.facing, stubEnd, avoidLines);
+    const minExitLen=(laneIndex.get(cand)||0)*LANE_STEP;
+    const rebuilt=buildFacingAwareConnectorAdaptive(target, otherMk.facing, stubEnd, avoidLines, minExitLen);
     return atEnd ? rebuilt : rebuilt.slice().reverse();
   }
 
-  // First pass: build each in turn, avoiding only what's already been
-  // placed — matches the straightforward reading of the spec, and is
-  // enough on its own for the common case.
+  // First pass: build each candidate DIRECTLY at its assigned lane
+  // (minExitLen), trusting the width-sort rather than reactively avoiding
+  // whatever shape a sibling currently happens to have. This matters
+  // specifically because a sibling's CURRENT shape can itself still be
+  // whatever a previous (buggy or just not-yet-optimised) pass left behind
+  // — e.g. a full-corridor-spanning stub from before this feature existed.
+  // Treating that as a real obstacle to avoid creates a deadlock: A dodges
+  // B's current (bad, wide) shape, but B hasn't had its own turn yet either,
+  // so it's still just as wide when A's turn comes — nobody can ever
+  // shrink down to a proper lane because everyone's dodging everyone else's
+  // stale, oversized placeholder. Passing empty avoidLines here forces
+  // buildOneAvoiding to return immediately at exactly minExitLen (see
+  // buildFacingAwareConnectorAdaptive's own short-circuit) — no escalation,
+  // no dodging, just "trust the sort". Genuine residual conflicts (there
+  // can still be some — see the lane-sort's own doc comment on crossing
+  // pairs) get a real chance to resolve in the relaxation passes below,
+  // once everyone already has a sane starting shape instead of the old
+  // uniform default.
   for(let i=0;i<facingCandidates.length;i++){
     const cand=facingCandidates[i];
-    const avoidLines=[
-      ...facingCandidates.slice(0,i).map(c=>c.line.pts),
-      ...cLines.filter(c=>c.line!==cand.line).map(stubSegFor).filter(Boolean),
-    ];
-    const pts=buildOneAvoiding(cand, avoidLines);
+    const pts=buildOneAvoiding(cand, []);
     if(pts){ cand.line.pts=pts; orthogonalizeLine(cand.line); routeAroundMarkers(cand.line); }
   }
 
@@ -4482,6 +4797,140 @@ function magistralizeLines(mk, cLines){
   }
 }
 
+// Local pairwise port-swap pass for a bus panel — opt-in via mk.busAutoSwap
+// ("Оптимизировать при каждом новом подключении"), triggered right after a
+// NEW line connects to this bus. Tries swapping (side, idx) between every
+// pair of this bus's own currently-connected lines, keeping a swap only if
+// it reduces the total number of crossings those two lines have with the
+// rest of the drawing. Deliberately uses stretchLineForMarker (moves only
+// the connected endpoint + one adjacent point) rather than a full path
+// rebuild — the "magistral" route the user already drew stays exactly as
+// is; only the very last stretch nearest the panel can change length. Not
+// exhaustive (a bus can have dozens of lines, no permutation search is
+// possible) — bounded passes of pairwise swaps, same spirit as
+// rebuildLinesAdaptively's relaxation loop.
+function busAutoSwapPass(mk){
+  const mt=markerTypes.find(t=>t.id===mk.mtypeId);
+  if(!mt||mt.kind!=='bus') return;
+  const entries=[];
+  lines.forEach(line=>{
+    [['connStart',false],['connEnd',true]].forEach(([key,atEnd])=>{
+      const conn=line[key];
+      if(conn?.markerId===mk.id && conn.side && conn.side!=='center') entries.push({line, conn});
+    });
+  });
+  if(entries.length<2) return;
+
+  function crossingsInvolving(line, exclude){
+    let n=0;
+    const AS=lineStubSegments(line);
+    lines.forEach(other=>{
+      if(other===line||other===exclude||!other.pts) return;
+      for(let a=0;a<line.pts.length-1;a++)for(let b=0;b<other.pts.length-1;b++){
+        if(segsIntersect(line.pts[a].wx,line.pts[a].wy,line.pts[a+1].wx,line.pts[a+1].wy,
+                         other.pts[b].wx,other.pts[b].wy,other.pts[b+1].wx,other.pts[b+1].wy)) n++;
+      }
+      const BS=lineStubSegments(other);
+      AS.forEach(s=>{ for(let b=0;b<other.pts.length-1;b++){ if(segsIntersect(s.a.wx,s.a.wy,s.b.wx,s.b.wy,other.pts[b].wx,other.pts[b].wy,other.pts[b+1].wx,other.pts[b+1].wy)) n++; } });
+      BS.forEach(s=>{ for(let a=0;a<line.pts.length-1;a++){ if(segsIntersect(line.pts[a].wx,line.pts[a].wy,line.pts[a+1].wx,line.pts[a+1].wy,s.a.wx,s.a.wy,s.b.wx,s.b.wy)) n++; } });
+    });
+    return n;
+  }
+  function pairCrossings(A,B){
+    return crossingsInvolving(A.line,null) + crossingsInvolving(B.line,A.line);
+  }
+
+  const MAX_PASSES=4;
+  for(let pass=0; pass<MAX_PASSES; pass++){
+    let improved=false;
+    for(let i=0;i<entries.length;i++){
+      for(let j=i+1;j<entries.length;j++){
+        const A=entries[i], B=entries[j];
+        const before=pairCrossings(A,B);
+        if(before===0) continue; // nothing to improve for this pair
+
+        const savedAConn={...A.conn}, savedBConn={...B.conn};
+        const savedAPts=A.line.pts.map(p=>({...p})), savedBPts=B.line.pts.map(p=>({...p}));
+
+        const tmpSide=A.conn.side, tmpIdx=A.conn.portIdx;
+        A.conn.side=B.conn.side; A.conn.portIdx=B.conn.portIdx;
+        B.conn.side=tmpSide; B.conn.portIdx=tmpIdx;
+        A.conn.stubLen=stubLenForIdx(A.conn.portIdx??0);
+        B.conn.stubLen=stubLenForIdx(B.conn.portIdx??0);
+
+        const ports=getMarkerPorts(mk);
+        const portA=ports.find(p=>p.side===A.conn.side&&p.idx===(A.conn.portIdx??0));
+        const portB=ports.find(p=>p.side===B.conn.side&&p.idx===(B.conn.portIdx??0));
+        if(portA) stretchLineForMarker(A.line, mk.id, portA.wx, portA.wy);
+        if(portB) stretchLineForMarker(B.line, mk.id, portB.wx, portB.wy);
+
+        const after=pairCrossings(A,B);
+        if(after<before){
+          improved=true;
+        } else {
+          Object.assign(A.conn, savedAConn); Object.assign(B.conn, savedBConn);
+          A.line.pts=savedAPts; B.line.pts=savedBPts;
+        }
+      }
+    }
+    if(!improved) break;
+  }
+  resolveBoxStubDepths(mk);
+}
+
+// Build the correct connector shape for a line's leg touching `port` on
+// `mk` — shared by the port search's own build step, resolveBoxStubDepths,
+// and compactBusPorts, so all three treat a box-to-box (or point-to-box)
+// connection the same way: the real, avoidance-aware connector, never the
+// cruder stretchLineForMarker fallback (which only moves the existing
+// endpoint + one neighbour, and can turn an otherwise-clean shape into a
+// stray detour the moment the target position it's nudging toward has
+// moved by more than a trivial amount — exactly what happens when a line
+// gets renumbered to a genuinely different port, not just re-stubbed at
+// the same one).
+function buildConnectorForPort(line, atEnd, mk, port){
+  const mt=markerTypes.find(t=>t.id===mk.mtypeId);
+  const otherConn = atEnd? line.connStart : line.connEnd;
+  const otherMk = otherConn?.markerId ? markers.find(m=>m.id===otherConn.markerId) : null;
+  if(!otherMk) return null;
+  const otherMt = markerTypes.find(t=>t.id===otherMk.mtypeId);
+  const stubLen=stubLenForIdx(port.idx??0);
+  const dir=portSideDir(port.side);
+  const stubEnd={wx:port.wx+dir.dx*stubLen, wy:port.wy+dir.dy*stubLen};
+  if(otherMt?.kind==='point'){
+    if(otherMk.facing){
+      const rebuilt=buildFacingAwareConnectorAdaptive({wx:otherMk.wx,wy:otherMk.wy}, otherMk.facing, stubEnd);
+      return atEnd ? rebuilt : rebuilt.slice().reverse();
+    }
+    const boxAxis=dir.dy===0?'h':'v';
+    return atEnd
+      ? buildBoxAwareConnector({wx:otherMk.wx,wy:otherMk.wy}, stubEnd, boxAxis, 'b')
+      : buildBoxAwareConnector(stubEnd, {wx:otherMk.wx,wy:otherMk.wy}, boxAxis, 'a');
+  }
+  if(isBoxKind(otherMk)){
+    // The other box's own STUB END, not its raw port/centre — the render
+    // always draws that box's stub separately and fresh from its own
+    // current port, so this leg only needs to span the gap BETWEEN the two
+    // stub ends.
+    const otherPort=getMarkerPorts(otherMk).find(p=>p.side===otherConn.side && p.idx===(otherConn.portIdx??0));
+    const otherTarget = otherPort
+      ? {wx:otherPort.wx+portSideDir(otherPort.side).dx*stubLenForIdx(otherPort.idx??0),
+         wy:otherPort.wy+portSideDir(otherPort.side).dy*stubLenForIdx(otherPort.idx??0)}
+      : {wx:otherMk.wx, wy:otherMk.wy};
+    const siblingLines=lines.filter(l=>l!==line && (
+      l.connStart?.markerId===mk.id || l.connEnd?.markerId===mk.id ||
+      l.connStart?.markerId===otherMk.id || l.connEnd?.markerId===otherMk.id
+    ));
+    const avoidLines=[
+      ...siblingLines.map(l=>l.pts).filter(Boolean),
+      ...siblingLines.flatMap(l=>lineStubSegments(l).map(s=>[s.a,s.b])),
+    ];
+    const rebuilt=buildBoxAwareConnectorAdaptive(stubEnd, otherTarget, dir, avoidLines, 0, mt?.kind==='bus');
+    return atEnd ? rebuilt.slice().reverse() : rebuilt;
+  }
+  return null;
+}
+
 function resolveBoxStubDepths(mk){
   const mt=markerTypes.find(t=>t.id===mk.mtypeId);
   if(!mt||(mt.kind!=='multi'&&mt.kind!=='bus')) return;
@@ -4502,7 +4951,17 @@ function resolveBoxStubDepths(mk){
       } else if(otherConn.side && otherConn.side!=='center'){
         const otherPorts=getMarkerPorts(otherMk);
         const otherPort=otherPorts.find(p=>p.side===otherConn.side&&p.idx===(otherConn.portIdx??0));
-        target=otherPort?{wx:otherPort.wx,wy:otherPort.wy}:{wx:otherMk.wx,wy:otherMk.wy};
+        // The other box's own STUB END, not its raw port position — same
+        // reasoning as freshPathForPort's anchor branch: the render always
+        // draws that box's stub separately and fresh from its own current
+        // port, so this leg only needs to span the gap BETWEEN the two
+        // stub ends. Using the raw port made this leg reach past the other
+        // box's real stub end, into (or through) its own body.
+        const otherDir=otherPort?portSideDir(otherPort.side):null;
+        const otherStubLen=otherPort?stubLenForIdx(otherPort.idx??0):0;
+        target = otherPort
+          ? {wx:otherPort.wx+otherDir.dx*otherStubLen, wy:otherPort.wy+otherDir.dy*otherStubLen}
+          : {wx:otherMk.wx,wy:otherMk.wy};
       } else {
         target={wx:otherMk.wx, wy:otherMk.wy};
       }
@@ -4557,25 +5016,62 @@ function resolveBoxStubDepths(mk){
       }
     }
 
-    used.forEach(c=>{
-      const d=depth[c.conn.portIdx??0];
-      c.conn.stubLen=d;
-      const stubEnd={wx:c.port.wx+dir.dx*d, wy:c.port.wy+dir.dy*d};
-      if(c.otherMt?.kind==='point'){
-        if(c.otherMk.facing){
-          const rebuilt=buildFacingAwareConnectorAdaptive(c.target, c.otherMk.facing, stubEnd);
-          c.line.pts = c.atEnd ? rebuilt : rebuilt.slice().reverse();
+    // Relaxation: the box-to-box branch's avoidLines read each SIBLING
+    // line's CURRENT pts — early on those are still whatever the port
+    // search originally built (before any of these depths were applied),
+    // so a port whose real depth needs to reach past its neighbours can
+    // still end up crossing them if it's processed before they've updated
+    // to their own new depth. Re-settling against the now-current state
+    // (same relaxation idea rebuildLinesAdaptively uses) lets a later pass
+    // find the clean shape once earlier passes have cleared the way — but
+    // with several anchors on one side, TWO passes isn't always enough:
+    // whichever one is processed FIRST within a pass still only ever sees
+    // the tail end of the PREVIOUS pass for entries that come later in
+    // `used`. Loop until nothing actually changes any more (bounded), not
+    // a fixed count.
+    let guard=0, changed=true;
+    while(changed && guard<8){
+      changed=false; guard++;
+      used.forEach(c=>{
+        const before=JSON.stringify(c.line.pts);
+        const d=depth[c.conn.portIdx??0];
+        c.conn.stubLen=d;
+        const stubEnd={wx:c.port.wx+dir.dx*d, wy:c.port.wy+dir.dy*d};
+        if(c.otherMt?.kind==='point'){
+          if(c.otherMk.facing){
+            const rebuilt=buildFacingAwareConnectorAdaptive(c.target, c.otherMk.facing, stubEnd);
+            c.line.pts = c.atEnd ? rebuilt : rebuilt.slice().reverse();
+          } else {
+            c.line.pts = c.atEnd
+              ? buildBoxAwareConnector(c.target, stubEnd, boxAxis, 'b')
+              : buildBoxAwareConnector(stubEnd, c.target, boxAxis, 'a');
+          }
+        } else if(isBoxKind(c.otherMk)){
+          // Box-to-box: same escalating, avoidance-aware connector
+          // freshPathForPort's anchor branch uses — not the crude "just move
+          // the endpoint" stretchLineForMarker, which (targeting the RAW
+          // port instead of the stub end, and with no sense of the other
+          // lines around it) could turn a perfectly clean shape into a
+          // stray, unwanted detour the moment this recomputed depth differs
+          // even slightly from whatever the port search originally used.
+          const siblingLines=lines.filter(l=>l!==c.line && (
+            l.connStart?.markerId===mk.id || l.connEnd?.markerId===mk.id ||
+            l.connStart?.markerId===c.otherMk.id || l.connEnd?.markerId===c.otherMk.id
+          ));
+          const avoidLines=[
+            ...siblingLines.map(l=>l.pts).filter(Boolean),
+            ...siblingLines.flatMap(l=>lineStubSegments(l).map(s=>[s.a,s.b])),
+          ];
+          const rebuilt=buildBoxAwareConnectorAdaptive(stubEnd, c.target, dir, avoidLines, 0, mt.kind==='bus');
+          c.line.pts = c.atEnd ? rebuilt.slice().reverse() : rebuilt;
         } else {
-          c.line.pts = c.atEnd
-            ? buildBoxAwareConnector(c.target, stubEnd, boxAxis, 'b')
-            : buildBoxAwareConnector(stubEnd, c.target, boxAxis, 'a');
+          stretchLineForMarker(c.line, mk.id, c.port.wx, c.port.wy);
         }
-      } else {
-        stretchLineForMarker(c.line, mk.id, c.port.wx, c.port.wy);
-      }
-      orthogonalizeLine(c.line);
-      routeAroundMarkers(c.line);
-    });
+        orthogonalizeLine(c.line);
+        routeAroundMarkers(c.line);
+        if(JSON.stringify(c.line.pts)!==before) changed=true;
+      });
+    }
   });
 }
 
@@ -4596,8 +5092,7 @@ function resolveBoxStubDepths(mk){
 // It's a candidate NARROWING, not a hard pick — totalCost() still decides
 // among them, same as any other port in the main search.
 function boxAnchorCandidatePorts(mk, otherMk, activePorts){
-  const mt=markerTypes.find(t=>t.id===mk.mtypeId);
-  const pps=mt?.portsPerSide||2;
+  const pps=activePortsPerSide(mk);
   const dx=otherMk.wx-mk.wx, dy=otherMk.wy-mk.wy;
   const vertical=Math.abs(dy)>=Math.abs(dx);
   const primarySide  =vertical?(dy>=0?'bottom':'top'):(dx>=0?'right':'left');
@@ -4609,8 +5104,29 @@ function boxAnchorCandidatePorts(mk, otherMk, activePorts){
   } else {
     cornerIdx = primarySide==='left' ? 0 : pps-1; // west-most or east-most on the secondary side
   }
-  const wanted=new Set();
-  for(let i=0;i<pps;i++) wanted.add(primarySide+'_'+i);
+  // Cap how much of the primary side counts as a "candidate" — taking the
+  // WHOLE side is a real narrowing for a small, fixed portsPerSide (a
+  // 'multi' box, usually 2), but a щит's portsPerSide GROWS with however
+  // many lines are already connected — "the whole side" there can be a
+  // dozen+ ports, not a narrowing at all. That defeats the whole point of
+  // this function on its own, and — with several anchors on the same щит
+  // at once (one wired entirely to other boxes instead of sockets) — is
+  // exactly what makes the joint anchor search combinatorially explode.
+  // Keep at most a handful, picked as whichever ports sit CLOSEST — along
+  // the growth axis — to where the other box actually is, so the
+  // narrowing stays small and geometrically meaningful regardless of pps.
+  const MAX_PRIMARY_CANDS=3;
+  const primaryPorts=activePorts.filter(p=>p.side===primarySide);
+  let primaryCands=primaryPorts;
+  if(primaryPorts.length>MAX_PRIMARY_CANDS){
+    const alongTop = primarySide==='top'||primarySide==='bottom';
+    const targetCoord = alongTop ? otherMk.wx : otherMk.wy;
+    const portCoord = p => alongTop ? p.wx : p.wy;
+    primaryCands=[...primaryPorts]
+      .sort((a,b)=>Math.abs(portCoord(a)-targetCoord)-Math.abs(portCoord(b)-targetCoord))
+      .slice(0,MAX_PRIMARY_CANDS);
+  }
+  const wanted=new Set(primaryCands.map(p=>p.side+'_'+(p.idx??0)));
   wanted.add(secondarySide+'_'+cornerIdx);
   const candidates=activePorts.filter(p=>wanted.has(p.side+'_'+(p.idx??0)));
   // Fallback: mk might not actually have the primary/secondary side active
@@ -4720,7 +5236,7 @@ function updateLinesForMarker(mk){
         ...siblingLines.map(l=>l.pts).filter(Boolean),
         ...siblingLines.flatMap(l=>lineStubSegments(l).map(s=>[s.a,s.b])),
       ];
-      const rebuilt=buildBoxAwareConnectorAdaptive(stubEnd, otherTarget, dir, avoidLines);
+      const rebuilt=buildBoxAwareConnectorAdaptive(stubEnd, otherTarget, dir, avoidLines, 0, markerTypes.find(t=>t.id===mk.mtypeId)?.kind==='bus');
       return atEnd ? rebuilt.slice().reverse() : rebuilt;
     }
     return null;
@@ -4958,15 +5474,59 @@ function updateLinesForMarker(mk){
     }, [[]]);
   }
   function distinctCombo(combo){ return new Set(combo).size===combo.length; }
+  function comboSpaceSize(lists){
+    return lists.reduce((acc,list)=>acc*Math.max(1,list.length), 1);
+  }
 
-  let anchorCombos=cartesianCombos(anchorCandidatePortIndices(false)).filter(distinctCombo);
+  // A joint search over every anchor's candidates together is only cheap
+  // while there are few anchors (1-2 is typical — one link to a
+  // neighbouring box). A щит wired entirely to OTHER boxes instead of
+  // sockets can easily have 5+ anchors at once, and if even one pair's
+  // narrowed candidates collide, the old fallback expanded EVERY anchor to
+  // the full port list — for a busy щит (many ports) with 6 anchors that's
+  // easily tens of billions of combinations, hanging the whole page. Cap
+  // the joint search to a sane budget; past that, fall back to assigning
+  // each anchor's port independently (still using its own narrowed
+  // candidates first) rather than trying every combination jointly.
+  const MAX_ANCHOR_COMBO_SPACE=4000;
+  const narrowCandLists=anchorCandidatePortIndices(false);
+  let anchorCombos = comboSpaceSize(narrowCandLists)<=MAX_ANCHOR_COMBO_SPACE
+    ? cartesianCombos(narrowCandLists).filter(distinctCombo)
+    : [];
   if(anchorCount>0 && !anchorCombos.length){
-    // Every narrowed candidate collided across anchors (rare — e.g. two
-    // sibling boxes both sitting due north). Don't strand the anchors with
-    // no valid combo at all: fall back to the full port set for this box
-    // only, still solved as combos so a genuinely non-colliding assignment
-    // is still found.
-    anchorCombos=cartesianCombos(anchorCandidatePortIndices(true)).filter(distinctCombo);
+    const fullCandLists=anchorCandidatePortIndices(true);
+    if(comboSpaceSize(fullCandLists)<=MAX_ANCHOR_COMBO_SPACE){
+      // Every narrowed candidate collided across anchors (rare — e.g. two
+      // sibling boxes both sitting due north). Don't strand the anchors with
+      // no valid combo at all: fall back to the full port set for this box
+      // only, still solved as combos so a genuinely non-colliding assignment
+      // is still found.
+      anchorCombos=cartesianCombos(fullCandLists).filter(distinctCombo);
+    } else {
+      // Too many anchors (or too many ports) for ANY joint search to be
+      // affordable — assign each anchor's port independently instead: one
+      // at a time, picking whichever of its own narrowed candidates (or,
+      // failing that, any free port) sits closest to the box on the other
+      // end. Not globally optimal, but every anchor still gets a
+      // geometrically sensible side/port, and it's the only option that
+      // stays fast regardless of how many anchors this box has.
+      const claimed=new Set();
+      const picks=anchorEntries.map((entry,ai)=>{
+        let cands=narrowCandLists[ai].filter(pi=>!claimed.has(pi));
+        if(!cands.length) cands=activePorts.map((_,pi)=>pi).filter(pi=>!claimed.has(pi));
+        const otherConn=entry.atEnd?entry.line.connStart:entry.line.connEnd;
+        const otherMk=markers.find(m=>m.id===otherConn.markerId);
+        let best=cands[0], bestD=Infinity;
+        cands.forEach(pi=>{
+          const p=activePorts[pi];
+          const d=Math.hypot(p.wx-otherMk.wx, p.wy-otherMk.wy);
+          if(d<bestD){ bestD=d; best=pi; }
+        });
+        claimed.add(best);
+        return best;
+      });
+      anchorCombos=[picks];
+    }
   }
 
   const nonAnchorCount=cLines.length-anchorCount;
@@ -5032,11 +5592,156 @@ function updateLinesForMarker(mk){
   // Fix up stub depths on any side where the static per-index assumption
   // doesn't match actual target order — see resolveBoxStubDepths.
   resolveBoxStubDepths(mk);
+  anchorPortSwapPass(mk);
   alignPointMarkersToBoxPorts(mk);
   rebuildLinesAdaptively(mk, cLines);
   resolveCrossingsWithAlternateShapes(mk, cLines, baselineLengths);
   rebuildLinesAdaptively(mk, cLines);
+  compactBusPorts(mk);
   // magistralizeLines(mk, cLines); // TEMPORARILY DISABLED — investigating a reported bug where it produces extra segments near stubs
+}
+
+// The port SEARCH picks each anchor's (side, idx) using a cheap, un-escalated
+// length estimate — it has no way to know that a particular assignment will
+// later force resolveBoxStubDepths to add tens of centimetres of extra stub
+// depth (or still fail to avoid crossing another anchor entirely), because
+// that cost only becomes visible AFTER resolveBoxStubDepths has already run.
+// A simple example: three box-to-box lines land on adjacent ports in
+// whatever order the search happened to try first; if their actual targets
+// point in three different directions, the "between" relationships that
+// drive stub depth can end up needlessly tangled even though a different
+// port ORDER among those same three lines — no different ports, just
+// reshuffled among each other — would need no extra depth and no crossings
+// at all. This is exactly the kind of fix a human reroutes by hand: "swap
+// which port these two (or three) lines use". Tries every same-side pair of
+// box-to-box anchors, swapping their ports and re-running
+// resolveBoxStubDepths to see the REAL resulting cost (total stub depth,
+// weighted heavily against any literal crossing among these same lines) —
+// keeping the swap only if that's genuinely better, discarding it
+// otherwise. Bounded passes, same relaxation shape as the other swap-based
+// passes in this file (busAutoSwapPass, rebuildLinesAdaptively).
+function anchorPortSwapPass(mk){
+  const mt=markerTypes.find(t=>t.id===mk.mtypeId);
+  if(!mt || (mt.kind!=='bus' && mt.kind!=='multi')) return;
+  const entries=[];
+  lines.forEach(line=>{
+    [['connStart',false],['connEnd',true]].forEach(([key,atEnd])=>{
+      const conn=line[key];
+      if(conn?.markerId!==mk.id || !conn.side || conn.side==='center') return;
+      const otherConn=atEnd?line.connStart:line.connEnd;
+      const otherMk=otherConn?.markerId?markers.find(m=>m.id===otherConn.markerId):null;
+      if(!otherMk || !isBoxKind(otherMk)) return;
+      entries.push({line,conn});
+    });
+  });
+  if(entries.length<2) return;
+
+  const CROSS_PENALTY=mToW(2.0); // dwarfs any plausible depth difference
+  function metric(){
+    let total=entries.reduce((s,e)=>s+(e.conn.stubLen||0),0);
+    for(let i=0;i<entries.length;i++)for(let j=i+1;j<entries.length;j++){
+      const A=entries[i].line, B=entries[j].line;
+      if(!A.pts||!B.pts) continue;
+      for(let a=0;a<A.pts.length-1;a++)for(let b=0;b<B.pts.length-1;b++){
+        if(segsIntersect(A.pts[a].wx,A.pts[a].wy,A.pts[a+1].wx,A.pts[a+1].wy,B.pts[b].wx,B.pts[b].wy,B.pts[b+1].wx,B.pts[b+1].wy)) total+=CROSS_PENALTY;
+      }
+    }
+    return total;
+  }
+
+  let improved=true, guard=0;
+  while(improved && guard<10){
+    improved=false; guard++;
+    for(let i=0;i<entries.length;i++){
+      for(let j=i+1;j<entries.length;j++){
+        const A=entries[i], B=entries[j];
+        if(A.conn.side!==B.conn.side) continue; // swapping across sides changes which cable enters where — out of scope here
+        const savedPtsAll=entries.map(e=>e.line.pts.map(p=>({...p})));
+        const savedConnAll=entries.map(e=>({...e.conn}));
+        const before=metric();
+
+        const tmpIdx=A.conn.portIdx;
+        A.conn.portIdx=B.conn.portIdx; B.conn.portIdx=tmpIdx;
+        resolveBoxStubDepths(mk);
+        const after=metric();
+
+        if(after<before-0.01){
+          improved=true;
+        } else {
+          entries.forEach((e,k)=>{ e.line.pts=savedPtsAll[k]; Object.assign(e.conn, savedConnAll[k]); });
+        }
+      }
+    }
+  }
+  // resolveBoxStubDepths rebuilds EVERY entry on the affected side as a side
+  // effect of testing just one pair — so a REJECTED trial's revert above
+  // also throws away whatever (perfectly good) rebuild an unrelated entry
+  // happened to get from that same call, snapping it back to an older,
+  // less-settled shape it had before this pass ever started. Once the port
+  // ASSIGNMENTS have finished settling (the loop above only decides WHICH
+  // ports go where — reverts restore conn.portIdx correctly, that part is
+  // solid), do one more clean rebuild against the now-final configuration
+  // so every entry's actual drawn shape is freshly built for what its
+  // neighbours truly end up being, not a leftover from mid-search.
+  resolveBoxStubDepths(mk);
+}
+
+// A щит's port count/width is derived from whatever index each connected
+// line currently uses (see busActivePps) — deliberately, so an existing
+// line's port is never invalidated mid-search. But that same rule means
+// indices only ever grow: once something's assigned port 9, nothing
+// shrinks the panel back down even if ports 0-8 on that side are free (a
+// stale high index from an earlier state, or — with several box-to-box
+// anchors landing on similar candidate ports — a fresh assignment that
+// just happened to land high because that's where OTHER anchors' own
+// narrowed candidates already were). Left alone, the щит reads as far
+// wider than the lines actually connected to it justify, with unused gaps
+// in the middle. This renumbers each side's indices densely (0,1,2,…,
+// preserving relative order) right after the real port search settles —
+// busActivePps then naturally shrinks to match, and the panel redraws at
+// its true minimum width. Only entries whose index actually changes get
+// touched, and get a full connector rebuild (buildConnectorForPort) rather
+// than a raw endpoint nudge — see the fuller reasoning below the guard.
+function compactBusPorts(mk){
+  const mt=markerTypes.find(t=>t.id===mk.mtypeId);
+  if(!mt||mt.kind!=='bus') return;
+  const sides=(mk.busOrientation||'horizontal')==='horizontal'?['top','bottom']:['left','right'];
+  const entries=[];
+  lines.forEach(line=>{
+    [['connStart',false],['connEnd',true]].forEach(([key,atEnd])=>{
+      const conn=line[key];
+      if(conn?.markerId===mk.id && sides.includes(conn.side)) entries.push({line,atEnd,conn});
+    });
+  });
+  if(!entries.length) return;
+  const changedEntries=[];
+  sides.forEach(side=>{
+    const onSide=entries.filter(e=>e.conn.side===side).sort((a,b)=>(a.conn.portIdx??0)-(b.conn.portIdx??0));
+    onSide.forEach((e,newIdx)=>{
+      if((e.conn.portIdx??0)!==newIdx){ e.conn.portIdx=newIdx; e.conn.stubLen=stubLenForIdx(newIdx); changedEntries.push(e); }
+    });
+  });
+  if(!changedEntries.length) return;
+  // pps naturally shrinks now that indices are dense — every entry that
+  // actually got renumbered here needs its shape properly rebuilt for its
+  // NEW port (buildConnectorForPort — same avoidance-aware connector the
+  // port search itself uses), not just nudged with stretchLineForMarker:
+  // that cruder "move the endpoint + one neighbour" adjustment assumes the
+  // target only shifted a LITTLE, but a renumbering (say, index 4 down to
+  // 1) can move it by a real distance, and stretchLineForMarker has no way
+  // to know that — it'll happily turn an already-clean shape into a stray
+  // detour trying to reach the new position from the old one's leftover
+  // bend.
+  const ports=getMarkerPorts(mk);
+  changedEntries.forEach(({line,atEnd,conn})=>{
+    const port=ports.find(p=>p.side===conn.side&&p.idx===conn.portIdx);
+    if(!port) return;
+    const fresh=buildConnectorForPort(line, atEnd, mk, port);
+    if(fresh) line.pts=fresh;
+    else stretchLineForMarker(line, mk.id, port.wx, port.wy);
+    orthogonalizeLine(line);
+    routeAroundMarkers(line);
+  });
 }
 
 function distPointToSegW(px,py,ax,ay,bx,by){
@@ -5689,6 +6394,35 @@ function redraw(){
     }
   });
 
+  // A segment's offset is decided in isolation (whichever OTHER lines it
+  // happens to run coaxial with) — it has no idea whether ITS OWN neighbour
+  // one point over, within the same line, got a different offset (or none).
+  // Two adjacent segments meeting at a real corner but carrying different
+  // offsets draw that shared point in two different screen positions, which
+  // reads as a stray, undraggable "point" sitting at the corner (it was
+  // never an actual point in `pts` — just this mismatch). Safest fix: if
+  // neighbours disagree, drop the offset on both sides of that corner
+  // rather than trying to taper between two different pixel shifts.
+  // Repeat until stable — zeroing one segment can newly mismatch the one
+  // beyond it.
+  {
+    let changed=true, guard=0;
+    while(changed && guard<10){
+      changed=false; guard++;
+      lines.forEach((line,li)=>{
+        const n=(line.pts?line.pts.length:0)-1;
+        for(let si=0;si<n-1;si++){
+          const a=segOffset.get(`${li}_${si}`)||0;
+          const b=segOffset.get(`${li}_${si+1}`)||0;
+          if(Math.abs(a-b)>0.01){
+            if(Math.abs(a)>0.01){ segOffset.set(`${li}_${si}`,0); changed=true; }
+            if(Math.abs(b)>0.01){ segOffset.set(`${li}_${si+1}`,0); changed=true; }
+          }
+        }
+      });
+    }
+  }
+
   // Draw each line segment-by-segment with its computed perpendicular offset
   lines.forEach((line,li)=>{
     if(!line.pts||line.pts.length<2) return;
@@ -5734,23 +6468,31 @@ function redraw(){
       }
     }
 
-    // Draw main line pts
+    // Draw main line pts. Each segment's endpoints are shifted independently
+    // (segOffset is per-segment, decided by which OTHER segments it happens
+    // to run coaxial with) — a corner between an offset segment and a
+    // non-offset (or differently-offset) one is a real position mismatch at
+    // that shared vertex, not just a rounding wrinkle. Always drawing lineTo
+    // BOTH this segment's own (possibly shifted) start and end — instead of
+    // moveTo/lineTo only at pts[0] and trusting the previous iteration's end
+    // to already be in the right place — turns that mismatch into a short
+    // connecting stroke instead of the path silently jumping, which used to
+    // read as a stray, undraggable "point" sitting at the corner (it was
+    // never a real point — see chat).
     ctx.beginPath();
     for(let si=0;si<line.pts.length-1;si++){
       const p1=w2c(line.pts[si].wx,  line.pts[si].wy);
       const p2=w2c(line.pts[si+1].wx,line.pts[si+1].wy);
       const offset=segOffset.get(`${li}_${si}`)||0;
-      if(Math.abs(offset)<0.01){
-        if(si===0) ctx.moveTo(p1.cx,p1.cy); else ctx.lineTo(p1.cx,p1.cy);
-        ctx.lineTo(p2.cx,p2.cy);
-      } else {
+      let ax=p1.cx, ay=p1.cy, bx=p2.cx, by=p2.cy;
+      if(Math.abs(offset)>=0.01){
         const dx=p2.cx-p1.cx, dy=p2.cy-p1.cy, len=Math.hypot(dx,dy)||1;
         const px=-dy/len, py=dx/len;
-        const ax=p1.cx+px*offset, ay=p1.cy+py*offset;
-        const bx=p2.cx+px*offset, by=p2.cy+py*offset;
-        if(si===0) ctx.moveTo(ax,ay); else ctx.lineTo(ax,ay);
-        ctx.lineTo(bx,by);
+        ax=p1.cx+px*offset; ay=p1.cy+py*offset;
+        bx=p2.cx+px*offset; by=p2.cy+py*offset;
       }
+      if(si===0) ctx.moveTo(ax,ay); else ctx.lineTo(ax,ay);
+      ctx.lineTo(bx,by);
     }
     ctx.stroke();
 
@@ -5794,10 +6536,10 @@ function redraw(){
     } else if(kind==='multi'){
       ctx.beginPath();ctx.rect(p.cx-r,p.cy-r,r*2,r*2);ctx.fill();ctx.stroke();
     } else if(kind==='bus'){
-      const orient=mk.busOrientation||'horizontal';
-      const rw=orient==='vertical'?mToW(PHYS_MARKER_R)*bgS:mToW(PHYS_BUS_W)*bgS;
-      const rh=orient==='vertical'?mToW(PHYS_BUS_W)*bgS:mToW(PHYS_BUS_H)*bgS;
-      ctx.beginPath();ctx.rect(p.cx-rw,p.cy-rh,rw*2,rh*2);ctx.fill();ctx.stroke();
+      const g=busGeometry(mk);
+      const pc=w2c(g.cx,g.cy);
+      const rw=g.hw*bgS, rh=g.hh*bgS;
+      ctx.beginPath();ctx.rect(pc.cx-rw,pc.cy-rh,rw*2,rh*2);ctx.fill();ctx.stroke();
     }
     if(isSel){ctx.shadowColor='#4a9eff';ctx.shadowBlur=10;ctx.stroke();ctx.shadowBlur=0;}
 
@@ -6902,6 +7644,15 @@ drC.addEventListener('mouseup',e=>{
       repairAnyCollapsedLines();
     }
     if((dragObj?.type==='line-seg'||dragObj?.type==='line-vertex') && lines[dragObj.lineIdx]){
+      // The "keep anchor endpoints fixed" step in the vertex-drag handler
+      // above restores a connected endpoint's position AFTER the drag logic
+      // already computed its neighbour's new position — nothing re-checks
+      // that neighbour against the just-restored (unmoved) anchor, so a
+      // diagonal segment can be left sitting right next to a box/bus port.
+      // orthogonalizeLine is the one thing that actually straightens that
+      // out; it was missing here entirely — simplifyLine only merges
+      // already-collinear points, it doesn't fix a genuine diagonal.
+      orthogonalizeLine(lines[dragObj.lineIdx]);
       // Collapses any point that's now truly redundant (e.g. a connector
       // from an earlier drag that a later one made collinear again) —
       // without this, repeated drags on the same stretch just kept
@@ -7123,6 +7874,17 @@ drC.addEventListener('click',e=>{
           if(c?.markerId){
             const cmk=markers.find(m=>m.id===c.markerId);
             if(cmk) alignPointMarkersToBoxPorts(cmk);
+          }
+        });
+        // Bus panels with their own opt-in toggle: reshuffle which of THIS
+        // panel's own ports its lines use (adjusting only the stretch
+        // nearest the panel, never the line's own drawn route) if that cuts
+        // down crossings. Off by default — see chat, this is a per-panel
+        // choice, not automatic for every щит.
+        [currentLine.connStart, currentLine.connEnd].forEach(c=>{
+          if(c?.markerId){
+            const cmk=markers.find(m=>m.id===c.markerId);
+            if(cmk?.busAutoSwap) busAutoSwapPass(cmk);
           }
         });
         // Don't call updateLinesForMarker here - it overrides port selection
@@ -7835,10 +8597,13 @@ function updatePropsPanel(){
       <div style="margin-top:4px">${propColorSelectHtml(obj.color||'#4a9eff','marker-color-select')}</div>
     </div>`;
 
-    // Orientation + optimise button for marker (no port dropdowns here anymore)
+    // Orientation + anchor side + optimise button for marker (no port dropdowns here anymore)
     let orientHtml='';
     if(mt?.kind==='bus'){
       const cur=obj.busOrientation||'horizontal';
+      const curSide=obj.busSide||(cur==='horizontal'?'left':'top');
+      const sideOptA = cur==='horizontal'?'left':'top';
+      const sideOptB = cur==='horizontal'?'right':'bottom';
       orientHtml=`<div class="prop-group" style="margin-top:8px">
         <div class="prop-label">${t('bus_orientation')}</div>
         <div style="display:flex;gap:6px;margin-top:4px">
@@ -7849,6 +8614,21 @@ function updatePropsPanel(){
             <i class="ti ti-rectangle-vertical"></i> ${t('bus_vertical')}
           </button>
         </div>
+      </div>
+      <div class="prop-group" style="margin-top:8px">
+        <div class="prop-label">${t('bus_anchor_side')}</div>
+        <div style="font-size:10px;color:#555;margin:2px 0 4px">${t('bus_anchor_side_hint')}</div>
+        <div style="display:flex;gap:6px">
+          <button id="bus-anchor-a" class="tb-btn${curSide===sideOptA?' active':''}" style="flex:1;justify-content:center">${t('bus_anchor_'+sideOptA)}</button>
+          <button id="bus-anchor-b" class="tb-btn${curSide===sideOptB?' active':''}" style="flex:1;justify-content:center">${t('bus_anchor_'+sideOptB)}</button>
+        </div>
+      </div>
+      <div class="prop-group" style="margin-top:8px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#ccc;cursor:pointer">
+          <input type="checkbox" id="bus-auto-swap" ${obj.busAutoSwap?'checked':''}>
+          ${t('bus_auto_swap')}
+        </label>
+        <div style="font-size:10px;color:#555;margin-top:3px">${t('bus_auto_swap_hint')}</div>
       </div>`;
     }
     let optimiseHtml='';
@@ -7958,6 +8738,19 @@ function updatePropsPanel(){
       document.getElementById('bus-orient-v')?.addEventListener('click',()=>{
         saveHistory();obj.busOrientation='vertical';obj.busSide=null;
         redraw();updatePropsPanel();
+      });
+      document.getElementById('bus-anchor-a')?.addEventListener('click',()=>{
+        const cur=obj.busOrientation||'horizontal';
+        saveHistory();obj.busSide=cur==='horizontal'?'left':'top';
+        redraw();updatePropsPanel();
+      });
+      document.getElementById('bus-anchor-b')?.addEventListener('click',()=>{
+        const cur=obj.busOrientation||'horizontal';
+        saveHistory();obj.busSide=cur==='horizontal'?'right':'bottom';
+        redraw();updatePropsPanel();
+      });
+      document.getElementById('bus-auto-swap')?.addEventListener('change',function(){
+        saveHistory();obj.busAutoSwap=this.checked;
       });
     }
     document.getElementById('btn-optimise-ports')?.addEventListener('click',()=>{
@@ -8621,6 +9414,25 @@ function panelDisconnectedColors(){
   return [...allColors]
     .filter(c=>c && !connected.has(c))
     .map(hex=>({hex, name:colorLabels[hex]||colorName(hex)}));
+}
+
+// Colours actually wired to a distribution panel but with no cable mark
+// set — panelCircuitList() (below) requires BOTH to include a colour, so
+// this is the "Расчёт щитка" version of the same silent-drop gap the
+// estimate modals have: a circuit that's really there, physically wired to
+// the panel, just vanishes from its own breaker/module count with nothing
+// telling the person why.
+function panelUnmarkedConnectedColors(){
+  const used=new Set();
+  const checkConn=(conn, color)=>{
+    if(!conn?.markerId) return;
+    const mk=markers.find(m=>m.id===conn.markerId);
+    const mt=mk?markerTypes.find(t=>t.id===mk.mtypeId):null;
+    if(mt?.kind==='bus') used.add(color);
+  };
+  lines.forEach(line=>{ checkConn(line.connStart,line.color); checkConn(line.connEnd,line.color); });
+  segments.forEach(seg=>{ checkConn(seg.connStart,seg.color); checkConn(seg.connEnd,seg.color); });
+  return [...used].filter(hex=>!colorCableTypes[hex]);
 }
 
 function panelCircuitList(){
@@ -10339,10 +11151,10 @@ function renderToCtx(octx,W,H,dpr,showLabels=true,showBoxNumbers=true){
     } else if(kind==='multi'){
       octx.beginPath();octx.rect(p.cx-r,p.cy-r,r*2,r*2);octx.fill();octx.stroke();
     } else if(kind==='bus'){
-      const orient=mk.busOrientation||'horizontal';
-      const rw=orient==='vertical'?mToW(PHYS_MARKER_R)*bgS:mToW(PHYS_BUS_W)*bgS;
-      const rh=orient==='vertical'?mToW(PHYS_BUS_W)*bgS:mToW(PHYS_BUS_H)*bgS;
-      octx.beginPath();octx.rect(p.cx-rw,p.cy-rh,rw*2,rh*2);octx.fill();octx.stroke();
+      const g=busGeometry(mk);
+      const pg=w2c(g.cx,g.cy);
+      const rw=g.hw*bgS, rh=g.hh*bgS;
+      octx.beginPath();octx.rect(pg.cx-rw,pg.cy-rh,rw*2,rh*2);octx.fill();octx.stroke();
     }
 
     function lum(h){const rv=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return 0.299*rv+0.587*g+0.114*b;}
@@ -10550,11 +11362,8 @@ function renderLocatorThumbnail(mk, size){
 function getRealBoxSize(mk){
   const mt=markerTypes.find(t=>t.id===mk.mtypeId);
   if(mt?.kind==='bus'){
-    const orient=mk.busOrientation||'horizontal';
-    // PHYS_BUS_W/H are HALF-dimensions — double for true full width/height.
-    return orient==='horizontal'
-      ? {w:mToW(PHYS_BUS_W)*2, h:mToW(PHYS_BUS_H)*2}
-      : {w:mToW(PHYS_BUS_H)*2, h:mToW(PHYS_BUS_W)*2};
+    const g=busGeometry(mk);
+    return {w:g.hw*2, h:g.hh*2};
   }
   const d=mToW(PHYS_MARKER_R)*2;
   return {w:d, h:d};
@@ -10572,14 +11381,20 @@ function renderBoxCrop(mk, size, targetBoxPx){
   const T=EXPORT_THEMES[exportTheme]||EXPORT_THEMES.dark;
   const rb=getRealBoxSize(mk);
   const s=targetBoxPx/Math.max(rb.w,rb.h);
+  const mt0=markerTypes.find(t=>t.id===mk.mtypeId);
+  // Pan on the box's true CENTRE — for a bus, mk.wx/wy is the anchored
+  // EDGE (see busGeometry), so centring the crop on that directly would
+  // shove most of a wide panel off to one side instead of framing it.
+  const centreWx = mt0?.kind==='bus' ? busGeometry(mk).cx : mk.wx;
+  const centreWy = mt0?.kind==='bus' ? busGeometry(mk).cy : mk.wy;
   const savedBgX=bgX, savedBgY=bgY, savedBgS=bgS;
   bgS=s;
-  bgX=size/2-mk.wx*s;
-  bgY=size/2-mk.wy*s;
+  bgX=size/2-centreWx*s;
+  bgY=size/2-centreWy*s;
 
   const mt=markerTypes.find(t=>t.id===mk.mtypeId);
   const kind=mt?.kind||'point';
-  const p=w2c(mk.wx,mk.wy);
+  const p=w2c(centreWx,centreWy);
   const r=mToW(PHYS_MARKER_R)*bgS;
   const mkColor=mk.color||'#4a9eff';
   const mkBg=mkColor==='#ffffff'?'#cccccc':mkColor;
@@ -10608,9 +11423,8 @@ function renderBoxCrop(mk, size, targetBoxPx){
   } else if(kind==='multi'){
     octx.beginPath();octx.rect(p.cx-r,p.cy-r,r*2,r*2);octx.fill();octx.stroke();
   } else if(kind==='bus'){
-    const orient=mk.busOrientation||'horizontal';
-    const rw=orient==='vertical'?mToW(PHYS_MARKER_R)*bgS:mToW(PHYS_BUS_W)*bgS;
-    const rh=orient==='vertical'?mToW(PHYS_BUS_W)*bgS:mToW(PHYS_BUS_H)*bgS;
+    const g=busGeometry(mk);
+    const rw=g.hw*bgS, rh=g.hh*bgS;
     octx.beginPath();octx.rect(p.cx-rw,p.cy-rh,rw*2,rh*2);octx.fill();octx.stroke();
   }
 
@@ -10666,7 +11480,7 @@ function drawPortList(ctx, mk, x, y, maxWidth, opts){
   const boxNumberMap=opts.boxNumberMap;
   const T=EXPORT_THEMES[exportTheme]||EXPORT_THEMES.dark;
   const mt=markerTypes.find(t=>t.id===mk.mtypeId);
-  const pps=mt.portsPerSide||2;
+  const pps=activePortsPerSide(mk);
   const rowH=compact?16:24;
   const dotR=compact?4:6;
   const font=compact?'10px sans-serif':'13px sans-serif';
@@ -11098,11 +11912,13 @@ function renderPanelSummary(){
 function openPanelCalcModal(){
   const body=document.getElementById('panel-calc-body');
   body.innerHTML=`
+    <div id="panel-unmarked"></div>
     <div id="panel-cfg-top"></div>
     <div class="res-section" style="margin-top:16px">${t('panel_circuits_title')}</div>
     <div id="panel-circuits-list"></div>
     <div id="panel-disconnected-list"></div>
     <div id="panel-summary"></div>`;
+  buildUnmarkedColorsBanner(document.getElementById('panel-unmarked'), 'panel-calc-modal', panelUnmarkedConnectedColors());
   renderPanelTop();
   renderPanelCircuitList();
   renderPanelDisconnectedList();
@@ -11454,15 +12270,63 @@ function renderOverallSummary(){
   });
 }
 
+// Colors that are actually IN USE (some line or segment is drawn with them)
+// but have no cable mark set in colorCableTypes — computeCableMarkData
+// silently drops anything in this state, so someone who hasn't gone
+// through and typed a mark for every colour they used sees an estimate
+// that's just missing rows, with nothing telling them why. Surfaced as a
+// banner at the top of the estimate instead of a silent gap.
+function unmarkedColorsInUse(){
+  const used=new Set();
+  lines.forEach(l=>{ if(l.color) used.add(l.color); });
+  segments.forEach(s=>{ if(s.color) used.add(s.color); });
+  return [...used].filter(hex=>!colorCableTypes[hex]);
+}
+
+// Shared banner HTML + click-wiring for all three modals that can silently
+// drop a connected-but-unmarked colour (Общая смета, Смета по кабелям,
+// Расчёт щитка) — same underlying gap (computeCableMarkData /
+// panelCircuitList both require a mark to include a colour at all), same
+// fix (jump straight to the mark input). `missing` is whichever colour list
+// applies to THIS modal — see unmarkedColorsInUse / panelUnmarkedConnectedColors.
+function buildUnmarkedColorsBanner(containerEl, closeModalId, missing){
+  if(!missing.length){ containerEl.innerHTML=''; return; }
+  containerEl.innerHTML=`
+    <div style="background:#3a2a10;border:1px solid #7a5a1a;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:12px;color:#e0c080">
+      <div style="font-weight:700;margin-bottom:6px">${t('overall_unmarked_title')}</div>
+      <div style="margin-bottom:10px">${t('overall_unmarked_hint')}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        ${missing.map(hex=>`
+          <button class="unmarked-color-dot" data-hex="${hex}" style="display:flex;align-items:center;gap:5px;background:#2a2a2a;border:1px solid #555;border-radius:6px;padding:4px 8px;cursor:pointer;color:#ddd;font-size:11px">
+            <span style="width:10px;height:10px;border-radius:50%;background:${hex};display:inline-block;flex-shrink:0"></span>
+            ${colorLabels[hex]?colorLabels[hex]:colorName(hex)}
+          </button>`).join('')}
+      </div>
+    </div>`;
+  containerEl.querySelectorAll('.unmarked-color-dot').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const hex=btn.dataset.hex;
+      currentColor=hex;
+      document.getElementById(closeModalId).style.display='none';
+      buildColorPicker();
+      updateCurrentColorCableUI(hex);
+      const input=document.getElementById('current-color-cable');
+      if(input){ input.focus(); input.scrollIntoView({behavior:'smooth', block:'center'}); }
+    });
+  });
+}
+
 function openOverallEstimateModal(){
   const body=document.getElementById('overall-estimate-body');
   body.innerHTML=`
+    <div id="overall-unmarked"></div>
     <div id="overall-cfg-top"></div>
     <div class="res-section" style="margin-top:16px">${t('overall_mount_title')}</div>
     <div id="overall-mount-table"></div>
     <div class="res-section" style="margin-top:16px">${t('overall_cable_title')}</div>
     <div id="overall-cable-list"></div>
     <div id="overall-summary"></div>`;
+  buildUnmarkedColorsBanner(document.getElementById('overall-unmarked'), 'overall-estimate-modal', unmarkedColorsInUse());
   renderOverallTop();
   renderOverallMountTable();
   renderOverallCableList();
@@ -11481,6 +12345,7 @@ document.getElementById('panel-calc-close-bottom').addEventListener('click',()=>
 document.getElementById('panel-calc-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) e.currentTarget.style.display='none'; });
 
 document.getElementById('btn-cable-estimate').addEventListener('click',()=>{
+  buildUnmarkedColorsBanner(document.getElementById('cable-estimate-unmarked'), 'cable-estimate-modal', unmarkedColorsInUse());
   document.getElementById('cable-estimate-table-wrap').innerHTML = buildCableEstimateTableHtml();
   document.getElementById('cable-estimate-modal').style.display='flex';
 });
@@ -11491,7 +12356,7 @@ document.getElementById('whatsnew-modal').addEventListener('click',e=>{ if(e.tar
 
 // Bump this string whenever new entries are added to the What's New modal —
 // anyone who hasn't seen THIS version yet gets the red dot on the button.
-const WHATSNEW_VERSION='2026-08-22';
+const WHATSNEW_VERSION='2026-08-28';
 function updateWhatsNewDot(){
   const seen=localStorage.getItem('wiringSeenWhatsNew');
   document.getElementById('whatsnew-dot').style.display = (seen===WHATSNEW_VERSION) ? 'none' : 'block';

@@ -268,6 +268,9 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     <button class="tb-btn" id="btn-overall-estimate" data-i18n-title="tt_overall_estimate" title="Общая смета: кабель, крепёж, подрозетники, коробки и оборудование щитка — всё вместе">
       <i class="ti ti-sum" style="font-size:13px"></i> <span data-i18n="overall_estimate_btn">Общая смета</span>
     </button>
+    <button class="tb-btn" id="btn-podrozet-scan" data-i18n-title="tt_podrozet_scan" title="Распознать количество подрозетников прямо по подложке чертежа — по образцам розеточных/выключательных блоков">
+      <i class="ti ti-viewfinder" style="font-size:13px"></i> <span data-i18n="podrozet_scan_btn">Подрозетники по чертежу</span>
+    </button>
     <div class="sep"></div>
     <button class="tb-btn" id="btn-site-mode" style="margin-left:auto" data-i18n-title="tt_toggle_mode" title="Переключить режим монтажа">По потолку</button>
     <button class="tb-btn success" id="btn-tour" style="font-weight:600" data-i18n-title="tt_tour" title="Пошаговое обучение">
@@ -750,6 +753,46 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
   </div>
 </div>
 
+<!-- Подрозетники по чертежу (template-based recognition on the underlay) -->
+<div id="podrozet-modal" style="display:none;position:fixed;inset:0;background:#141414;z-index:700;flex-direction:column">
+  <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#1e1e1e;border-bottom:1px solid #333;flex-wrap:wrap">
+    <span data-i18n="podrozet_h2" style="font-weight:700;color:#e8e8e8;font-size:14px;margin-right:8px">Подрозетники по чертежу</span>
+    <button class="tb-btn" id="podrozet-tool-area" data-i18n="podrozet_tool_area">Область поиска</button>
+    <button class="tb-btn" id="podrozet-tool-sample" data-i18n="podrozet_tool_sample">Добавить образец</button>
+    <button class="tb-btn" id="podrozet-run" data-i18n="podrozet_run_btn" style="background:#1a3a5c;border-color:#4a9eff;color:#7dc4ff" disabled>Распознать</button>
+    <div class="sep"></div>
+    <span data-i18n="podrozet_brightness_label" style="color:#999;font-size:11px">Яркость</span>
+    <input id="podrozet-brightness" type="range" min="40" max="220" value="100" style="width:110px">
+    <div class="sep"></div>
+    <span id="podrozet-total" style="color:#ccc;font-size:12px;white-space:nowrap"></span>
+    <button id="podrozet-close" style="margin-left:auto;background:none;border:none;color:#888;font-size:22px;cursor:pointer;line-height:1">✕</button>
+  </div>
+  <div style="display:flex;flex:1;overflow:hidden">
+    <div id="podrozet-canvas-wrap" style="flex:1;position:relative;overflow:hidden;background:#0a0a0a">
+      <canvas id="podrozet-canvas" style="position:absolute;top:0;left:0;cursor:crosshair"></canvas>
+      <div id="podrozet-widgets-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
+      <div id="podrozet-empty-hint" data-i18n="podrozet_empty_hint" style="display:none;position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#555;font-size:13px;text-align:center;padding:20px">Загрузите подложку чертежа в проект, чтобы распознавание могло по ней работать.</div>
+    </div>
+    <div style="width:260px;flex-shrink:0;background:#1a1a1a;border-left:1px solid #333;overflow-y:auto;padding:12px">
+      <div data-i18n="podrozet_samples_title" style="font-size:12px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.03em;margin-bottom:8px">Образцы</div>
+      <div id="podrozet-samples-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px"></div>
+      <div data-i18n="podrozet_hint_text" style="font-size:11px;color:#666;line-height:1.5;margin-bottom:16px">Сначала выделите область поиска (чтобы не задело легенду), потом добавьте один или несколько образцов блока с указанием числа подрозетников в каждом. Затем «Распознать».</div>
+      <div data-i18n="podrozet_results_title" style="font-size:12px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.03em;margin-bottom:8px">Результаты</div>
+      <div id="podrozet-results-list" style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:#ccc"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Count-prompt mini popup for a newly drawn sample -->
+<div id="podrozet-count-prompt" style="display:none;position:fixed;z-index:800;background:#242424;border:1px solid #4a9eff;border-radius:8px;padding:10px;box-shadow:0 4px 16px rgba(0,0,0,.5)">
+  <div data-i18n="podrozet_count_prompt" style="font-size:11px;color:#ccc;margin-bottom:6px">Сколько подрозетников в этом образце?</div>
+  <div style="display:flex;gap:6px;align-items:center">
+    <input id="podrozet-count-input" type="number" min="1" value="1" style="width:56px;background:#141414;border:1px solid #555;border-radius:5px;color:#eee;padding:4px 6px;font-size:13px">
+    <button id="podrozet-count-ok" data-i18n="podrozet_count_ok" style="background:#1a3a5c;border:1px solid #4a9eff;color:#7dc4ff;border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer">OK</button>
+    <button id="podrozet-count-cancel" style="background:none;border:1px solid #555;color:#999;border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer">✕</button>
+  </div>
+</div>
+
 <!-- Shop Request modal -->
 <div id="shop-request-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:600;align-items:center;justify-content:center;overflow:auto;padding:20px">
   <div style="background:#1e1e1e;border:1px solid #444;border-radius:12px;max-width:min(94vw,520px);width:100%;max-height:90vh;overflow-y:auto;padding:28px 30px;position:relative">
@@ -788,7 +831,23 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     <button id="whatsnew-close" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#666;font-size:22px;cursor:pointer;line-height:1">✕</button>
     <h2 data-i18n="whatsnew_h2" style="font-size:18px;font-weight:700;margin-bottom:20px;color:#e8e8e8">Последние обновления</h2>
 
-    <div class="whatsnew-date" data-i18n="wn_r5_date" style="font-size:12px;font-weight:700;color:#7dc4ff;margin-bottom:10px;text-transform:uppercase;letter-spacing:.03em">28 августа 2026</div>
+    <div class="whatsnew-date" data-i18n="wn_r6_date" style="font-size:12px;font-weight:700;color:#7dc4ff;margin-bottom:10px;text-transform:uppercase;letter-spacing:.03em">29 августа 2026</div>
+
+    <div class="guide-step">
+      <div class="guide-body" style="margin-left:0">
+        <div class="guide-title" data-i18n="wn_r6_1_title">Новое: «Посчитать подрозетники» прямо по чертежу</div>
+        <div class="guide-text" data-i18n-html="wn_r6_1_text">Выделите на подложке чертежа образец розетки, выключателя или целой рамки на несколько постов и укажите, сколько подрозетников в нём — сервис сам найдёт все похожие места по всему плану и подсветит их с указанием количества. Результат можно поправить вручную и одной кнопкой применить в общую смету.</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-body" style="margin-left:0">
+        <div class="guide-title" data-i18n="wn_r6_2_title">Заметки в каждой строке общей сметы</div>
+        <div class="guide-text" data-i18n-html="wn_r6_2_text">Рядом с любой позицией сметы — кабель, крепёж, подрозетники, оборудование щитка — теперь можно оставить свою короткую заметку, она сохраняется вместе с проектом.</div>
+      </div>
+    </div>
+
+    <div class="whatsnew-date" data-i18n="wn_r5_date" style="font-size:12px;font-weight:700;color:#7dc4ff;margin:22px 0 10px;text-transform:uppercase;letter-spacing:.03em;border-top:1px solid #333;padding-top:18px">28 августа 2026</div>
 
     <div class="guide-step">
       <div class="guide-body" style="margin-left:0">
@@ -1210,6 +1269,11 @@ const translations = {
     wn_5_title:'Курсор больше не «убегает»',
     wn_5_text:'Исправлено расхождение между тем, где реально происходит клик, и тем, где показывалось перекрестие — особенно заметно было при смене режима (линия/значок/выбор).',
     wn_footer_prompt:'Нашли баг или есть предложение?', wn_footer_link:'Написать разработчику',
+    wn_r6_date:'29 августа 2026',
+    wn_r6_1_title:'Новое: «Посчитать подрозетники» прямо по чертежу',
+    wn_r6_1_text:'Выделите на подложке чертежа образец розетки, выключателя или целой рамки на несколько постов и укажите, сколько подрозетников в нём — сервис сам найдёт все похожие места по всему плану и подсветит их с указанием количества. Результат можно поправить вручную и одной кнопкой применить в общую смету.',
+    wn_r6_2_title:'Заметки в каждой строке общей сметы',
+    wn_r6_2_text:'Рядом с любой позицией сметы — кабель, крепёж, подрозетники, оборудование щитка — теперь можно оставить свою короткую заметку, она сохраняется вместе с проектом.',
     wn_r5_date:'28 августа 2026',
     wn_r5_1_title:'Щит распределительный сам растёт под подключения',
     wn_r5_1_text:'Новый значок «ЩР» подстраивает свою ширину и число портов под фактическое количество подключённых линий, наполняясь от закреплённого края (настраивается в свойствах значка), а не занимает фиксированный размер заранее. Провода теперь могут физически проходить рядом со щитом, не обходя его как препятствие.',
@@ -1321,6 +1385,28 @@ const translations = {
     panel_col_qty:'Кол-во', panel_col_modules:'Модули', panel_col_total_modules:'Итого модулей',
     tt_overall_estimate:'Общая смета: кабель, крепёж, подрозетники, коробки и оборудование щитка — всё вместе',
     overall_estimate_btn:'Общая смета', overall_estimate_h2:'Общая смета',
+    podrozet_scan_btn:'Посчитать подрозетники', tt_podrozet_scan:'Распознать количество подрозетников прямо по подложке чертежа — по образцам розеточных/выключательных блоков',
+    podrozet_h2:'Подрозетники по чертежу',
+    podrozet_tool_area:'Область поиска',
+    podrozet_tool_sample:'Добавить образец',
+    podrozet_run_btn:'Распознать',
+    podrozet_empty_hint:'Загрузите подложку чертежа в проект, чтобы распознавание могло по ней работать.',
+    podrozet_samples_title:'Образцы',
+    podrozet_hint_text:'Сначала выделите область поиска (чтобы не задело легенду), потом добавьте один или несколько образцов блока с указанием числа подрозетников в каждом. Затем «Распознать».',
+    podrozet_results_title:'Результаты',
+    podrozet_count_prompt:'Сколько подрозетников в этом образце?',
+    podrozet_count_ok:'OK',
+    podrozet_draw_area_hint:'Выделите прямоугольную область поиска на подложке',
+    podrozet_draw_sample_hint:'Выделите образец блока розеток/выключателей',
+    podrozet_need_area_first:'Сначала выделите область поиска',
+    podrozet_need_sample_first:'Добавьте хотя бы один образец',
+    podrozet_sample_label:'Образец',
+    podrozet_review_badge:'проверьте',
+    podrozet_total_label:'Всего подрозетников',
+    podrozet_apply_btn:'Применить в смету и выйти',
+    podrozet_applied_msg:'Учтено в общей смете',
+    podrozet_delete_sample:'Удалить образец',
+    podrozet_brightness_label:'Яркость',
     overall_unmarked_title:'Не у всех использованных цветов указана марка кабеля',
     overall_unmarked_hint:'Их метраж не попадёт в смету, пока для цвета не указана марка. Нажмите на цвет ниже, чтобы сразу перейти к вводу марки в панели свойств.',
     overall_horiz_label:'Крепление горизонтальных участков', overall_vert_label:'Крепление вертикальных участков',
@@ -1335,6 +1421,7 @@ const translations = {
     overall_mount_title:'Способ крепления по линиям', overall_axis_horizontal:'Горизонтальные', overall_axis_vertical:'Вертикальные',
     overall_col_metres:'Метров', overall_col_method:'Метод крепежа', overall_col_size:'Размерность', overall_col_rate:'Расход/м',
     overall_note_ph:'например: ВВГ НГ (LS)',
+    overall_generic_note_ph:'заметка...',
     overall_summary_title:'Общая смета',
     overall_item_cable:'Кабель', overall_item_backbox:'Подрозетники',
     overall_item_box_pro:'Коробка наружной установки', overall_item_box_pro_none:'Коробок на схеме не найдено',
@@ -1348,8 +1435,8 @@ const translations = {
     shop_request_no_shops:'Для вашего города магазины пока не добавлены.', shop_request_none_selected:'Отметьте хотя бы один магазин.',
     shop_request_sent_one:'Открыт чат WhatsApp с сообщением — осталось отправить.',
     shop_request_tap_each:'Откройте каждый чат по очереди и отправьте сообщение (браузер не даёт открыть все сразу):',
-    shop_request_msg_header:'Здравствуйте! Формирую заявку через калькулятор проводки provodka.org, прошу посчитать стоимость этих материалов для монтажа:',
-    shop_request_msg_footer:'При необходимости могу прислать схему для сверки количества (сделана на provodka.org). Буду благодарен(на) за расчёт и накладную. Спасибо!',
+    shop_request_msg_header:'Здравствуйте! Заявка с промокодом provodka.org на расчёт материалов:',
+    shop_request_msg_footer:'Заранее благодарю и жду вашего ответа!',
     overall_box_count_ph:'количество', overall_box_size_ph:'размер, например 100×100',
     overall_item_corr_pvc:'Гофра ПВХ', overall_item_corr_pnd:'Гофра ПНД', overall_item_clips:'Клипса',
     overall_clip_gun_suffix:'для прямого монтажа', overall_item_dowel:'Дюбель-хомут', overall_item_tiepad:'Площадка под стяжку',
@@ -1563,6 +1650,11 @@ const translations = {
     wn_5_title:"The cursor no longer drifts",
     wn_5_text:"Fixed a mismatch between where a click actually registered and where the crosshair was shown — most noticeable when switching modes (line/marker/select).",
     wn_footer_prompt:'Found a bug or have a suggestion?', wn_footer_link:'Message the developer',
+    wn_r6_date:'August 29, 2026',
+    wn_r6_1_title:'New: "Count boxes" straight from the drawing',
+    wn_r6_1_text:"Select a sample socket, switch, or a whole multi-gang frame on the drawing's underlay and say how many boxes it represents — the tool finds every similar spot across the whole plan and highlights them with a count. Adjust the result by hand if needed, then apply it to the overall estimate with one button.",
+    wn_r6_2_title:'Notes on every row of the overall estimate',
+    wn_r6_2_text:'Next to any estimate line — cable, mounting hardware, mounting boxes, panel equipment — you can now leave a short note of your own; it\'s saved with the project.',
     wn_r5_date:'August 28, 2026',
     wn_r5_1_title:'Distribution panels now grow to fit their connections',
     wn_r5_1_text:'The new "ЩР" (panel) marker adjusts its width and port count to however many lines are actually connected, filling in from its anchored edge (configurable in the marker\'s properties) instead of occupying a fixed size up front. Wires can now physically run past the panel without being routed around it as an obstacle.',
@@ -1674,6 +1766,28 @@ const translations = {
     panel_col_qty:'Qty', panel_col_modules:'Modules', panel_col_total_modules:'Total modules',
     tt_overall_estimate:'Overall estimate: cable, mounting hardware, back-boxes, junction boxes, and panel equipment — combined',
     overall_estimate_btn:'Overall estimate', overall_estimate_h2:'Overall estimate',
+    podrozet_scan_btn:'Count boxes', tt_podrozet_scan:"Recognise the number of mounting boxes straight from the drawing's underlay — from samples of socket/switch blocks",
+    podrozet_h2:'Boxes from drawing',
+    podrozet_tool_area:'Search area',
+    podrozet_tool_sample:'Add sample',
+    podrozet_run_btn:'Recognise',
+    podrozet_empty_hint:'Load a drawing underlay into the project for recognition to work on.',
+    podrozet_samples_title:'Samples',
+    podrozet_hint_text:'First mark out a search area (to keep the legend out of it), then add one or more block samples with the box count for each. Then click "Recognise".',
+    podrozet_results_title:'Results',
+    podrozet_count_prompt:'How many boxes are in this sample?',
+    podrozet_count_ok:'OK',
+    podrozet_draw_area_hint:'Draw a rectangular search area on the underlay',
+    podrozet_draw_sample_hint:'Draw around a sample socket/switch block',
+    podrozet_need_area_first:'Mark out a search area first',
+    podrozet_need_sample_first:'Add at least one sample',
+    podrozet_sample_label:'Sample',
+    podrozet_review_badge:'review',
+    podrozet_total_label:'Total boxes',
+    podrozet_apply_btn:'Apply to estimate and exit',
+    podrozet_applied_msg:'Counted in the overall estimate',
+    podrozet_delete_sample:'Delete sample',
+    podrozet_brightness_label:'Brightness',
     overall_unmarked_title:'Not every colour in use has a cable mark set',
     overall_unmarked_hint:"Their length won't appear in the estimate until a mark is set for that colour. Click a colour below to jump straight to entering its mark in the properties panel.",
     overall_horiz_label:'Horizontal run mounting', overall_vert_label:'Vertical run mounting',
@@ -1688,6 +1802,7 @@ const translations = {
     overall_mount_title:'Mounting method per circuit', overall_axis_horizontal:'Horizontal', overall_axis_vertical:'Vertical',
     overall_col_metres:'Metres', overall_col_method:'Mounting method', overall_col_size:'Size', overall_col_rate:'Rate/m',
     overall_note_ph:'e.g. VVGng (LS)',
+    overall_generic_note_ph:'note...',
     overall_summary_title:'Overall estimate',
     overall_item_cable:'Cable', overall_item_backbox:'Back-boxes',
     overall_item_box_pro:'Surface-mount box', overall_item_box_pro_none:'No boxes found on the scheme',
@@ -1701,8 +1816,8 @@ const translations = {
     shop_request_no_shops:'No shops added for your city yet.', shop_request_none_selected:'Check at least one shop.',
     shop_request_sent_one:'A WhatsApp chat with the message is open — just send it.',
     shop_request_tap_each:'Open each chat in turn and send the message (the browser will not let all of them open at once):',
-    shop_request_msg_header:"Hello! I'm putting together this order via the provodka.org wiring calculator — could you quote the price for these installation materials:",
-    shop_request_msg_footer:"If it helps, I can send the wiring scheme to double-check the quantities (made on provodka.org). I'd appreciate a quote and an invoice. Thank you!",
+    shop_request_msg_header:"Hello! Order with promo code provodka.org for a materials quote:",
+    shop_request_msg_footer:"Thank you in advance, looking forward to your reply!",
     overall_box_count_ph:'quantity', overall_box_size_ph:'size, e.g. 100×100',
     overall_item_corr_pvc:'PVC corrugated conduit', overall_item_corr_pnd:'PND corrugated conduit', overall_item_clips:'Clip',
     overall_clip_gun_suffix:'for direct mounting', overall_item_dowel:'Dowel clamp', overall_item_tiepad:'Cable tie mounting pad',
@@ -1916,6 +2031,11 @@ const translations = {
     wn_5_title:'El cursor ya no se desvía',
     wn_5_text:'Se corrigió un desajuste entre el lugar donde realmente ocurría el clic y donde se mostraba la cruceta — era especialmente notorio al cambiar de modo (línea/elemento/selección).',
     wn_footer_prompt:'¿Encontró un error o tiene una sugerencia?', wn_footer_link:'Escribir al desarrollador',
+    wn_r6_date:'29 de agosto de 2026',
+    wn_r6_1_title:'Novedad: "Contar cajas" directamente desde el plano',
+    wn_r6_1_text:'Seleccione una muestra de toma, interruptor o un marco completo de varios puestos en la imagen de fondo del plano e indique cuántas cajas representa — la herramienta encuentra todos los lugares similares en todo el plano y los resalta con la cantidad. Puede ajustar el resultado manualmente y aplicarlo al presupuesto general con un solo botón.',
+    wn_r6_2_title:'Notas en cada línea del presupuesto general',
+    wn_r6_2_text:'Junto a cualquier línea del presupuesto — cable, sujeción, cajas de empotrar, equipo del cuadro — ahora puede dejar su propia nota breve; se guarda junto con el proyecto.',
     wn_r5_date:'28 de agosto de 2026',
     wn_r5_1_title:'El cuadro de distribución ahora crece según sus conexiones',
     wn_r5_1_text:'El nuevo elemento «ЩР» (cuadro) ajusta su ancho y número de puertos a la cantidad real de líneas conectadas, llenándose desde su borde anclado (configurable en las propiedades del elemento), en lugar de ocupar un tamaño fijo de antemano. Los cables ahora pueden pasar físicamente junto al cuadro sin bordearlo como si fuera un obstáculo.',
@@ -2027,6 +2147,28 @@ const translations = {
     panel_col_qty:'Cant.', panel_col_modules:'Módulos', panel_col_total_modules:'Total de módulos',
     tt_overall_estimate:'Presupuesto general: cable, sujeción, cajas de empotrar, cajas de derivación y equipo del cuadro — todo junto',
     overall_estimate_btn:'Presupuesto general', overall_estimate_h2:'Presupuesto general',
+    podrozet_scan_btn:'Contar cajas', tt_podrozet_scan:'Reconocer la cantidad de cajas de empotrar directamente desde la imagen de fondo del plano — a partir de muestras de bloques de tomas/interruptores',
+    podrozet_h2:'Cajas desde el plano',
+    podrozet_tool_area:'Área de búsqueda',
+    podrozet_tool_sample:'Añadir muestra',
+    podrozet_run_btn:'Reconocer',
+    podrozet_empty_hint:'Cargue una imagen de fondo del plano en el proyecto para que el reconocimiento pueda funcionar.',
+    podrozet_samples_title:'Muestras',
+    podrozet_hint_text:'Primero delimite un área de búsqueda (para no incluir la leyenda), luego añada una o varias muestras de bloque indicando el número de cajas en cada una. Después pulse «Reconocer».',
+    podrozet_results_title:'Resultados',
+    podrozet_count_prompt:'¿Cuántas cajas hay en esta muestra?',
+    podrozet_count_ok:'OK',
+    podrozet_draw_area_hint:'Dibuje un área de búsqueda rectangular sobre el plano',
+    podrozet_draw_sample_hint:'Dibuje alrededor de una muestra de bloque de tomas/interruptores',
+    podrozet_need_area_first:'Delimite primero un área de búsqueda',
+    podrozet_need_sample_first:'Añada al menos una muestra',
+    podrozet_sample_label:'Muestra',
+    podrozet_review_badge:'revisar',
+    podrozet_total_label:'Total de cajas',
+    podrozet_apply_btn:'Aplicar al presupuesto y salir',
+    podrozet_applied_msg:'Contabilizado en el presupuesto general',
+    podrozet_delete_sample:'Eliminar muestra',
+    podrozet_brightness_label:'Brillo',
     overall_unmarked_title:'No todos los colores usados tienen una marca de cable indicada',
     overall_unmarked_hint:'Su longitud no aparecerá en el presupuesto hasta que se indique una marca para ese color. Haga clic en un color abajo para ir directamente a introducir su marca en el panel de propiedades.',
     overall_horiz_label:'Sujeción de tramos horizontales', overall_vert_label:'Sujeción de tramos verticales',
@@ -2041,6 +2183,7 @@ const translations = {
     overall_mount_title:'Método de sujeción por circuito', overall_axis_horizontal:'Horizontal', overall_axis_vertical:'Vertical',
     overall_col_metres:'Metros', overall_col_method:'Método de sujeción', overall_col_size:'Tamaño', overall_col_rate:'Consumo/m',
     overall_note_ph:'p. ej.: VVGng (LS)',
+    overall_generic_note_ph:'nota...',
     overall_summary_title:'Presupuesto general',
     overall_item_cable:'Cable', overall_item_backbox:'Cajas de empotrar',
     overall_item_box_pro:'Caja de superficie', overall_item_box_pro_none:'No se encontraron cajas en el esquema',
@@ -2054,8 +2197,8 @@ const translations = {
     shop_request_no_shops:'Todavía no hay tiendas añadidas para su ciudad.', shop_request_none_selected:'Marque al menos una tienda.',
     shop_request_sent_one:'Se abrió un chat de WhatsApp con el mensaje — solo falta enviarlo.',
     shop_request_tap_each:'Abra cada chat por turno y envíe el mensaje (el navegador no permite abrirlos todos a la vez):',
-    shop_request_msg_header:'¡Hola! Estoy preparando este pedido con la calculadora de cableado provodka.org — ¿podría cotizar el precio de estos materiales de instalación:',
-    shop_request_msg_footer:'Si le sirve, puedo enviarle el esquema para verificar las cantidades (hecho en provodka.org). Le agradecería un presupuesto y una factura. ¡Gracias!',
+    shop_request_msg_header:'¡Hola! Pedido con código promocional provodka.org para cotización de materiales:',
+    shop_request_msg_footer:'¡Muchas gracias de antemano, quedo a la espera de su respuesta!',
     overall_box_count_ph:'cantidad', overall_box_size_ph:'tamaño, p. ej. 100×100',
     overall_item_corr_pvc:'Tubo corrugado PVC', overall_item_corr_pnd:'Tubo corrugado PEAD', overall_item_clips:'Grapa',
     overall_clip_gun_suffix:'para montaje directo', overall_item_dowel:'Grapa de fijación', overall_item_tiepad:'Base para brida',
@@ -2269,6 +2412,11 @@ const translations = {
     wn_5_title:'Курсор енді «қашпайды»',
     wn_5_text:'Шертудің нақты орны мен айқас белгінің көрсетілетін орны арасындағы алшақтық түзетілді — режимді ауыстырғанда (сызық/белгіше/таңдау) әсіресе байқалатын.',
     wn_footer_prompt:'Қате таптыңыз ба немесе ұсынысыңыз бар ма?', wn_footer_link:'Әзірлеушіге жазу',
+    wn_r6_date:'2026 жылғы 29 тамыз',
+    wn_r6_1_title:'Жаңалық: сызба бойынша «Подрозетниктерді санау»',
+    wn_r6_1_text:'Сызба тінінде розетка, выключатель немесе бірнеше посттық рамка үлгісін белгілеп, онда неше подрозетник бар екенін көрсетіңіз — қызмет бүкіл жоспар бойынша осындай орындарды өзі тауып, санымен бірге белгілейді. Нәтижені қолмен түзетуге болады, содан кейін бір батырмамен жалпы сметаға қолдануға болады.',
+    wn_r6_2_title:'Жалпы сметаның әр жолында ескертпе',
+    wn_r6_2_text:'Сметаның кез келген жолының қасында — кабель, бекіту, подрозетниктер, щит жабдығы — енді өз қысқа ескертпеңізді қалдыруға болады, ол жобамен бірге сақталады.',
     wn_r5_date:'2026 жылғы 28 тамыз',
     wn_r5_1_title:'Тарату щиті енді қосылымдарға қарай өседі',
     wn_r5_1_text:'Жаңа «ЩР» белгішесі өз енін және порт санын қосылған сызықтардың нақты санына бейімдейді, бекітілген жиегінен (белгіше қасиеттерінде теңшеледі) толтырыла отырып — алдын ала тіркелген мөлшерді алмайды. Сымдар енді щитті кедергі ретінде айналып өтпей, оның қасынан физикалық түрде өте алады.',
@@ -2380,6 +2528,28 @@ const translations = {
     panel_col_qty:'Саны', panel_col_modules:'Модульдер', panel_col_total_modules:'Барлығы модуль',
     tt_overall_estimate:'Жалпы смета: кабель, бекітпе, астаушалар, қораптар және щиток жабдығы — барлығы бірге',
     overall_estimate_btn:'Жалпы смета', overall_estimate_h2:'Жалпы смета',
+    podrozet_scan_btn:'Подрозетниктерді санау', tt_podrozet_scan:'Розетка/выключатель блоктарының үлгілері бойынша подрозетниктер санын тікелей сызба тінінен тану',
+    podrozet_h2:'Сызбадан подрозетниктер',
+    podrozet_tool_area:'Іздеу аймағы',
+    podrozet_tool_sample:'Үлгі қосу',
+    podrozet_run_btn:'Тану',
+    podrozet_empty_hint:'Тану жұмыс істеуі үшін жобаға сызба тінін жүктеңіз.',
+    podrozet_samples_title:'Үлгілер',
+    podrozet_hint_text:'Алдымен іздеу аймағын белгілеңіз (легенда түспеу үшін), сосын блок үлгісін (немесе бірнешеуін) подрозетник санын көрсетіп қосыңыз. Содан кейін «Тану» басыңыз.',
+    podrozet_results_title:'Нәтижелер',
+    podrozet_count_prompt:'Бұл үлгіде неше подрозетник бар?',
+    podrozet_count_ok:'OK',
+    podrozet_draw_area_hint:'Тіндегі тікбұрышты іздеу аймағын белгілеңіз',
+    podrozet_draw_sample_hint:'Розетка/выключатель блогының үлгісін белгілеңіз',
+    podrozet_need_area_first:'Алдымен іздеу аймағын белгілеңіз',
+    podrozet_need_sample_first:'Кемінде бір үлгі қосыңыз',
+    podrozet_sample_label:'Үлгі',
+    podrozet_review_badge:'тексеріңіз',
+    podrozet_total_label:'Барлық подрозетниктер',
+    podrozet_apply_btn:'Сметаға қолданып, шығу',
+    podrozet_applied_msg:'Жалпы сметада ескерілді',
+    podrozet_delete_sample:'Үлгіні жою',
+    podrozet_brightness_label:'Жарықтық',
     overall_unmarked_title:'Қолданылған түстердің барлығында кабель маркасы көрсетілмеген',
     overall_unmarked_hint:'Түс үшін марка көрсетілмейінше, оның ұзындығы сметаға енбейді. Марканы қасиеттер тақтасында бірден енгізу үшін төмендегі түсті басыңыз.',
     overall_horiz_label:'Көлденең учаскелерді бекіту', overall_vert_label:'Тік учаскелерді бекіту',
@@ -2394,6 +2564,7 @@ const translations = {
     overall_mount_title:'Сызық бойынша бекіту тәсілі', overall_axis_horizontal:'Көлденең', overall_axis_vertical:'Тік',
     overall_col_metres:'Метр', overall_col_method:'Бекіту тәсілі', overall_col_size:'Өлшемі', overall_col_rate:'Шығын/м',
     overall_note_ph:'мысалы: ВВГнг (LS)',
+    overall_generic_note_ph:'ескертпе...',
     overall_summary_title:'Жалпы смета',
     overall_item_cable:'Кабель', overall_item_backbox:'Астаушалар',
     overall_item_box_pro:'Сыртқы орнату қорабы', overall_item_box_pro_none:'Схемада қораптар табылмады',
@@ -2407,8 +2578,8 @@ const translations = {
     shop_request_no_shops:'Сіздің қалаңыз үшін дүкендер әлі қосылмаған.', shop_request_none_selected:'Кем дегенде бір дүкенді белгілеңіз.',
     shop_request_sent_one:'Хабарламасы бар WhatsApp чаты ашылды — жіберу ғана қалды.',
     shop_request_tap_each:'Әр чатты кезекпен ашып, хабарламаны жіберіңіз (браузер барлығын бірден ашуға рұқсат бермейді):',
-    shop_request_msg_header:'Сәлеметсіз бе! provodka.org сым калькуляторы арқылы тапсырыс жасап жатырмын, осы монтаж материалдарының құнын есептеп бере аласыз ба:',
-    shop_request_msg_footer:'Қажет болса, мөлшерді тексеру үшін схеманы жібере аламын (provodka.org сайтында жасалған). Есептеу мен жүкқұжат үшін алғыс білдіремін. Рахмет!',
+    shop_request_msg_header:'Сәлеметсіз бе! provodka.org промокодымен материалдарды есептеуге тапсырыс:',
+    shop_request_msg_footer:'Алдын ала рахмет, жауабыңызды күтемін!',
     overall_box_count_ph:'саны', overall_box_size_ph:'өлшемі, мысалы 100×100',
     overall_item_corr_pvc:'ПВХ гофрасы', overall_item_corr_pnd:'ПНД гофрасы', overall_item_clips:'Қысқыш',
     overall_clip_gun_suffix:'тікелей орнатуға арналған', overall_item_dowel:'Дюбель-қысқыш', overall_item_tiepad:'Тарту алаңшасы',
@@ -2617,6 +2788,7 @@ let overallBoxSizeText = '';            // base-mode only: user-entered box dime
 let overallBoxExtraInfo = '';           // both modes: free-text extra info (e.g. physical dimensions like "100*100*50")
 let overallBoxBaseCount = null;         // base-mode only: user-entered box count (no reliable auto-detection there)
 let cableMarkNotes = {};                // {markLabel: 'free text note'} — per cable-mark comments in the overall estimate
+let overallRowNotes = {};               // {rowKey: 'free text note'} — same idea, generalised to every other row of the overall estimate (back-boxes, mounting hardware, panel items...)
 // Per (axis, cable mark) mounting config — each row of the middle table in
 // the Overall Estimate modal gets its own method/size/consumption-rate,
 // since e.g. a thicker cable might need a bigger conduit and a different
@@ -9152,7 +9324,7 @@ function doSaveProject(){
   const name=getProjectName();
   const data={version:10,pro:true,projectName:name,scale,segments,lines,markers,walls,measurements,markerTypes,colorLabels,colorCableTypes,hiddenColors:[...hiddenColors],bg:bgImgDataUrl,bgX,bgY,bgS,bgOpacity,markerSnapRadius,crossingPenaltyCm,autoFixupEnabled,zones,ceilingHeightM,defaultRouteHeightM,defaultRouteHeightRef,colorRouteHeight,
     panelPhases,panelHasInputBreaker,panelInputBreakerRating,panelHasVoltageRelay,panelHasContactor,panelContactorRating,panelVoltageRelayRating,panelProtectionScheme,panelRcdCount,panelRcdRating,panelNeutralBusChoice,panelMountType,colorBreakerRating,
-    overallHasMountingGun,overallMarginPct,overallBackBoxCountOverride,overallBoxSizeText,overallBoxBaseCount,overallBoxExtraInfo,cableMarkNotes,overallRowConfig};
+    overallHasMountingGun,overallMarginPct,overallBackBoxCountOverride,overallBoxSizeText,overallBoxBaseCount,overallBoxExtraInfo,cableMarkNotes,overallRowNotes,overallRowConfig};
   const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download=safeFileName(name)+'.wiring';a.click();
@@ -9203,6 +9375,7 @@ document.getElementById('project-in').addEventListener('change',e=>{
       overallBoxBaseCount=d.overallBoxBaseCount!=null?d.overallBoxBaseCount:null;
       overallBoxExtraInfo=d.overallBoxExtraInfo||'';
       cableMarkNotes=d.cableMarkNotes||{};
+      overallRowNotes=d.overallRowNotes||{};
       overallRowConfig=d.overallRowConfig||{};
       // Restore project name if present in the file
       if(d.projectName) document.getElementById('project-name').value=d.projectName;
@@ -9579,6 +9752,12 @@ function overallBoxRows(){
 }
 
 function defaultBackBoxCount(){
+  // If "Подрозетники по чертежу" has been run and applied, its result — a
+  // real count of physical boxes seen on the underlay — is more accurate
+  // than one-per-marker (a marker is just where a cable lands; a real
+  // installation can group several boxes under one marker via a shared
+  // frame). See chat for the full recognition design.
+  if(podrozetManualBoxCount!=null) return podrozetManualBoxCount;
   let n=0;
   markers.forEach(mk=>{
     const mt=markerTypes.find(t=>t.id===mk.mtypeId);
@@ -12195,66 +12374,79 @@ function renderOverallSummary(){
 
   // Cable, by mark
   est.cableRows.forEach(r=>{
-    rows.push({name:`${t('overall_item_cable')} ${r.mark}`, qty:`${r.total} ${t('unit_m')}`});
+    rows.push({key:`cable_${r.mark}`, name:`${t('overall_item_cable')} ${r.mark}`, qty:`${r.total} ${t('unit_m')}`});
   });
 
   // Back-boxes (editable)
-  rows.push({name:t('overall_item_backbox'), editableCount:'backbox', qty:est.backBoxCount});
+  rows.push({key:'backbox', name:t('overall_item_backbox'), editableCount:'backbox', qty:est.backBoxCount});
 
   // Junction boxes
   if(est.boxes.mode==='pro'){
-    est.boxes.rows.forEach(b=>{
-      rows.push({name:`${t('overall_item_box_pro')} ${b.desc} (${b.totalPorts} ${t('overall_ports_total')})`, qty:b.count});
+    est.boxes.rows.forEach((b,i)=>{
+      rows.push({key:`boxpro_${i}_${b.desc}`, name:`${t('overall_item_box_pro')} ${b.desc} (${b.totalPorts} ${t('overall_ports_total')})`, qty:b.count});
     });
-    if(!est.boxes.rows.length) rows.push({name:t('overall_item_box_pro_none'), qty:''});
+    if(!est.boxes.rows.length) rows.push({key:'boxpro_none', name:t('overall_item_box_pro_none'), qty:''});
   } else {
-    rows.push({name:t('overall_item_box_base'), editableBoxBase:true, qty:''});
+    rows.push({key:'boxbase', name:t('overall_item_box_base'), editableBoxBase:true, qty:''});
   }
-  rows.push({name:t('overall_item_box_extra_info'), editableBoxExtraInfo:true, qty:''});
+  rows.push({key:'boxextra', name:t('overall_item_box_extra_info'), editableBoxExtraInfo:true, qty:'', noNote:true});
 
   // Mounting hardware, aggregated by (method,size)
   const methodItemKey={'corr-pvc':'overall_item_corr_pvc','corr-pnd':'overall_item_corr_pnd','cable-channel':'overall_item_channel'};
   const fastenerItemKey={'corr-pvc':'overall_item_clips','corr-pnd':'overall_item_clips','groove-dowel':'overall_item_dowel','tie-pad':'overall_item_tiepad'};
-  Object.values(est.materialTotals).forEach(m=>{
+  Object.entries(est.materialTotals).forEach(([mkey,m])=>{
     if(m.metres>0.001 && methodItemKey[m.method]){
-      rows.push({name:`${t(methodItemKey[m.method])} ${m.size}`.trim(), qty:`${m.metres} ${t('unit_m')}`});
+      rows.push({key:`mount_${mkey}_mat`, name:`${t(methodItemKey[m.method])} ${m.size}`.trim(), qty:`${m.metres} ${t('unit_m')}`});
     }
     if(m.fastenerQty>0.001 && fastenerItemKey[m.method]){
       const gunSuffix = (m.method==='corr-pvc'||m.method==='corr-pnd') && overallHasMountingGun ? ` ${t('overall_clip_gun_suffix')}` : '';
-      rows.push({name:`${t(fastenerItemKey[m.method])}${gunSuffix} ${m.size}`.trim(), qty:Math.ceil(m.fastenerQty)});
+      rows.push({key:`mount_${mkey}_fast`, name:`${t(fastenerItemKey[m.method])}${gunSuffix} ${m.size}`.trim(), qty:Math.ceil(m.fastenerQty)});
     }
   });
 
   // Panel equipment
-  est.panel.items.forEach(i=>{ rows.push({name:i.name, qty:`${i.qty} ${t('panel_pcs')}`}); });
+  est.panel.items.forEach((i,idx)=>{ rows.push({key:`panel_${idx}_${i.name}`, name:i.name, qty:`${i.qty} ${t('panel_pcs')}`}); });
+
+  // Every row (except the box-extra-info one, which is already itself a
+  // free-text note — a second field for it would just duplicate it) gets
+  // its own small inline note field, same idea as the per-cable-mark
+  // notes the cable table already had — so a person can jot something
+  // ("нет в наличии, заменить на...", "уточнить у прораба"...) against
+  // ANY line of the estimate, not only cable marks. Inline (same row, not
+  // a second line underneath) per how this reads better in the UI.
+  const noteInput=(r)=> r.noNote ? '' : `
+          <input type="text" class="prop-input oe-row-note" data-key="${r.key}" style="width:120px;flex-shrink:0;font-size:11px;padding:5px 7px" value="${overallRowNotes[r.key]||''}" placeholder="${t('overall_generic_note_ph')}">`;
 
   wrap.innerHTML=`<div class="res-section" style="margin-top:16px">${t('overall_summary_title')}</div>
     ${rows.map(r=>{
       if(r.editableCount==='backbox'){
-        return `<div class="res-row" style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #2a2a2a">
-          <span style="color:#ccc">${r.name}</span>
-          <input type="number" id="oe-backbox-count" class="prop-input" min="0" step="1" style="width:70px;text-align:right" value="${r.qty}">
+        return `<div class="res-row" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #2a2a2a">
+          <span style="color:#ccc;flex:1;min-width:0">${r.name}</span>
+          <input type="number" id="oe-backbox-count" class="prop-input" min="0" step="1" style="width:70px;flex-shrink:0;text-align:right" value="${r.qty}">${noteInput(r)}
         </div>`;
       }
       if(r.editableBoxBase){
-        return `<div class="res-row" style="padding:4px 0;border-bottom:1px solid #2a2a2a">
-          <div style="color:#ccc;margin-bottom:4px">${r.name}</div>
-          <div style="display:flex;gap:8px">
-            <input type="number" id="oe-box-base-count" class="prop-input" min="0" step="1" style="width:70px" placeholder="${t('overall_box_count_ph')}" value="${overallBoxBaseCount!=null?overallBoxBaseCount:''}">
-            <input type="text" id="oe-box-base-size" class="prop-input" style="flex:1" placeholder="${t('overall_box_size_ph')}" value="${overallBoxSizeText}">
-          </div>
+        return `<div class="res-row" style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #2a2a2a">
+          <span style="color:#ccc;flex:1;min-width:0">${r.name}</span>
+          <input type="number" id="oe-box-base-count" class="prop-input" min="0" step="1" style="width:60px;flex-shrink:0" placeholder="${t('overall_box_count_ph')}" value="${overallBoxBaseCount!=null?overallBoxBaseCount:''}">
+          <input type="text" id="oe-box-base-size" class="prop-input" style="width:90px;flex-shrink:0" placeholder="${t('overall_box_size_ph')}" value="${overallBoxSizeText}">${noteInput(r)}
         </div>`;
       }
       if(r.editableBoxExtraInfo){
-        return `<div class="res-row" style="padding:4px 0;border-bottom:1px solid #2a2a2a">
-          <div style="color:#ccc;margin-bottom:4px">${r.name}</div>
-          <input type="text" id="oe-box-extra-info" class="prop-input" style="width:100%" placeholder="${t('overall_box_extra_ph')}" value="${overallBoxExtraInfo}">
+        return `<div class="res-row" style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #2a2a2a">
+          <span style="color:#ccc;flex:1;min-width:0">${r.name}</span>
+          <input type="text" id="oe-box-extra-info" class="prop-input" style="width:160px;flex-shrink:0" placeholder="${t('overall_box_extra_ph')}" value="${overallBoxExtraInfo}">
         </div>`;
       }
-      return `<div class="res-row" style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #2a2a2a">
-        <span style="color:#ccc">${r.name}</span><span style="color:#7dc4ff;font-weight:600">${r.qty}</span>
+      return `<div class="res-row" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #2a2a2a">
+        <span style="color:#ccc;flex:1;min-width:0">${r.name}</span>
+        <span style="color:#7dc4ff;font-weight:600;flex-shrink:0">${r.qty}</span>${noteInput(r)}
       </div>`;
     }).join('')}`;
+
+  wrap.querySelectorAll('.oe-row-note').forEach(inp=>{
+    inp.addEventListener('input',function(){ overallRowNotes[this.dataset.key]=this.value; });
+  });
 
   document.getElementById('oe-backbox-count')?.addEventListener('input',function(){
     overallBackBoxCountOverride=this.value.trim()===''?null:Math.max(0,parseInt(this.value,10)||0);
@@ -12276,6 +12468,483 @@ function renderOverallSummary(){
 // through and typed a mark for every colour they used sees an estimate
 // that's just missing rows, with nothing telling them why. Surfaced as a
 // banner at the top of the estimate instead of a silent gap.
+// ============================================================
+// Подрозетники по чертежу — template-based mounting-box counter (v2)
+// ============================================================
+// v1 blended every sample into ONE averaged colour + ONE combined size
+// range — so adding a differently-sized/coloured sample stretched the
+// tolerance for every other sample too, and got WORSE the more samples
+// were added (see chat). Each sample is now its OWN independent
+// template, matched separately — classic normalised cross-correlation,
+// same idea as the very first prototype that was validated well against
+// a real drawing earlier in this project. Colour is dropped entirely:
+// matching runs on ink DENSITY (how far a pixel is from bare paper,
+// regardless of hue) — "искать рамки, не цвет" — so it doesn't care
+// whether a drawing uses red, blue, or black for its device symbols, and
+// a mix of sample TYPES (single socket, double socket, switch+socket…)
+// no longer degrades each other at all, since nothing about them is
+// ever averaged together.
+let podrozetSearchRect=null;
+let podrozetSamples=[];             // [{id,x0,y0,x1,y1,count,tmpl}]
+let podrozetDetections=[];          // [{id,x0,y0,x1,y1,count,needsReview,confirmed}]
+let podrozetMode=null;              // 'area' | 'sample' | null
+let podrozetView={x:0,y:0,s:1};
+let podrozetDragStart=null, podrozetDragCur=null;
+let podrozetPanStart=null;          // {cx,cy,viewX,viewY} while middle-button panning
+let podrozetPendingSampleRect=null;
+let podrozetBgCanvas=null, podrozetBgCtx=null;
+let podrozetRawCache=null;          // {data:Uint8ClampedArray,w,h,_forImg} — whole underlay's raw RGBA
+let podrozetNextId=1;
+let podrozetDetNextId=1;
+let podrozetBrightness=100;         // percent — VIEW ONLY, see podrozetRedraw
+
+function podrozetWorldToCanvas(wx,wy){ return {x:wx*podrozetView.s+podrozetView.x, y:wy*podrozetView.s+podrozetView.y}; }
+function podrozetCanvasToWorld(cx,cy){ return {x:(cx-podrozetView.x)/podrozetView.s, y:(cy-podrozetView.y)/podrozetView.s}; }
+
+function podrozetEnsureBgCanvas(){
+  if(!bgImg) return false;
+  if(podrozetBgCanvas && podrozetBgCanvas._forImg===bgImg) return true;
+  podrozetBgCanvas=document.createElement('canvas');
+  podrozetBgCanvas.width=bgImg.width; podrozetBgCanvas.height=bgImg.height;
+  podrozetBgCtx=podrozetBgCanvas.getContext('2d', {willReadFrequently:true});
+  podrozetBgCtx.drawImage(bgImg,0,0);
+  podrozetBgCanvas._forImg=bgImg;
+  podrozetRawCache=null; // stale, will rebuild lazily
+  return true;
+}
+
+// Raw RGB of the WHOLE underlay, read once and cached — the actual
+// per-pixel signal used for matching is a PROJECTION onto each
+// individual template's own "ink direction" (see podrozetProjectedFull
+// below), not these raw channels directly. Using raw R/G/B straight
+// turned out to have much weaker contrast between a device border and
+// plain background than the original single-channel "redness" prototype
+// that validated well (see chat) — projecting onto the sample's own
+// ink-vs-paper direction restores that same sharp contrast, generalised
+// to whatever colour a given template actually is, not hardcoded to red.
+function podrozetRawFull(){
+  if(podrozetRawCache && podrozetRawCache._forImg===bgImg) return podrozetRawCache;
+  podrozetEnsureBgCanvas();
+  const w=podrozetBgCanvas.width, h=podrozetBgCanvas.height;
+  const data=podrozetBgCtx.getImageData(0,0,w,h).data;
+  podrozetRawCache={data,w,h,_forImg:bgImg};
+  return podrozetRawCache;
+}
+
+// The sample's own "ink colour" — the average colour of its most
+// saturated/darkest pixels (i.e. the border line itself, not the white
+// paper inside/around it). Works for red, blue, black or whatever a given
+// drawing's convention actually is, without assuming any specific hue.
+function podrozetSampleInkColor(x0,y0,x1,y1){
+  const raw=podrozetRawFull();
+  const px0=Math.max(0,Math.round(x0)), py0=Math.max(0,Math.round(y0));
+  const px1=Math.min(raw.w,Math.round(x1)), py1=Math.min(raw.h,Math.round(y1));
+  const pixels=[];
+  for(let y=py0;y<py1;y++){
+    for(let x=px0;x<px1;x++){
+      const i=(y*raw.w+x)*4;
+      const r=raw.data[i],g=raw.data[i+1],b=raw.data[i+2];
+      const dist = Math.abs(255-r)+Math.abs(255-g)+Math.abs(255-b); // distance from white paper
+      pixels.push({r,g,b,dist});
+    }
+  }
+  pixels.sort((a,b)=>b.dist-a.dist);
+  const inkPixels=pixels.slice(0, Math.max(4, Math.floor(pixels.length*0.25))); // darkest quarter = the ink
+  const n=inkPixels.length;
+  return {
+    r: inkPixels.reduce((s,p)=>s+p.r,0)/n,
+    g: inkPixels.reduce((s,p)=>s+p.g,0)/n,
+    b: inkPixels.reduce((s,p)=>s+p.b,0)/n,
+  };
+}
+
+// Boolean "is this pixel this ink colour" mask over a rect of the
+// underlay. Deliberately does NOT care what's drawn INSIDE a device's
+// border (circle, square, "M", a play-button triangle…) at all — per the
+// idea that settled this feature (see chat): a square of roughly the
+// sample's own size, with the sample's own colour inside it, IS a
+// mounting-box spot, whatever specific device it turns out to be. That's
+// what a strict pattern-match (tried first) was too sensitive to: two
+// visually-identical neighbouring blocks could differ by a stray pixel
+// of compression noise and one would fail to match while this simpler
+// "same colour, right size" test does not care.
+function podrozetColorMask(x0,y0,x1,y1,color,tol){
+  const raw=podrozetRawFull();
+  const px0=Math.max(0,Math.round(x0)), py0=Math.max(0,Math.round(y0));
+  const px1=Math.min(raw.w,Math.round(x1)), py1=Math.min(raw.h,Math.round(y1));
+  const w=Math.max(1,px1-px0), h=Math.max(1,py1-py0);
+  const mask=new Uint8Array(w*h);
+  const tol2=tol*tol;
+  for(let y=0;y<h;y++){
+    for(let x=0;x<w;x++){
+      const i=((py0+y)*raw.w+(px0+x))*4;
+      const dr=raw.data[i]-color.r, dg=raw.data[i+1]-color.g, db=raw.data[i+2]-color.b;
+      if(dr*dr+dg*dg+db*db<=tol2) mask[y*w+x]=1;
+    }
+  }
+  return {mask,w,h,ox:px0,oy:py0};
+}
+
+// 8-connected component labelling, iterative (stack-based — a naive
+// recursive flood fill blows the call stack on anything but a tiny image).
+function podrozetConnectedComponents(mask,w,h){
+  const labels=new Uint8Array(w*h);
+  const comps=[];
+  const stack=new Int32Array(w*h);
+  for(let start=0; start<w*h; start++){
+    if(!mask[start] || labels[start]) continue;
+    let sp=0; stack[sp++]=start; labels[start]=1;
+    let minX=w,maxX=-1,minY=h,maxY=-1,count=0;
+    while(sp>0){
+      const idx=stack[--sp];
+      const x=idx%w, y=(idx/w)|0;
+      if(x<minX)minX=x; if(x>maxX)maxX=x; if(y<minY)minY=y; if(y>maxY)maxY=y;
+      count++;
+      for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+        if(!dx&&!dy) continue;
+        const nx=x+dx, ny=y+dy;
+        if(nx<0||ny<0||nx>=w||ny>=h) continue;
+        const nidx=ny*w+nx;
+        if(mask[nidx] && !labels[nidx]){ labels[nidx]=1; stack[sp++]=nidx; }
+      }
+    }
+    comps.push({x0:minX,y0:minY,x1:maxX+1,y1:maxY+1,count});
+  }
+  return comps;
+}
+
+function podrozetRun(){
+  if(!bgImg || !podrozetSearchRect || !podrozetSamples.length) return;
+  podrozetEnsureBgCanvas();
+  const sr=podrozetSearchRect;
+
+  // Each sample independently gives a colour + a per-gang size measured
+  // along ITS OWN orientation (a wider-than-tall sample is read as a
+  // horizontal frame, sized by width; a taller-than-wide one as vertical,
+  // sized by height) — nothing here blends one sample's size into
+  // another's, which was the actual bug in the very first version.
+  const calibs=podrozetSamples.map(s=>{
+    const w=s.x1-s.x0, h=s.y1-s.y0;
+    const orientation = w>=h ? 'h' : 'v';
+    const singleGrowth=(orientation==='h'?w:h)/s.count;
+    const crossSize=orientation==='h'?h:w;
+    return { color:podrozetSampleInkColor(s.x0,s.y0,s.x1,s.y1), orientation, singleGrowth, crossSize };
+  });
+
+  let allDet=[];
+  calibs.forEach(cal=>{
+    const {mask,w,h,ox,oy}=podrozetColorMask(sr.x0,sr.y0,sr.x1,sr.y1, cal.color, 70);
+    const comps=podrozetConnectedComponents(mask,w,h);
+    comps.forEach(c=>{
+      const cw=c.x1-c.x0, ch=c.y1-c.y0;
+      const solidity=c.count/(cw*ch);
+      // Solidity threshold: these are thin-LINE icons (a hollow square
+      // border plus a small inner symbol), not filled blocks — measured
+      // directly against this drawing's real single-socket symbol: only
+      // ~0.20 of its own bounding box is actually ink. The 0.25 first
+      // tried here was calibrated on a hand-picked, unusually clean crop
+      // rather than a real full-drawing search and rejected the vast
+      // majority of genuine symbols outright (see chat).
+      if(solidity<0.14 || c.count<12) return;
+      const compOrientation = cw>=ch ? 'h' : 'v';
+      const growthDim = compOrientation==='h'?cw:ch;
+      const crossDim = compOrientation==='h'?ch:cw;
+      // Plausible size range derived from THIS sample's own numbers, not
+      // a hardcoded guess — a component way outside it is something else
+      // entirely (a stray bit of text, a dimension-line arrowhead…).
+      if(crossDim < cal.crossSize*0.45 || crossDim > cal.crossSize*2.2) return;
+      if(growthDim < cal.singleGrowth*0.5 || growthDim > cal.singleGrowth*6) return;
+      const predicted=Math.max(1, growthDim/cal.singleGrowth);
+      const count=Math.max(1, Math.round(predicted));
+      const cleanness=Math.abs(predicted-count);
+      allDet.push({
+        x0:c.x0+ox, y0:c.y0+oy, x1:c.x1+ox, y1:c.y1+oy,
+        count, needsReview: count>=3 || cleanness>0.22,
+      });
+    });
+  });
+
+  // De-duplicate across different samples' colour masks — in case two
+  // samples happen to have similar-enough ink colours (or a shared block
+  // where one sample's calibration only captures part of it) that the
+  // same physical block gets picked up more than once. Centre-distance
+  // was the wrong test for this: two boxes of very different widths can
+  // share real pixels — a 2-post detection and a 3-post detection both
+  // partly covering the SAME 4-post block, say — while still having
+  // centres far enough apart to slip past a "how close are the middles"
+  // check entirely. Actual rectangle overlap is what a genuine conflict
+  // looks like, regardless of how differently-sized or -centred the two
+  // boxes are.
+  function rectOverlapFraction(a,b){
+    const ox=Math.max(0, Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0));
+    const oy=Math.max(0, Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0));
+    const overlapArea=ox*oy;
+    const aArea=(a.x1-a.x0)*(a.y1-a.y0), bArea=(b.x1-b.x0)*(b.y1-b.y0);
+    const smallerArea=Math.min(aArea,bArea)||1;
+    return overlapArea/smallerArea;
+  }
+  allDet.sort((a,b)=>(b.x1-b.x0)*(b.y1-b.y0) - (a.x1-a.x0)*(a.y1-a.y0));
+  const kept=[];
+  allDet.forEach(d=>{
+    const conflict=kept.find(k=>rectOverlapFraction(d,k)>0.25);
+    if(!conflict) kept.push(d);
+    else conflict.needsReview=true; // a real conflict happened here — flag it even though we kept the other one, so it still gets the person's attention rather than silently picking a side
+  });
+
+  podrozetDetections=kept.map(d=>({ id:podrozetDetNextId++, x0:d.x0,y0:d.y0,x1:d.x1,y1:d.y1, count:d.count, needsReview:d.needsReview, confirmed:false }));
+  podrozetRenderResultsList();
+  podrozetRedraw();
+}
+
+function podrozetOpen(){
+  document.getElementById('podrozet-modal').style.display='flex';
+  document.getElementById('podrozet-empty-hint').style.display = bgImg ? 'none' : 'flex';
+  podrozetEnsureBgCanvas();
+  const wrap=document.getElementById('podrozet-canvas-wrap');
+  const canvas=document.getElementById('podrozet-canvas');
+  canvas.width=wrap.clientWidth; canvas.height=wrap.clientHeight;
+  if(bgImg){
+    const s=Math.min(canvas.width/bgImg.width, canvas.height/bgImg.height)*0.92;
+    podrozetView.s=s;
+    podrozetView.x=(canvas.width-bgImg.width*s)/2;
+    podrozetView.y=(canvas.height-bgImg.height*s)/2;
+  }
+  podrozetSearchRect=null; podrozetSamples=[]; podrozetDetections=[]; podrozetMode=null;
+  podrozetBrightness=100; document.getElementById('podrozet-brightness').value=100;
+  podrozetRenderSamplesList(); podrozetRenderResultsList(); podrozetUpdateRunButton();
+  podrozetRedraw();
+}
+
+function podrozetUpdateRunButton(){
+  document.getElementById('podrozet-run').disabled = !(podrozetSearchRect && podrozetSamples.length);
+}
+
+function podrozetRedraw(){
+  const canvas=document.getElementById('podrozet-canvas');
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#0a0a0a'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  if(bgImg){
+    ctx.filter=`brightness(${podrozetBrightness}%)`;
+    ctx.drawImage(bgImg, podrozetView.x, podrozetView.y, bgImg.width*podrozetView.s, bgImg.height*podrozetView.s);
+    ctx.filter='none';
+  }
+  function rectAt(r,strokeStyle,fillStyle,lineWidth){
+    const p0=podrozetWorldToCanvas(r.x0,r.y0), p1=podrozetWorldToCanvas(r.x1,r.y1);
+    ctx.strokeStyle=strokeStyle; ctx.lineWidth=lineWidth||2;
+    if(fillStyle){ ctx.fillStyle=fillStyle; ctx.fillRect(p0.x,p0.y,p1.x-p0.x,p1.y-p0.y); }
+    ctx.strokeRect(p0.x,p0.y,p1.x-p0.x,p1.y-p0.y);
+    return p0;
+  }
+  if(podrozetSearchRect) rectAt(podrozetSearchRect, '#ffd23f', null, 2);
+  podrozetSamples.forEach((s,i)=>{
+    const p0=rectAt(s, '#4a9eff', 'rgba(74,158,255,.15)', 2);
+    ctx.fillStyle='#4a9eff'; ctx.font='bold 12px sans-serif';
+    ctx.fillText((t('podrozet_sample_label')||'Образец')+' '+(i+1)+' ×'+s.count, p0.x, p0.y-4);
+  });
+  podrozetDetections.forEach(d=>{
+    const color = d.confirmed ? '#5ad15a' : (d.needsReview ? '#ff9f1c' : '#5ad15a');
+    rectAt(d, color, null, 2);
+  });
+  if(podrozetDragStart && podrozetDragCur){
+    ctx.strokeStyle = podrozetMode==='area' ? '#ffd23f' : '#4a9eff';
+    ctx.setLineDash([5,4]); ctx.lineWidth=2;
+    ctx.strokeRect(podrozetDragStart.x, podrozetDragStart.y, podrozetDragCur.x-podrozetDragStart.x, podrozetDragCur.y-podrozetDragStart.y);
+    ctx.setLineDash([]);
+  }
+  podrozetRenderDetectionWidgets();
+}
+
+// Per-detection confirmation control: [←] [count] [→] [✓] rendered as real
+// HTML (not hand-rolled canvas hit-testing) directly over the canvas,
+// repositioned on every redraw to track the detection's current on-screen
+// spot. ← / → adjust the count by one, ✓ marks it confirmed (turns green,
+// stops counting as "needs review").
+function podrozetRenderDetectionWidgets(){
+  const layer=document.getElementById('podrozet-widgets-layer');
+  layer.innerHTML='';
+  podrozetDetections.forEach(d=>{
+    const p0=podrozetWorldToCanvas(d.x0,d.y0), p1=podrozetWorldToCanvas(d.x1,d.y1);
+    const cx=(p0.x+p1.x)/2, topY=Math.min(p0.y,p1.y);
+    if(topY<-30 || topY>document.getElementById('podrozet-canvas').height+10) return; // off-screen, skip
+    const wrap=document.createElement('div');
+    wrap.style.cssText=`position:absolute;left:${cx}px;top:${topY-26}px;transform:translateX(-50%);display:flex;align-items:center;gap:2px;background:#1a1a1aee;border:1px solid ${d.confirmed?'#5ad15a':(d.needsReview?'#ff9f1c':'#5ad15a')};border-radius:6px;padding:2px 4px;pointer-events:auto;white-space:nowrap`;
+    wrap.innerHTML=`
+      <button data-act="dec" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:13px;padding:0 3px;line-height:1.6">◀</button>
+      <span style="color:#fff;font-size:12px;font-weight:700;min-width:14px;text-align:center">${d.count}</span>
+      <button data-act="inc" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:13px;padding:0 3px;line-height:1.6">▶</button>
+      <button data-act="ok" style="background:none;border:none;color:${d.confirmed?'#5ad15a':'#888'};cursor:pointer;font-size:13px;padding:0 3px;line-height:1.6">✓</button>
+      <button data-act="del" style="background:none;border:none;color:#888;cursor:pointer;font-size:11px;padding:0 3px;line-height:1.6">✕</button>`;
+    wrap.querySelector('[data-act="dec"]').addEventListener('click', e=>{ e.stopPropagation(); d.count=Math.max(0,d.count-1); if(d.count===0){ podrozetDetections=podrozetDetections.filter(x=>x!==d); } podrozetRenderResultsList(); podrozetRedraw(); });
+    wrap.querySelector('[data-act="inc"]').addEventListener('click', e=>{ e.stopPropagation(); d.count+=1; podrozetRenderResultsList(); podrozetRedraw(); });
+    wrap.querySelector('[data-act="ok"]').addEventListener('click', e=>{ e.stopPropagation(); d.confirmed=true; d.needsReview=false; podrozetRenderResultsList(); podrozetRedraw(); });
+    wrap.querySelector('[data-act="del"]').addEventListener('click', e=>{ e.stopPropagation(); podrozetDetections=podrozetDetections.filter(x=>x!==d); podrozetRenderResultsList(); podrozetRedraw(); });
+    layer.appendChild(wrap);
+  });
+}
+
+function podrozetRenderSamplesList(){
+  const el=document.getElementById('podrozet-samples-list');
+  if(!podrozetSamples.length){ el.innerHTML=`<div style="color:#555;font-size:11px">—</div>`; return; }
+  el.innerHTML=podrozetSamples.map((s,i)=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;background:#222;border-radius:5px;padding:5px 8px">
+      <span style="color:#ddd">${(t('podrozet_sample_label')||'Образец')} ${i+1}: ×${s.count}</span>
+      <button data-sid="${s.id}" class="podrozet-del-sample" style="background:none;border:none;color:#888;cursor:pointer;font-size:13px" title="${t('podrozet_delete_sample')||''}">✕</button>
+    </div>`).join('');
+  el.querySelectorAll('.podrozet-del-sample').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      podrozetSamples=podrozetSamples.filter(s=>s.id!==Number(btn.dataset.sid));
+      podrozetRenderSamplesList(); podrozetUpdateRunButton(); podrozetRedraw();
+    });
+  });
+}
+
+function podrozetRenderResultsList(){
+  const el=document.getElementById('podrozet-results-list');
+  const totalEl=document.getElementById('podrozet-total');
+  if(!podrozetDetections.length){ el.innerHTML=''; totalEl.textContent=''; return; }
+  const total=podrozetDetections.reduce((s,d)=>s+d.count,0);
+  const reviewCount=podrozetDetections.filter(d=>d.needsReview && !d.confirmed).length;
+  totalEl.textContent=(t('podrozet_total_label')||'Всего')+': '+total+(reviewCount?' ('+reviewCount+' '+(t('podrozet_review_badge')||'проверьте')+')':'');
+  el.innerHTML=`
+    <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #333;font-weight:700;color:#eee">
+      <span>${t('podrozet_total_label')||'Всего'}</span><span>${total}</span>
+    </div>
+    <button id="podrozet-apply" style="margin-top:10px;width:100%;padding:8px;background:#1a3a5c;border:1px solid #4a9eff;border-radius:6px;color:#7dc4ff;font-size:12px;font-weight:600;cursor:pointer">${t('podrozet_apply_btn')||'Применить в смету и выйти'}</button>`;
+  const applyBtn=document.getElementById('podrozet-apply');
+  if(applyBtn) applyBtn.addEventListener('click',()=>{
+    podrozetManualBoxCount=total;
+    setInfo(t('podrozet_applied_msg')||'Учтено');
+    document.getElementById('podrozet-modal').style.display='none';
+  });
+}
+
+// ---- Mouse interaction: drag to draw area/sample rects, wheel to zoom,
+// middle-button drag to pan ----
+
+function podrozetSetupCanvas(){
+  const canvas=document.getElementById('podrozet-canvas');
+  canvas.addEventListener('mousedown', e=>{
+    if(e.button===1){ // middle-button pan
+      e.preventDefault();
+      podrozetPanStart={cx:e.clientX, cy:e.clientY, viewX:podrozetView.x, viewY:podrozetView.y};
+      return;
+    }
+    if(e.button!==0) return;
+    if(!podrozetMode) return; // clicks on existing detections are handled by their own widget buttons now
+    const rect=canvas.getBoundingClientRect();
+    podrozetDragStart={x:e.clientX-rect.left, y:e.clientY-rect.top};
+    podrozetDragCur=podrozetDragStart;
+  });
+  window.addEventListener('mousemove', e=>{
+    if(podrozetPanStart){
+      podrozetView.x=podrozetPanStart.viewX+(e.clientX-podrozetPanStart.cx);
+      podrozetView.y=podrozetPanStart.viewY+(e.clientY-podrozetPanStart.cy);
+      podrozetRedraw();
+      return;
+    }
+    if(!podrozetDragStart) return;
+    const rect=canvas.getBoundingClientRect();
+    podrozetDragCur={x:e.clientX-rect.left, y:e.clientY-rect.top};
+    podrozetRedraw();
+  });
+  window.addEventListener('mouseup', e=>{
+    if(e.button===1 && podrozetPanStart){ podrozetPanStart=null; return; }
+    if(!podrozetDragStart || !podrozetDragCur) return;
+    const p0=podrozetCanvasToWorld(podrozetDragStart.x,podrozetDragStart.y);
+    const p1=podrozetCanvasToWorld(podrozetDragCur.x,podrozetDragCur.y);
+    const rectW={x0:Math.min(p0.x,p1.x), y0:Math.min(p0.y,p1.y), x1:Math.max(p0.x,p1.x), y1:Math.max(p0.y,p1.y)};
+    const tooSmall=(rectW.x1-rectW.x0)<6 || (rectW.y1-rectW.y0)<6;
+    if(!tooSmall){
+      if(podrozetMode==='area'){
+        podrozetSearchRect=rectW;
+      } else if(podrozetMode==='sample'){
+        podrozetPendingSampleRect=rectW;
+        podrozetShowCountPrompt();
+      }
+    }
+    podrozetDragStart=null; podrozetDragCur=null;
+    podrozetMode=null;
+    document.getElementById('podrozet-tool-area').classList.remove('active');
+    document.getElementById('podrozet-tool-sample').classList.remove('active');
+    podrozetUpdateRunButton();
+    podrozetRedraw();
+  });
+  canvas.addEventListener('contextmenu', e=>e.preventDefault()); // middle-click pan shouldn't also open a context menu
+  canvas.addEventListener('wheel', e=>{
+    e.preventDefault();
+    const rect=canvas.getBoundingClientRect();
+    const cx=e.clientX-rect.left, cy=e.clientY-rect.top;
+    const before=podrozetCanvasToWorld(cx,cy);
+    const factor=e.deltaY<0?1.1:1/1.1;
+    podrozetView.s*=factor;
+    const after=podrozetWorldToCanvas(before.x,before.y);
+    podrozetView.x+=cx-after.x; podrozetView.y+=cy-after.y;
+    podrozetRedraw();
+  }, {passive:false});
+}
+
+function podrozetShowCountPrompt(){
+  const prompt=document.getElementById('podrozet-count-prompt');
+  const input=document.getElementById('podrozet-count-input');
+  input.value=1;
+  prompt.style.display='block';
+  const canvas=document.getElementById('podrozet-canvas');
+  const rect=canvas.getBoundingClientRect();
+  const p1=podrozetWorldToCanvas(podrozetPendingSampleRect.x1,podrozetPendingSampleRect.y1);
+  prompt.style.left=Math.min(rect.left+p1.x+8, window.innerWidth-180)+'px';
+  prompt.style.top=Math.min(rect.top+p1.y+8, window.innerHeight-90)+'px';
+  input.focus(); input.select();
+}
+function podrozetConfirmSample(){
+  const count=Math.max(1, parseInt(document.getElementById('podrozet-count-input').value,10)||1);
+  const r=podrozetPendingSampleRect;
+  podrozetSamples.push({id:podrozetNextId++, x0:r.x0,y0:r.y0,x1:r.x1,y1:r.y1, count});
+  podrozetPendingSampleRect=null;
+  document.getElementById('podrozet-count-prompt').style.display='none';
+  podrozetRenderSamplesList(); podrozetUpdateRunButton(); podrozetRedraw();
+}
+
+document.getElementById('btn-podrozet-scan').addEventListener('click', podrozetOpen);
+document.getElementById('podrozet-close').addEventListener('click', ()=>{ document.getElementById('podrozet-modal').style.display='none'; });
+document.getElementById('podrozet-tool-area').addEventListener('click', function(){
+  podrozetMode = podrozetMode==='area' ? null : 'area';
+  this.classList.toggle('active', podrozetMode==='area');
+  document.getElementById('podrozet-tool-sample').classList.remove('active');
+  setInfo(podrozetMode==='area' ? (t('podrozet_draw_area_hint')||'') : '');
+});
+document.getElementById('podrozet-tool-sample').addEventListener('click', function(){
+  podrozetMode = podrozetMode==='sample' ? null : 'sample';
+  this.classList.toggle('active', podrozetMode==='sample');
+  document.getElementById('podrozet-tool-area').classList.remove('active');
+  setInfo(podrozetMode==='sample' ? (t('podrozet_draw_sample_hint')||'') : '');
+});
+document.getElementById('podrozet-run').addEventListener('click', podrozetRun);
+document.getElementById('podrozet-count-ok').addEventListener('click', podrozetConfirmSample);
+document.getElementById('podrozet-count-cancel').addEventListener('click', ()=>{
+  podrozetPendingSampleRect=null;
+  document.getElementById('podrozet-count-prompt').style.display='none';
+});
+document.getElementById('podrozet-count-input').addEventListener('keydown', e=>{ if(e.key==='Enter') podrozetConfirmSample(); });
+document.getElementById('podrozet-brightness').addEventListener('input', function(){
+  podrozetBrightness=Number(this.value);
+  podrozetRedraw();
+});
+podrozetSetupCanvas();
+window.addEventListener('resize', ()=>{
+  if(document.getElementById('podrozet-modal').style.display==='none') return;
+  const wrap=document.getElementById('podrozet-canvas-wrap');
+  const canvas=document.getElementById('podrozet-canvas');
+  canvas.width=wrap.clientWidth; canvas.height=wrap.clientHeight;
+  podrozetRedraw();
+});
+
+// When set (via "Применить в смету"), this OVERRIDES defaultBackBoxCount()'s
+// plain per-marker count in the estimate — null means "not run / not
+// applied yet", so the estimate quietly keeps using the old marker-count
+// behaviour until the person actually applies a recognised result.
+let podrozetManualBoxCount=null;
+
 function unmarkedColorsInUse(){
   const used=new Set();
   lines.forEach(l=>{ if(l.color) used.add(l.color); });
@@ -12356,7 +13025,7 @@ document.getElementById('whatsnew-modal').addEventListener('click',e=>{ if(e.tar
 
 // Bump this string whenever new entries are added to the What's New modal —
 // anyone who hasn't seen THIS version yet gets the red dot on the button.
-const WHATSNEW_VERSION='2026-08-28';
+const WHATSNEW_VERSION='2026-08-29';
 function updateWhatsNewDot(){
   const seen=localStorage.getItem('wiringSeenWhatsNew');
   document.getElementById('whatsnew-dot').style.display = (seen===WHATSNEW_VERSION) ? 'none' : 'block';

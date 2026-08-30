@@ -83,6 +83,27 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 .stab{flex:1;padding:8px 0;font-size:11px;text-align:center;cursor:pointer;color:#666;border-bottom:2px solid transparent;user-select:none}
 .stab.active{color:#7dc4ff;border-color:#4a9eff}
 .stab:hover{color:#aaa}
+
+/* ═══════════════════════════════════════════════════════
+   MOBILE VIEW MODE — auto, by screen width, no manual toggle
+   (see chat: "убрать все детали интерфейса рисования, оставить
+   только загрузку и просмотр проекта, выделение элементов").
+   Everything hidden here is drawing-tooling; load/save/export/
+   estimate viewing all stay, per what the person actually asked
+   to keep. The JS side (isMobileMode()) is what actually stops
+   editing from happening — this CSS only controls what's visible,
+   it is NOT the safety mechanism against accidental edits.
+   ═══════════════════════════════════════════════════════ */
+@media (max-width: 768px){
+  .desktop-only{display:none !important}
+  #toolbar{padding:4px 6px;gap:2px}
+  .tb-btn{padding:6px 8px;font-size:11px}
+  #project-name{width:110px !important;font-size:12px}
+  #main{flex-direction:column}
+  #canvas-wrap{flex:1;min-height:0}
+  #sidebar{width:100%;height:38vh;border-left:none;border-top:1px solid #333;flex-shrink:0}
+  .mobile-hint:not(.hidden){display:flex}
+}
 .spanel{flex:1;overflow-y:auto;display:none;padding:10px}
 .spanel.active{display:block}
 .res-row{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid #2a2a2a}
@@ -126,6 +147,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 #drop-hint i{font-size:44px}
 #drop-hint p{font-size:13px}
 #drop-hint.hidden{display:none}
+.mobile-hint{display:none}
 /* Generic modal */
 #modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);align-items:center;justify-content:center;z-index:200}
 #modal.show{display:flex}
@@ -189,7 +211,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
   <div id="toolbar">
     <span id="brand-badge" style="font-weight:700;color:#f0c040;font-size:13px;letter-spacing:.5px;flex-shrink:0;padding:0 4px">⚡Provodka</span>
     <div class="sep"></div>
-    <label class="tb-btn" data-i18n-title="tt_upload_bg" title="Загрузить фотографию или план помещения" style="cursor:pointer">
+    <label class="tb-btn desktop-only" data-i18n-title="tt_upload_bg" title="Загрузить фотографию или план помещения" style="cursor:pointer">
       <i class="ti ti-photo-up"></i> <span data-i18n="upload_bg">Загрузить фон</span>
       <input type="file" accept="image/*" id="file-in" style="display:none">
     </label>
@@ -203,23 +225,23 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
       <input type="file" accept=".wiring,.json" id="project-in" style="display:none">
     </label>
     <div class="sep"></div>
-    <button class="tb-btn" id="btn-scale"><i class="ti ti-ruler"></i> <span data-i18n="scale">Масштаб</span></button>
-    <div id="scale-badge"><i class="ti ti-ruler" style="font-size:11px"></i> <span data-i18n="scale_set">Масштаб задан</span></div>
+    <button class="tb-btn desktop-only" id="btn-scale"><i class="ti ti-ruler"></i> <span data-i18n="scale">Масштаб</span></button>
+    <div id="scale-badge" class="desktop-only"><i class="ti ti-ruler" style="font-size:11px"></i> <span data-i18n="scale_set">Масштаб задан</span></div>
     <div class="sep"></div>
-    <button class="tb-btn" id="btn-wall" data-i18n-title="tt_walls" title="Нарисовать стены (контур помещения)"><i class="ti ti-border-outer"></i> <span data-i18n="walls">Стены</span></button>
-    <button class="tb-btn active" id="btn-line"><i class="ti ti-pencil"></i> <span data-i18n="line">Линия</span></button>
-    <button class="tb-btn" id="btn-ortho" data-i18n-title="tt_ortho" title="Только горизонтальные и вертикальные линии (базовый режим)"><i class="ti ti-border-outer"></i> <span data-i18n="ortho">Ортого</span></button>
-    <button class="tb-btn" id="btn-marker"><i class="ti ti-map-pin"></i> <span data-i18n="marker">Значок</span></button>
-    <button class="tb-btn" id="btn-select"><i class="ti ti-pointer"></i> <span data-i18n="select">Выбор</span></button>
+    <button class="tb-btn desktop-only" id="btn-wall" data-i18n-title="tt_walls" title="Нарисовать стены (контур помещения)"><i class="ti ti-border-outer"></i> <span data-i18n="walls">Стены</span></button>
+    <button class="tb-btn active desktop-only" id="btn-line"><i class="ti ti-pencil"></i> <span data-i18n="line">Линия</span></button>
+    <button class="tb-btn desktop-only" id="btn-ortho" data-i18n-title="tt_ortho" title="Только горизонтальные и вертикальные линии (базовый режим)"><i class="ti ti-border-outer"></i> <span data-i18n="ortho">Ортого</span></button>
+    <button class="tb-btn desktop-only" id="btn-marker"><i class="ti ti-map-pin"></i> <span data-i18n="marker">Значок</span></button>
+    <button class="tb-btn desktop-only" id="btn-select"><i class="ti ti-pointer"></i> <span data-i18n="select">Выбор</span></button>
     <div class="sep"></div>
-    <button class="tb-btn" id="btn-dim" data-i18n-title="tt_dim" title="Выноска: отрезок + расстояние/направление офсета мышкой, без ввода чисел"><i class="ti ti-ruler-measure"></i> <span data-i18n="dim_tool">Выноска</span></button>
-    <button class="tb-btn" id="btn-measure" data-i18n-title="tt_measure" title="Измерение: россыпь независимых отрезков с бегущей суммой длины"><i class="ti ti-sum"></i> <span data-i18n="measure_tool">Измерение</span></button>
+    <button class="tb-btn desktop-only" id="btn-dim" data-i18n-title="tt_dim" title="Выноска: отрезок + расстояние/направление офсета мышкой, без ввода чисел"><i class="ti ti-ruler-measure"></i> <span data-i18n="dim_tool">Выноска</span></button>
+    <button class="tb-btn desktop-only" id="btn-measure" data-i18n-title="tt_measure" title="Измерение: россыпь независимых отрезков с бегущей суммой длины"><i class="ti ti-sum"></i> <span data-i18n="measure_tool">Измерение</span></button>
     <div class="sep"></div>
-    <div id="color-picker-row"><span data-i18n="color_label" style="font-size:11px;color:#555;margin-right:2px">Цвет:</span></div>
+    <div id="color-picker-row" class="desktop-only"><span data-i18n="color_label" style="font-size:11px;color:#555;margin-right:2px">Цвет:</span></div>
     <div class="sep"></div>
-    <button class="tb-btn" id="btn-undo"><i class="ti ti-arrow-back-up"></i></button>
-    <button class="tb-btn" id="btn-redo"><i class="ti ti-arrow-forward-up"></i></button>
-    <button class="tb-btn danger" id="btn-clear"><i class="ti ti-trash"></i> <span data-i18n="clear">Сбросить</span></button>
+    <button class="tb-btn desktop-only" id="btn-undo"><i class="ti ti-arrow-back-up"></i></button>
+    <button class="tb-btn desktop-only" id="btn-redo"><i class="ti ti-arrow-forward-up"></i></button>
+    <button class="tb-btn danger desktop-only" id="btn-clear"><i class="ti ti-trash"></i> <span data-i18n="clear">Сбросить</span></button>
     <div class="sep"></div>
     <!-- Bg opacity -->
     <div style="display:flex;align-items:center;gap:5px;flex-shrink:0" data-i18n-title="tt_bg_opacity" title="Прозрачность фона. Без фото-плана — регулирует яркость подложки (тёмная/светлая)">
@@ -230,14 +252,14 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     </div>
     <div class="sep"></div>
     <!-- Cursor size -->
-    <div style="display:flex;align-items:center;gap:5px;flex-shrink:0" data-i18n-title="tt_cursor_size" title="Размер курсора-прицела">
+    <div class="desktop-only" style="display:flex;align-items:center;gap:5px;flex-shrink:0" data-i18n-title="tt_cursor_size" title="Размер курсора-прицела">
       <i class="ti ti-crosshair" style="font-size:13px;color:#666"></i>
       <input type="range" id="cursor-size" min="10" max="120" value="0" step="2"
         style="width:60px;accent-color:#4a9eff;cursor:pointer">
     </div>
     <div class="sep"></div>
     <!-- Marker alignment snap radius -->
-    <div style="display:flex;align-items:center;gap:5px;flex-shrink:0" data-i18n-title="tt_marker_snap" title="Радиус прилипания значков к общей вертикали/горизонтали">
+    <div class="desktop-only" style="display:flex;align-items:center;gap:5px;flex-shrink:0" data-i18n-title="tt_marker_snap" title="Радиус прилипания значков к общей вертикали/горизонтали">
       <i class="ti ti-layout-align-center" style="font-size:13px;color:#666"></i>
       <input type="range" id="marker-snap" min="0" max="30" value="10" step="1"
         style="width:55px;accent-color:#4a9eff;cursor:pointer">
@@ -245,17 +267,17 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     </div>
     <div class="sep"></div>
     <!-- Crossing penalty for "Оптимизация портов" -->
-    <div style="display:flex;align-items:center;gap:5px;flex-shrink:0" data-i18n-title="tt_crossing_penalty" title="Штраф за одно пересечение линий при «Оптимизации портов», в см эквивалентной длины">
+    <div class="desktop-only" style="display:flex;align-items:center;gap:5px;flex-shrink:0" data-i18n-title="tt_crossing_penalty" title="Штраф за одно пересечение линий при «Оптимизации портов», в см эквивалентной длины">
       <i class="ti ti-cable" style="font-size:13px;color:#666"></i>
       <input type="range" id="crossing-penalty" min="0" max="150" value="30" step="5"
         style="width:60px;accent-color:#4a9eff;cursor:pointer">
       <span id="crossing-penalty-val" style="font-size:11px;color:#666;width:36px">30см</span>
     </div>
     <div class="sep"></div>
-    <button class="tb-btn active" id="btn-autofixup" data-i18n-title="tt_autofixup" title="Автоматически пересчитывать порты/стабы/выравнивание после каждого действия. Выключите при ручной шлифовке уже готового чертежа.">
+    <button class="tb-btn active desktop-only" id="btn-autofixup" data-i18n-title="tt_autofixup" title="Автоматически пересчитывать порты/стабы/выравнивание после каждого действия. Выключите при ручной шлифовке уже готового чертежа.">
       <i class="ti ti-plug-connected" style="font-size:13px"></i> <span data-i18n="auto_optimize">Авто-оптимизация</span>
     </button>
-    <button class="tb-btn" id="btn-heights" data-i18n-title="tt_heights" title="Высота потолка и высота прокладки трассы по умолчанию — нужны для расчёта вертикальных участков кабеля">
+    <button class="tb-btn desktop-only" id="btn-heights" data-i18n-title="tt_heights" title="Высота потолка и высота прокладки трассы по умолчанию — нужны для расчёта вертикальных участков кабеля">
       <i class="ti ti-ruler" style="font-size:13px"></i> <span data-i18n="heights_btn">Высоты</span>
     </button>
     <div class="sep"></div>
@@ -268,12 +290,12 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     <button class="tb-btn" id="btn-overall-estimate" data-i18n-title="tt_overall_estimate" title="Общая смета: кабель, крепёж, подрозетники, коробки и оборудование щитка — всё вместе">
       <i class="ti ti-sum" style="font-size:13px"></i> <span data-i18n="overall_estimate_btn">Общая смета</span>
     </button>
-    <button class="tb-btn" id="btn-podrozet-scan" data-i18n-title="tt_podrozet_scan" title="Распознать количество подрозетников прямо по подложке чертежа — по образцам розеточных/выключательных блоков">
+    <button class="tb-btn desktop-only" id="btn-podrozet-scan" data-i18n-title="tt_podrozet_scan" title="Распознать количество подрозетников прямо по подложке чертежа — по образцам розеточных/выключательных блоков">
       <i class="ti ti-viewfinder" style="font-size:13px"></i> <span data-i18n="podrozet_scan_btn">Подрозетники по чертежу</span>
     </button>
     <div class="sep"></div>
-    <button class="tb-btn" id="btn-site-mode" style="margin-left:auto" data-i18n-title="tt_toggle_mode" title="Переключить режим монтажа">По потолку</button>
-    <button class="tb-btn success" id="btn-tour" style="font-weight:600" data-i18n-title="tt_tour" title="Пошаговое обучение">
+    <button class="tb-btn desktop-only" id="btn-site-mode" style="margin-left:auto" data-i18n-title="tt_toggle_mode" title="Переключить режим монтажа">По потолку</button>
+    <button class="tb-btn success desktop-only" id="btn-tour" style="font-weight:600" data-i18n-title="tt_tour" title="Пошаговое обучение">
       <i class="ti ti-school"></i> <span data-i18n="tour">Обучение</span>
     </button>
     <button class="tb-btn" id="whatsnew-btn" style="position:relative" data-i18n-title="tt_whatsnew" title="Последние обновления">
@@ -294,7 +316,8 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     <div id="canvas-wrap">
       <canvas id="bg-canvas"></canvas>
       <canvas id="draw-canvas"></canvas>
-      <div id="drop-hint"><i class="ti ti-photo-off"></i><p data-i18n="drop_hint">Перетащите план сюда или нажмите «Фон»</p></div>
+      <div id="drop-hint" class="desktop-only"><i class="ti ti-photo-off"></i><p data-i18n="drop_hint">Перетащите план сюда или нажмите «Фон»</p></div>
+      <div id="drop-hint-mobile" class="mobile-hint" style="position:absolute;inset:0;align-items:center;justify-content:center;text-align:center;color:#555;padding:20px"><div><i class="ti ti-folder-open" style="font-size:32px"></i><p data-i18n="drop_hint_mobile" style="margin-top:8px;font-size:13px">Нажмите «Открыть» и выберите сохранённый файл проекта (.wiring)</p></div></div>
     </div>
 
     <div id="sidebar">
@@ -750,6 +773,17 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     <div id="overall-estimate-body"></div>
     <div id="overall-shop-request" style="margin-top:20px;padding-top:16px;border-top:1px solid #333"></div>
     <button id="overall-estimate-close-bottom" data-i18n="wn_close_btn" style="margin-top:20px;width:100%;padding:10px;background:#1a3a5c;border:1px solid #4a9eff;border-radius:7px;color:#7dc4ff;font-size:13px;font-weight:600;cursor:pointer">Понятно</button>
+  </div>
+</div>
+
+<!-- Mobile-only: first-visit info about view-only mode + demo project -->
+<div id="mobile-info-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:900;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#1e1e1e;border:1px solid #444;border-radius:12px;max-width:min(92vw,420px);width:100%;padding:22px 20px;text-align:center">
+    <i class="ti ti-device-mobile-off" style="font-size:34px;color:#f0c040"></i>
+    <div data-i18n="mob_info_title" style="font-size:15px;font-weight:700;color:#e8e8e8;margin:12px 0 8px">Мобильная версия — только просмотр</div>
+    <div data-i18n="mob_info_body" style="font-size:12px;color:#aaa;line-height:1.6;margin-bottom:18px;text-align:left">С телефона доступен только режим просмотра готовых проектов: откройте свой сохранённый файл, приближайте/отдаляйте и вращайте план двумя пальцами, нажимайте на элементы, чтобы увидеть информацию о них. Полный режим рисования (стены, линии, значки) требует экран шириной от 768px и мышь — доступен на компьютере или ноутбуке.</div>
+    <button id="mobile-info-demo-btn" data-i18n="mob_info_demo_btn" style="width:100%;padding:10px;background:#1a3a5c;border:1px solid #4a9eff;border-radius:7px;color:#7dc4ff;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:8px">Посмотреть демо-проект</button>
+    <button id="mobile-info-ok-btn" data-i18n="mob_info_ok_btn" style="width:100%;padding:10px;background:#2a2a2a;border:1px solid #444;border-radius:7px;color:#ccc;font-size:13px;cursor:pointer">Понятно</button>
   </div>
 </div>
 
@@ -1354,6 +1388,7 @@ const translations = {
     route_height_hint_own:'Своё значение для этого цвета.',
     route_height_hint_default:'Сейчас используется значение по умолчанию: {v}.',
     drop_hint:'Перетащите план сюда или нажмите «Фон»',
+    drop_hint_mobile:'Нажмите «Открыть» и выберите сохранённый файл проекта (.wiring)',
     tab_results:'Итого', tab_markers:'Значки', tab_props:'Свойства',
     tt_show_all:'Показать все скрытые линии', show_all:'Показать все', no_data:'Нет данных',
     markers_universal:'Универсальные типы значков', add_marker_type:'Добавить тип значка',
@@ -1407,6 +1442,10 @@ const translations = {
     podrozet_applied_msg:'Учтено в общей смете',
     podrozet_delete_sample:'Удалить образец',
     podrozet_brightness_label:'Яркость',
+    mob_info_title:'Мобильная версия — только просмотр',
+    mob_info_body:'С телефона доступен только режим просмотра готовых проектов: откройте свой сохранённый файл, приближайте/отдаляйте и вращайте план двумя пальцами, нажимайте на элементы, чтобы увидеть информацию о них. Полный режим рисования (стены, линии, значки) требует экран шириной от 768px и мышь — доступен на компьютере или ноутбуке.',
+    mob_info_demo_btn:'Посмотреть демо-проект',
+    mob_info_ok_btn:'Понятно',
     overall_unmarked_title:'Не у всех использованных цветов указана марка кабеля',
     overall_unmarked_hint:'Их метраж не попадёт в смету, пока для цвета не указана марка. Нажмите на цвет ниже, чтобы сразу перейти к вводу марки в панели свойств.',
     overall_horiz_label:'Крепление горизонтальных участков', overall_vert_label:'Крепление вертикальных участков',
@@ -1735,6 +1774,7 @@ const translations = {
     route_height_hint_own:'This colour has its own value.',
     route_height_hint_default:'Currently using the default: {v}.',
     drop_hint:'Drag a plan here or click "Background"',
+    drop_hint_mobile:'Tap "Open" and choose a saved project file (.wiring)',
     tab_results:'Totals', tab_markers:'Markers', tab_props:'Properties',
     tt_show_all:'Show all hidden lines', show_all:'Show all', no_data:'No data',
     markers_universal:'Universal marker types', add_marker_type:'Add marker type',
@@ -1788,6 +1828,10 @@ const translations = {
     podrozet_applied_msg:'Counted in the overall estimate',
     podrozet_delete_sample:'Delete sample',
     podrozet_brightness_label:'Brightness',
+    mob_info_title:'Mobile version — view only',
+    mob_info_body:"On a phone you can only view finished projects: open your saved file, pinch to zoom and drag with one finger to pan, tap an element to see its info. Full drawing mode (walls, lines, markers) needs a screen at least 768px wide and a mouse — use a desktop or laptop for that.",
+    mob_info_demo_btn:'View a demo project',
+    mob_info_ok_btn:'Got it',
     overall_unmarked_title:'Not every colour in use has a cable mark set',
     overall_unmarked_hint:"Their length won't appear in the estimate until a mark is set for that colour. Click a colour below to jump straight to entering its mark in the properties panel.",
     overall_horiz_label:'Horizontal run mounting', overall_vert_label:'Vertical run mounting',
@@ -2116,6 +2160,7 @@ const translations = {
     route_height_hint_own:'Este color tiene su propio valor.',
     route_height_hint_default:'Actualmente se usa el valor por defecto: {v}.',
     drop_hint:'Arrastre un plano aquí o pulse «Fondo»',
+    drop_hint_mobile:'Pulse «Abrir» y elija un archivo de proyecto guardado (.wiring)',
     tab_results:'Totales', tab_markers:'Marcadores', tab_props:'Propiedades',
     tt_show_all:'Mostrar todas las líneas ocultas', show_all:'Mostrar todo', no_data:'Sin datos',
     markers_universal:'Tipos de marcador universales', add_marker_type:'Añadir tipo de marcador',
@@ -2169,6 +2214,10 @@ const translations = {
     podrozet_applied_msg:'Contabilizado en el presupuesto general',
     podrozet_delete_sample:'Eliminar muestra',
     podrozet_brightness_label:'Brillo',
+    mob_info_title:'Versión móvil — solo visualización',
+    mob_info_body:'En el teléfono solo puede ver proyectos ya terminados: abra su archivo guardado, use dos dedos para acercar/alejar y uno para desplazar el plano, toque un elemento para ver su información. El modo de dibujo completo (paredes, líneas, iconos) necesita una pantalla de al menos 768px de ancho y un ratón — disponible en ordenador o portátil.',
+    mob_info_demo_btn:'Ver un proyecto de ejemplo',
+    mob_info_ok_btn:'Entendido',
     overall_unmarked_title:'No todos los colores usados tienen una marca de cable indicada',
     overall_unmarked_hint:'Su longitud no aparecerá en el presupuesto hasta que se indique una marca para ese color. Haga clic en un color abajo para ir directamente a introducir su marca en el panel de propiedades.',
     overall_horiz_label:'Sujeción de tramos horizontales', overall_vert_label:'Sujeción de tramos verticales',
@@ -2497,6 +2546,7 @@ const translations = {
     route_height_hint_own:'Бұл түс үшін өз мәні бар.',
     route_height_hint_default:'Қазір әдепкі мән қолданылады: {v}.',
     drop_hint:'Жоспарды осында тартыңыз немесе «Фон» басыңыз',
+    drop_hint_mobile:'«Ашу» басып, сақталған жоба файлын (.wiring) таңдаңыз',
     tab_results:'Қорытынды', tab_markers:'Белгішелер', tab_props:'Қасиеттер',
     tt_show_all:'Барлық жасырын сызықтарды көрсету', show_all:'Барлығын көрсету', no_data:'Деректер жоқ',
     markers_universal:'Әмбебап белгіше түрлері', add_marker_type:'Белгіше түрін қосу',
@@ -2550,6 +2600,10 @@ const translations = {
     podrozet_applied_msg:'Жалпы сметада ескерілді',
     podrozet_delete_sample:'Үлгіні жою',
     podrozet_brightness_label:'Жарықтық',
+    mob_info_title:'Мобильді нұсқа — тек қарау',
+    mob_info_body:'Телефоннан тек дайын жобаларды қарауға болады: сақталған файлыңызды ашыңыз, екі саусақпен үлкейтіп-кішірейтіңіз, бір саусақпен жылжытыңыз, элементке басып, ол туралы ақпаратты көріңіз. Толық сызу режимі (қабырғалар, сызықтар, белгішелер) кемінде 768px ені бар экран мен тышқанды қажет етеді — бұл компьютерде немесе ноутбукте қолжетімді.',
+    mob_info_demo_btn:'Демо-жобаны қарау',
+    mob_info_ok_btn:'Түсінікті',
     overall_unmarked_title:'Қолданылған түстердің барлығында кабель маркасы көрсетілмеген',
     overall_unmarked_hint:'Түс үшін марка көрсетілмейінше, оның ұзындығы сметаға енбейді. Марканы қасиеттер тақтасында бірден енгізу үшін төмендегі түсті басыңыз.',
     overall_horiz_label:'Көлденең учаскелерді бекіту', overall_vert_label:'Тік учаскелерді бекіту',
@@ -6333,7 +6387,10 @@ function redraw(){
 
   // Hide the "no plan" watermark whenever there's any content to look at
   const hint=document.getElementById('drop-hint');
-  if(hint) hint.classList.toggle('hidden', !!(bgImg || walls.length || segments.length || markers.length));
+  const hasContent=!!(bgImg || walls.length || segments.length || markers.length);
+  if(hint) hint.classList.toggle('hidden', hasContent);
+  const hintMobile=document.getElementById('drop-hint-mobile');
+  if(hintMobile) hintMobile.classList.toggle('hidden', hasContent);
 
   // ── Walls (drawn first, beneath everything) ──
   walls.forEach((w,i)=>{
@@ -8322,6 +8379,129 @@ drC.addEventListener('wheel',e=>{
 drC.addEventListener('mousedown',e=>{if(e.button===1)e.preventDefault();},{passive:false,capture:true});
 
 // ═══════════════════════════════════════════════════════
+// MOBILE VIEW MODE — auto by screen width (see chat: "убрать все
+// детали интерфейса рисования, оставить только загрузку и просмотр
+// проекта, выделение элементов"). Deliberately NOT reusing the
+// desktop mousedown/drag machinery above — that code also drives
+// moving markers, dragging line vertices, etc., and touch input makes
+// an accidental drag far more likely than with a mouse. This whole
+// block is a separate, additive touch layer: pan with one finger,
+// pinch to zoom, tap to select — nothing here can ever start an edit.
+// ═══════════════════════════════════════════════════════
+function isMobileMode(){ return window.matchMedia('(max-width:768px)').matches; }
+
+function mobileEnforceSelectMode(){
+  if(!isMobileMode()) return;
+  // Drawing modes are unreachable anyway (their toolbar buttons are
+  // display:none on mobile), but force it defensively — e.g. mode
+  // defaults to 'line' at load, and a saved project shouldn't be able
+  // to leave the person mid-way through drawing a wall chain etc.
+  if(mode!=='select'){ mode='select'; wallStartPt=null; measureStartPt=null; redraw(); }
+}
+window.addEventListener('resize', mobileEnforceSelectMode);
+// Deferred to 'load', not called immediately here — this sits earlier in
+// the script than some state redraw() itself depends on (e.g.
+// routeOptPreview), which isn't initialised yet at this point in a
+// top-to-bottom script run.
+window.addEventListener('load', mobileEnforceSelectMode);
+
+// A real, complete little project (studio-room layout: panel + 2 outlets
+// + 1 switch), built and verified the same way any other project in this
+// codebase is (run through updateLinesForMarker, checked for crossings —
+// see chat) — not a mock, so "Посмотреть демо" shows exactly the same
+// experience as opening a real .wiring file.
+const DEMO_PROJECT_DATA = {"scale":0.01,"segments":[],"lines":[{"id":"l1","color":"#e24b4a","pts":[{"wx":0,"wy":180},{"wx":0,"wy":271.5},{"wx":-6,"wy":271.5}],"connStart":{"markerId":"rz1","type":"connected","side":"center","portIdx":0},"connEnd":{"markerId":"shr1","type":"connected","side":"left","portIdx":0,"stubLen":5}},{"id":"l2","color":"#4a9eff","pts":[{"wx":0,"wy":100},{"wx":0,"wy":274.5},{"wx":9,"wy":274.5}],"connStart":{"markerId":"vk1","type":"connected","side":"center","portIdx":0},"connEnd":{"markerId":"shr1","type":"connected","side":"right","portIdx":1,"stubLen":8}},{"id":"l3","color":"#e24b4a","pts":[{"wx":400,"wy":80},{"wx":400,"wy":271.5},{"wx":6,"wy":271.5}],"connStart":{"markerId":"rz2","type":"connected","side":"center","portIdx":0},"connEnd":{"markerId":"shr1","type":"connected","side":"right","portIdx":0,"stubLen":5}}],"markers":[{"id":"shr1","wx":0,"wy":270,"mtypeId":"mt_shr","busOrientation":"vertical","busSide":"left","busAutoSwap":true},{"id":"rz1","wx":0,"wy":180,"mtypeId":"mt_rz"},{"id":"vk1","wx":0,"wy":100,"mtypeId":"mt_vk"},{"id":"rz2","wx":400,"wy":80,"mtypeId":"mt_rz"}],"walls":[{"id":"w1","a":{"wx":0,"wy":0},"b":{"wx":400,"wy":0}},{"id":"w2","a":{"wx":400,"wy":0},"b":{"wx":400,"wy":300}},{"id":"w3","a":{"wx":400,"wy":300},"b":{"wx":0,"wy":300}},{"id":"w4","a":{"wx":0,"wy":300},"b":{"wx":0,"wy":0}}],"measurements":[],"markerTypes":[{"id":"mt_rz","abbr":"Рз","desc":"Розетка","extra":0.5,"size":12,"kind":"point","portsPerSide":1},{"id":"mt_vk","abbr":"Вк","desc":"Выключатель","extra":0.3,"size":12,"kind":"point","portsPerSide":1},{"id":"mt_shr","abbr":"ЩР","desc":"Щит распределит.","extra":4,"size":18,"kind":"bus","portsPerSide":12}],"colorLabels":{"#e24b4a":"Розетки","#4a9eff":"Освещение"},"colorCableTypes":{"#e24b4a":"ВВГнг(A)-LS 3x2.5","#4a9eff":"ВВГнг(A)-LS 3x1.5"},"hiddenColors":[],"projectName":"Демо — однокомнатная квартира","ceilingHeightM":2.8};
+
+function mobileShowInfoOnce(){
+  if(!isMobileMode()) return;
+  if(localStorage.getItem('mobileInfoSeen')) return;
+  document.getElementById('mobile-info-modal').style.display='flex';
+}
+document.getElementById('mobile-info-demo-btn').addEventListener('click', ()=>{
+  applyProjectData(JSON.parse(JSON.stringify(DEMO_PROJECT_DATA))); // deep-copy — never let the person's edits (view mode has none, but future-proof) mutate the shared constant
+  localStorage.setItem('mobileInfoSeen','1');
+  document.getElementById('mobile-info-modal').style.display='none';
+});
+document.getElementById('mobile-info-ok-btn').addEventListener('click', ()=>{
+  localStorage.setItem('mobileInfoSeen','1');
+  document.getElementById('mobile-info-modal').style.display='none';
+});
+window.addEventListener('load', mobileShowInfoOnce);
+
+(function setupMobileTouch(){
+  let panActive=false, panStart=null, panOrigin=null;
+  let pinchActive=false, pinchStartDist=0, pinchStartS=1, pinchMidWorld=null;
+  let touchDownPos=null, touchMoved=false;
+
+  function touchDist(t0,t1){ return Math.hypot(t1.clientX-t0.clientX, t1.clientY-t0.clientY); }
+  function touchMid(t0,t1){
+    const r=drC.getBoundingClientRect();
+    return {x:(t0.clientX+t1.clientX)/2-r.left, y:(t0.clientY+t1.clientY)/2-r.top};
+  }
+
+  drC.addEventListener('touchstart', e=>{
+    if(!isMobileMode()) return;
+    e.preventDefault(); // stop the browser synthesising a mousedown/click from this touch too
+    hideCtxMenu(); hideConnPopup();
+    if(e.touches.length===2){
+      panActive=false;
+      pinchActive=true;
+      pinchStartDist=touchDist(e.touches[0], e.touches[1]);
+      pinchStartS=bgS;
+      const mid=touchMid(e.touches[0], e.touches[1]);
+      pinchMidWorld={x:(mid.x-bgX)/bgS, y:(mid.y-bgY)/bgS};
+    } else if(e.touches.length===1){
+      pinchActive=false;
+      const p=getPos(e);
+      panStart={...p}; panOrigin={bgX,bgY};
+      touchDownPos={...p}; touchMoved=false;
+      panActive=true;
+    }
+  }, {passive:false});
+
+  drC.addEventListener('touchmove', e=>{
+    if(!isMobileMode()) return;
+    e.preventDefault();
+    if(pinchActive && e.touches.length===2){
+      const dist=touchDist(e.touches[0], e.touches[1]);
+      const factor=dist/(pinchStartDist||1);
+      const ns=Math.max(0.02, Math.min(20, pinchStartS*factor));
+      const mid=touchMid(e.touches[0], e.touches[1]);
+      bgX=mid.x-pinchMidWorld.x*ns; bgY=mid.y-pinchMidWorld.y*ns;
+      bgS=ns;
+      updateAllConnectedEndpoints();
+      redrawBg(); redraw();
+    } else if(panActive && e.touches.length===1){
+      const p=getPos(e);
+      if(Math.hypot(p.x-touchDownPos.x, p.y-touchDownPos.y)>6) touchMoved=true;
+      bgX=panOrigin.bgX+(p.x-panStart.x);
+      bgY=panOrigin.bgY+(p.y-panStart.y);
+      redrawBg(); redraw();
+    }
+  }, {passive:false});
+
+  drC.addEventListener('touchend', e=>{
+    if(!isMobileMode()) return;
+    e.preventDefault();
+    if(panActive && !touchMoved){
+      // A tap that didn't turn into a pan/drag — select whatever's under it.
+      const p=touchDownPos;
+      const hit=hitTest(p);
+      if(hit){
+        const selHitType=hit.type==='line-vertex'?'line':hit.type;
+        selType=selHitType; selIdx=hit.idx;
+        showPropsTab(); updatePropsPanel();
+      } else {
+        selType=null; selIdx=null; updatePropsPanel();
+      }
+      redraw();
+    }
+    panActive=false; pinchActive=false; touchDownPos=null;
+  }, {passive:false});
+})();
+
+
+// ═══════════════════════════════════════════════════════
 // KEYBOARD
 // ═══════════════════════════════════════════════════════
 document.addEventListener('keydown',e=>{
@@ -9328,105 +9508,113 @@ function doSaveProject(){
   const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download=safeFileName(name)+'.wiring';a.click();
-  if(typeof gtag==='function') gtag('event', 'save_project');
+  if(typeof gtag==='function'){ gtag('event', 'save_project'); gtag('event', 'project_saved', {method:'wiring'}); }
 }
 document.getElementById('btn-save').addEventListener('click',()=>{
   showPartnerCard(doSaveProject);
 });
+// Extracted so both the real "Открыть" file picker AND the mobile demo
+// loader (see setupMobileTouch/demo modal below) share one code path —
+// the demo is a real project loaded exactly the way any other one is,
+// not a special-cased mock.
+function applyProjectData(d){
+  saveHistory();
+  segments=d.segments||[];
+  lines=d.lines||[];
+  markers=d.markers||[];
+  walls=d.walls||[];
+  measurements=d.measurements||[];
+  zones=d.zones||[];
+  markerTypes=d.markerTypes||markerTypes;
+  scale=d.scale||null;
+  colorLabels=d.colorLabels||{};
+  colorCableTypes=d.colorCableTypes||{};
+  hiddenColors=new Set(d.hiddenColors||[]);
+  ceilingHeightM=d.ceilingHeightM!=null?d.ceilingHeightM:2.8;
+  defaultRouteHeightM=d.defaultRouteHeightM!=null?d.defaultRouteHeightM:0;
+  defaultRouteHeightRef=d.defaultRouteHeightRef||'ceiling';
+  colorRouteHeight=d.colorRouteHeight||{};
+  panelPhases=d.panelPhases||1;
+  panelHasInputBreaker=!!d.panelHasInputBreaker;
+  panelInputBreakerRating=d.panelInputBreakerRating||'63А';
+  panelHasVoltageRelay=!!d.panelHasVoltageRelay;
+  panelHasContactor=!!d.panelHasContactor;
+  panelContactorRating=d.panelContactorRating||'63А';
+  panelVoltageRelayRating=d.panelVoltageRelayRating||'63А';
+  panelProtectionScheme=d.panelProtectionScheme||'rcd';
+  panelRcdCount=d.panelRcdCount!=null?d.panelRcdCount:1;
+  panelRcdRating=d.panelRcdRating||'40А';
+  panelNeutralBusChoice=d.panelNeutralBusChoice||'own';
+  panelMountType=d.panelMountType||'flush';
+  colorBreakerRating=d.colorBreakerRating||{};
+  overallHasMountingGun=!!d.overallHasMountingGun;
+  overallMarginPct=d.overallMarginPct!=null?d.overallMarginPct:15;
+  overallBackBoxCountOverride=d.overallBackBoxCountOverride!=null?d.overallBackBoxCountOverride:null;
+  overallBoxSizeText=d.overallBoxSizeText||'';
+  overallBoxBaseCount=d.overallBoxBaseCount!=null?d.overallBoxBaseCount:null;
+  overallBoxExtraInfo=d.overallBoxExtraInfo||'';
+  cableMarkNotes=d.cableMarkNotes||{};
+  overallRowNotes=d.overallRowNotes||{};
+  overallRowConfig=d.overallRowConfig||{};
+  // Restore project name if present in the file
+  if(d.projectName) document.getElementById('project-name').value=d.projectName;
+  if(d.bgOpacity!=null){
+    bgOpacity=d.bgOpacity;
+    bgOpacitySlider.value=Math.round(bgOpacity*100);
+    bgOpacityVal.textContent=Math.round(bgOpacity*100)+'%';
+  }
+  if(d.markerSnapRadius!=null){
+    markerSnapRadius=d.markerSnapRadius;
+    markerSnapSlider.value=markerSnapRadius;
+    markerSnapVal.textContent=markerSnapRadius+'px';
+  }
+  if(d.crossingPenaltyCm!=null){
+    crossingPenaltyCm=d.crossingPenaltyCm;
+    crossingPenaltySlider.value=crossingPenaltyCm;
+    crossingPenaltyVal.textContent=crossingPenaltyCm+t('unit_cm');
+  }
+  if(d.autoFixupEnabled!=null){
+    autoFixupEnabled=d.autoFixupEnabled;
+    document.getElementById('btn-autofixup').classList.toggle('active', autoFixupEnabled);
+  }
+  bgX=d.bgX||0;bgY=d.bgY||0;bgS=d.bgS||d.bgScale||1;
+  // Recompute physical scale constants
+  if(scale!=null){
+    window._physLineW=0.02/scale;
+    window._physLineGap=0.01/scale;
+    window._physMarkerR=0.05/scale;
+  }
+  document.getElementById('scale-badge').style.display=scale!==null?'flex':'none';
+  // Snap all line endpoints to current port positions after load
+  updateAllConnectedEndpoints();
+  // Clean up float noise / non-orthogonal segments — safe and
+  // non-destructive, never changes where a line intentionally goes.
+  lines.forEach(line=>{ simplifyLine(line); orthogonalizeLine(line); });
+  if(autoFixupEnabled){
+    // Broader re-fitting — same thing this toggle guards everywhere
+    // else. A saved file should reopen exactly as it was saved unless
+    // you've opted into this.
+    lines.forEach(line=>{ routeAroundMarkers(line); });
+    markers.forEach(m=>{ if(isBoxKind(m)){ resolveBoxStubDepths(m); alignPointMarkersToBoxPorts(m); } });
+  }
+  repairAnyCollapsedLines();
+  if(d.bg){
+    bgImgDataUrl=d.bg;
+    const img=new Image();
+    img.onload=()=>{bgImg=img;document.getElementById('drop-hint').classList.add('hidden');redrawBg();redraw();};
+    img.src=d.bg;
+  } else {bgImg=null;redrawBg();redraw();}
+  selType=null;selIdx=null;
+  renderMarkerTypesList();updatePropsPanel();buildColorPicker();updateResults();setInfo(t('msg_project_loaded'));
+}
+
 document.getElementById('project-in').addEventListener('change',e=>{
   const f=e.target.files[0];if(!f) return;
   const r=new FileReader();
   r.onload=ev=>{
     try{
       const d=JSON.parse(ev.target.result);
-      saveHistory();
-      segments=d.segments||[];
-      lines=d.lines||[];
-      markers=d.markers||[];
-      walls=d.walls||[];
-      measurements=d.measurements||[];
-      zones=d.zones||[];
-      markerTypes=d.markerTypes||markerTypes;
-      scale=d.scale||null;
-      colorLabels=d.colorLabels||{};
-      colorCableTypes=d.colorCableTypes||{};
-      hiddenColors=new Set(d.hiddenColors||[]);
-      ceilingHeightM=d.ceilingHeightM!=null?d.ceilingHeightM:2.8;
-      defaultRouteHeightM=d.defaultRouteHeightM!=null?d.defaultRouteHeightM:0;
-      defaultRouteHeightRef=d.defaultRouteHeightRef||'ceiling';
-      colorRouteHeight=d.colorRouteHeight||{};
-      panelPhases=d.panelPhases||1;
-      panelHasInputBreaker=!!d.panelHasInputBreaker;
-      panelInputBreakerRating=d.panelInputBreakerRating||'63А';
-      panelHasVoltageRelay=!!d.panelHasVoltageRelay;
-      panelHasContactor=!!d.panelHasContactor;
-      panelContactorRating=d.panelContactorRating||'63А';
-      panelVoltageRelayRating=d.panelVoltageRelayRating||'63А';
-      panelProtectionScheme=d.panelProtectionScheme||'rcd';
-      panelRcdCount=d.panelRcdCount!=null?d.panelRcdCount:1;
-      panelRcdRating=d.panelRcdRating||'40А';
-      panelNeutralBusChoice=d.panelNeutralBusChoice||'own';
-      panelMountType=d.panelMountType||'flush';
-      colorBreakerRating=d.colorBreakerRating||{};
-      overallHasMountingGun=!!d.overallHasMountingGun;
-      overallMarginPct=d.overallMarginPct!=null?d.overallMarginPct:15;
-      overallBackBoxCountOverride=d.overallBackBoxCountOverride!=null?d.overallBackBoxCountOverride:null;
-      overallBoxSizeText=d.overallBoxSizeText||'';
-      overallBoxBaseCount=d.overallBoxBaseCount!=null?d.overallBoxBaseCount:null;
-      overallBoxExtraInfo=d.overallBoxExtraInfo||'';
-      cableMarkNotes=d.cableMarkNotes||{};
-      overallRowNotes=d.overallRowNotes||{};
-      overallRowConfig=d.overallRowConfig||{};
-      // Restore project name if present in the file
-      if(d.projectName) document.getElementById('project-name').value=d.projectName;
-      if(d.bgOpacity!=null){
-        bgOpacity=d.bgOpacity;
-        bgOpacitySlider.value=Math.round(bgOpacity*100);
-        bgOpacityVal.textContent=Math.round(bgOpacity*100)+'%';
-      }
-      if(d.markerSnapRadius!=null){
-        markerSnapRadius=d.markerSnapRadius;
-        markerSnapSlider.value=markerSnapRadius;
-        markerSnapVal.textContent=markerSnapRadius+'px';
-      }
-      if(d.crossingPenaltyCm!=null){
-        crossingPenaltyCm=d.crossingPenaltyCm;
-        crossingPenaltySlider.value=crossingPenaltyCm;
-        crossingPenaltyVal.textContent=crossingPenaltyCm+t('unit_cm');
-      }
-      if(d.autoFixupEnabled!=null){
-        autoFixupEnabled=d.autoFixupEnabled;
-        document.getElementById('btn-autofixup').classList.toggle('active', autoFixupEnabled);
-      }
-      bgX=d.bgX||0;bgY=d.bgY||0;bgS=d.bgS||d.bgScale||1;
-      // Recompute physical scale constants
-      if(scale!=null){
-        window._physLineW=0.02/scale;
-        window._physLineGap=0.01/scale;
-        window._physMarkerR=0.05/scale;
-      }
-      document.getElementById('scale-badge').style.display=scale!==null?'flex':'none';
-      // Snap all line endpoints to current port positions after load
-      updateAllConnectedEndpoints();
-      // Clean up float noise / non-orthogonal segments — safe and
-      // non-destructive, never changes where a line intentionally goes.
-      lines.forEach(line=>{ simplifyLine(line); orthogonalizeLine(line); });
-      if(autoFixupEnabled){
-        // Broader re-fitting — same thing this toggle guards everywhere
-        // else. A saved file should reopen exactly as it was saved unless
-        // you've opted into this.
-        lines.forEach(line=>{ routeAroundMarkers(line); });
-        markers.forEach(m=>{ if(isBoxKind(m)){ resolveBoxStubDepths(m); alignPointMarkersToBoxPorts(m); } });
-      }
-      repairAnyCollapsedLines();
-      if(d.bg){
-        bgImgDataUrl=d.bg;
-        const img=new Image();
-        img.onload=()=>{bgImg=img;document.getElementById('drop-hint').classList.add('hidden');redrawBg();redraw();};
-        img.src=d.bg;
-      } else {bgImg=null;redrawBg();redraw();}
-      selType=null;selIdx=null;
-      renderMarkerTypesList();updatePropsPanel();buildColorPicker();updateResults();setInfo(t('msg_project_loaded'));
+      applyProjectData(d);
     }catch(err){alert(t('alert_open_error_prefix')+err.message);}
   };
   r.readAsText(f);
@@ -11089,7 +11277,7 @@ function doExportForTheme(theme){
         a.href=URL.createObjectURL(blob);
         a.download=safeFileName(getProjectName())+`-full-${dpr}x-${theme}.png`;
         a.click();
-        if(typeof gtag==='function') gtag('event', 'export_png', {scope:'full', quality:dpr+'x', theme});
+        if(typeof gtag==='function'){ gtag('event', 'export_png', {scope:'full', quality:dpr+'x', theme}); gtag('event', 'project_saved', {method:'png_full'}); }
       },'image/png');
     }, fullDelay);
 
@@ -11113,7 +11301,7 @@ function doExportForTheme(theme){
         a.href=URL.createObjectURL(blob);
         a.download=safeFileName(getProjectName())+`-${dpr}x-${theme}.png`;
         a.click();
-        if(typeof gtag==='function') gtag('event', 'export_png', {scope:'viewport', quality:dpr+'x', theme});
+        if(typeof gtag==='function'){ gtag('event', 'export_png', {scope:'viewport', quality:dpr+'x', theme}); gtag('event', 'project_saved', {method:'png_viewport'}); }
       },'image/png');
     }, viewportDelay);
   }
@@ -11856,7 +12044,7 @@ function exportPortsDiagramForTheme(theme){
         a.href=URL.createObjectURL(blob);
         a.download=safeFileName(getProjectName())+`-ports-${theme}${pageSuffix}.png`;
         a.click();
-        if(page===numPages-1 && typeof gtag==='function') gtag('event', 'export_png', {scope:'ports-diagram', theme, pages:numPages});
+        if(page===numPages-1 && typeof gtag==='function'){ gtag('event', 'export_png', {scope:'ports-diagram', theme, pages:numPages}); gtag('event', 'project_saved', {method:'png_ports'}); }
       },'image/png');
     }, delay);
   }
@@ -12342,12 +12530,24 @@ function openShopRequestModal(cityKey){
           </div>
           <a href="https://wa.me/${s.whatsapp}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener"
             title="${t('shop_request_send_one_tt')}"
+            data-shop="${(s.name||'unknown').replace(/"/g,'&quot;')}"
+            class="shop-request-send-link"
             style="flex-shrink:0;display:flex;align-items:center;justify-content:center;width:34px;height:34px;background:#1a3a1a;border:1px solid #2a6a2a;border-radius:7px;color:#8aff8a;text-decoration:none">
             <i class="ti ti-brand-whatsapp" style="font-size:17px"></i>
           </a>
         </div>`).join('')}
     </div>`;
   }
+  // Tracked separately from partner_click (see chat): this is a person
+  // actually sending a materials order to a specific shop, not just
+  // clicking through to a partner's site/socials — worth its own event
+  // so "how many shop requests went out, and to whom" is answerable
+  // straight from GA4 without guessing from a mix of click types.
+  listWrap.querySelectorAll('.shop-request-send-link').forEach(a=>{
+    a.addEventListener('click', ()=>{
+      if(typeof gtag==='function') gtag('event', 'shop_request_sent', {shop_name:a.dataset.shop, city:cityKey});
+    });
+  });
   const addOwnBtn=document.getElementById('shop-request-add-own');
   addOwnBtn.style.display = (partnersConfig && partnersConfig._ad_slot_whatsapp) ? '' : 'none';
   document.getElementById('shop-request-modal').style.display='flex';

@@ -61,6 +61,8 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 .tb-btn{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;font-size:12px;border:1px solid #444;border-radius:6px;background:#2a2a2a;color:#ccc;cursor:pointer;white-space:nowrap;transition:background .1s,border-color .1s;user-select:none}
 .tb-btn:hover{background:#333;border-color:#555}
 .tb-btn.active{border-color:#4a9eff;background:#1a3a5c;color:#7dc4ff}
+.site-mode-seg.active{background:#1a3a5c !important;color:#7dc4ff !important}
+.site-mode-seg:hover:not(.active){color:#ccc !important}
 .tour-btn-highlight{animation:tourPulse 1s ease-in-out 3}
 @keyframes tourPulse{0%,100%{box-shadow:0 0 0 0 rgba(109,202,138,0.7)}50%{box-shadow:0 0 0 8px rgba(109,202,138,0)}}
 .tb-btn i{font-size:14px}
@@ -294,7 +296,10 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
       <i class="ti ti-viewfinder" style="font-size:13px"></i> <span data-i18n="podrozet_scan_btn">Подрозетники по чертежу</span>
     </button>
     <div class="sep"></div>
-    <button class="tb-btn desktop-only" id="btn-site-mode" style="margin-left:auto" data-i18n-title="tt_toggle_mode" title="Переключить режим монтажа">По потолку</button>
+    <div id="site-mode-toggle" class="desktop-only" style="margin-left:auto;display:flex;align-items:center;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:2px;gap:1px" data-i18n-title="tt_toggle_mode" title="Два режима прокладки кабеля — нажмите, чтобы переключиться">
+      <button class="site-mode-seg" id="site-mode-base" data-mode="base" style="padding:5px 10px;font-size:11px;border:none;border-radius:6px;background:none;color:#888;cursor:pointer;white-space:nowrap" data-i18n="mode_base">В штробах</button>
+      <button class="site-mode-seg" id="site-mode-pro" data-mode="pro" style="padding:5px 10px;font-size:11px;border:none;border-radius:6px;background:none;color:#888;cursor:pointer;white-space:nowrap" data-i18n="mode_pro">По потолку</button>
+    </div>
     <button class="tb-btn success desktop-only" id="btn-tour" style="font-weight:600" data-i18n-title="tt_tour" title="Пошаговое обучение">
       <i class="ti ti-school"></i> <span data-i18n="tour">Обучение</span>
     </button>
@@ -458,7 +463,11 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     <rect id="tour-hole-border" x="0" y="0" width="0" height="0" rx="10" fill="none" stroke="#4a9eff" stroke-width="2.5"/>
   </svg>
   <div id="tour-card" style="position:absolute;background:#1e1e1e;border:1px solid #4a9eff;border-radius:10px;padding:16px 18px;max-width:320px;box-shadow:0 8px 30px rgba(0,0,0,0.6);pointer-events:auto">
-    <div style="font-size:10px;color:#4a9eff;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px" id="tour-step-counter">Шаг 1 из 10</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <span style="font-size:10px;color:#4a9eff;font-weight:700;text-transform:uppercase;letter-spacing:.05em" id="tour-step-counter">Шаг 1 из 10</span>
+      <button id="tour-restart" data-i18n="tour_restart" title="Начать заново" style="font-size:10px;color:#666;background:none;border:none;cursor:pointer;text-decoration:underline">Начать заново</button>
+    </div>
+    <div id="tour-svg-wrap" style="display:none;margin-bottom:10px"></div>
     <div style="font-size:13px;font-weight:600;color:#e8e8e8;margin-bottom:6px" id="tour-title"></div>
     <div style="font-size:12px;color:#aaa;line-height:1.55;margin-bottom:14px" id="tour-text"></div>
     <div style="display:flex;gap:8px;justify-content:space-between;align-items:center">
@@ -1262,7 +1271,7 @@ const translations = {
     modal_scale_title:'Масштаб', modal_scale_label:'Длина нарисованной линии (м):',
     modal_new_type:'Новый тип значка', modal_edit_type:'Изменить тип значка',
     modal_edit_length_title:'Изменить длину', modal_edit_length_label:'Новая длина (м):',
-    tour_skip:'Пропустить тур', tour_prev:'Назад', tour_next:'Далее', tour_finish:'Завершить',
+    tour_skip:'Пропустить тур', tour_prev:'Назад', tour_next:'Далее', tour_finish:'Завершить', tour_restart:'Начать заново',
     tour_step_counter:'Шаг {n} из {total}',
     tour_0_title:'Добро пожаловать, кожаный мешок!',
     tour_0_text:'Это калькулятор проводки: рисуете план, прокладываете кабель и сразу получаете метраж по цветам. Есть два режима монтажа — «В штробах» (скрытая проводка, расположение портов и пересечения линий не важны — всё спрятано в стене) и «По потолку» (открытая проводка, тут уже важно, как именно идут провода). Разберём оба по порядку.',
@@ -1551,22 +1560,34 @@ const translations = {
     ports_more_hidden:'+{n} ещё',
     msg_declutter_done:'Мелкие зигзаги убраны.',
     msg_declutter_nothing:'Убирать нечего — лишних точек не найдено (или они все рядом с коробками, в пределах 30см).',
-    tourpro_0_title:'Добро пожаловать в режим «По потолку»!',
-    tourpro_0_text:'Это режим «По потолку» — для открытой проводки, которую видно после монтажа. Здесь то же самое рисование линий, что и в режиме «В штробах», плюс коробки/щиты с несколькими портами, зоны прокладки и автоматическая оптимизация всего чертежа — потому что тут разводка действительно на виду. Пройдёмся по новому.',
-    tourpro_1_title:'Коробки и щиты с портами',
-    tourpro_1_text:'На вкладке «Значки» типы Кр и ЩР — не просто точки: у них несколько портов на каждой стороне. При создании своего типа можно выбрать «Коробка» или «Щит» и задать число портов на сторону.',
-    tourpro_2_title:'Порт для подключения выбирается автоматически',
-    tourpro_2_text:'Когда линия подходит к коробке, вручную выбирать порт не обязательно — движок сам подберёт лучший порт под путь при запуске «Оптимизации чертежа» (следующий шаг).',
-    tourpro_3_title:'Отметьте, где можно вести линии',
-    tourpro_3_text:'ПКМ — начать зону произвольной формы, клик — добавить точку, двойной клик — замкнуть. Пересекающиеся зоны читаются как одна сплошная область. Без зон разрешена вся площадь чертежа.',
-    tourpro_4_title:'Оптимизация чертежа',
-    tourpro_4_text:'Пересобирает пути всех линий заново с учётом зон. Три ползунка — длина / пересечения / магистрали — и три готовых пресета. Предпросмотр показывает результат прямо на чертеже до применения.',
-    tourpro_5_title:'Коробки сами «смотрят» друг на друга',
-    tourpro_5_text:'Для связей коробка-коробка движок перебирает пары портов и выбирает вариант с минимумом углов — по возможности порты оказываются друг напротив друга.',
-    tourpro_6_title:'Предложения по переносу коробок',
-    tourpro_6_text:'Кнопка «Найти улучшения расположения коробок» в диалоге оптимизации ищет позицию в радиусе 50см, которая сокращает длину линий. Перенос применяется только после вашего подтверждения — по одному.',
-    tourpro_7_title:'Авто-оптимизация',
-    tourpro_7_text:'Включена по умолчанию — порты и стабы пересчитываются после каждого действия. Выключите её, если хотите вручную довести уже готовый чертёж без автоматических поправок.',
+    tourpro_0_title:'Добро пожаловать в обучение!',
+    tourpro_0_text:'Пройдём весь путь — от загрузки плана до готовой сметы, на примере режима «По потолку в гофрах» (раз вы сейчас в нём). Каждый шаг подсвечивает нужную кнопку прямо в интерфейсе — можно в любой момент нажать «Пропустить» и вернуться позже с того же места.',
+    tourpro_1_title:'Быстрый старт: загрузите план',
+    tourpro_1_text:'Самый быстрый и точный способ — загрузить фото или скан плана помещения и обвести его поверх. Это быстрее и надёжнее, чем чертить стены с нуля вручную — хотя нарисовать стены самому тоже можно, кнопкой «Стены» рядом.',
+    tourpro_2_title:'Задайте масштаб',
+    tourpro_2_text:'Отметьте на плане отрезок известной длины (например, ширину дверного проёма) и укажите его реальный размер в метрах. Без масштаба метраж кабеля посчитать невозможно.',
+    tourpro_3_title:'Высота помещения и трассы',
+    tourpro_3_text:'Укажите высоту потолка и высоту прокладки трассы по умолчанию — это нужно для расчёта вертикальных участков кабеля, от розетки или выключателя вверх до самой трассы.',
+    tourpro_4_title:'Выберите способ прокладки',
+    tourpro_4_text:'Всего два режима: «В штробах» — кабель пучками в стене, «По потолку» — в гофре по потолку, открытым способом. Дальше обучение продолжится именно в режиме «По потолку», раз вы уже его выбрали.',
+    tourpro_5_title:'Маркировка кабеля цветом',
+    tourpro_5_text:'Каждый цвет линии — это отдельная марка кабеля: например, один цвет для розеточной группы (ВВГнг 3×2.5), другой — для освещения (3×1.5). Выберите цвет перед тем, как начать рисовать линию.',
+    tourpro_6_title:'Разместите значки',
+    tourpro_6_text:'Розетка, выключатель, распредкоробка, щит — всё это значки. Кликните по нужному типу в списке справа, затем поставьте его на плане в нужном месте.',
+    tourpro_7_title:'Сторона значка',
+    tourpro_7_text:'У розетки или выключателя провод физически выходит только в одну сторону. Зажмите правую кнопку мыши на значке и потяните в нужную сторону — так задаётся направление выхода провода.',
+    tourpro_8_title:'Коробки и их порты',
+    tourpro_8_text:'Распредкоробка (Кр) — это точка разветвления проводки. У неё есть порты с каждой стороны, к которым подключаются линии. Здесь, на вкладке «Значки», настраивается число портов и создаются свои типы значков.',
+    tourpro_9_title:'Оптимизация портов',
+    tourpro_9_text:'Когда провода подключены к коробке или щиту не в самом удобном порядке — нажмите «Оптимизировать порты» (эта кнопка включает и авто-режим): сервис сам переставит их местами, чтобы линии не пересекались и не удлинялись зря.',
+    tourpro_10_title:'Подключение щита',
+    tourpro_10_text:'Щит (ЩР) растёт по числу подключённых линий от одного закреплённого края — как настоящий щиток на стене. Разместите его у стены заранее, до того как начнёте заводить в него провода, чтобы он рос в нужную сторону, а не «наружу» в комнату.',
+    tourpro_11_title:'Смета по кабелям',
+    tourpro_11_text:'Сводная таблица метража отдельно по каждой марке кабеля — горизонтальные и вертикальные участки, расход на подключение.',
+    tourpro_12_title:'Расчёт щитка',
+    tourpro_12_text:'Автоматический подбор автоматов и УЗО/дифавтоматов по факту подключённых линий и их марок кабеля.',
+    tourpro_13_title:'Общая смета',
+    tourpro_13_text:'Всё вместе: кабель, крепёж, подрозетники, короба, оборудование щитка — готовая смета, которую можно тут же отправить поставщику через WhatsApp.',
   },
   en: {
     upload_bg:'Upload background', tt_upload_bg:'Upload a photo or floor plan',
@@ -1651,7 +1672,7 @@ const translations = {
     modal_scale_title:'Scale', modal_scale_label:'Length of the drawn line (m):',
     modal_new_type:'New marker type', modal_edit_type:'Edit marker type',
     modal_edit_length_title:'Edit length', modal_edit_length_label:'New length (m):',
-    tour_skip:'Skip tour', tour_prev:'Back', tour_next:'Next', tour_finish:'Finish',
+    tour_skip:'Skip tour', tour_prev:'Back', tour_next:'Next', tour_finish:'Finish', tour_restart:'Start over',
     tour_step_counter:'Step {n} of {total}',
     tour_0_title:'Welcome, meatbag!',
     tour_0_text:"This is a wiring calculator: draw a plan, route the cable, and get the length per color right away. There are two installation modes — In-wall chase (concealed wiring, port layout and line crossings don't matter — it's all hidden inside the wall) and Ceiling-run (exposed wiring, where how the wires actually run does matter). Let's go through both.",
@@ -1940,22 +1961,34 @@ const translations = {
     ports_more_hidden:'+{n} more',
     msg_declutter_done:'Small zigzags removed.',
     msg_declutter_nothing:'Nothing to remove — no extra points found (or they\'re all near boxes, within 30cm).',
-    tourpro_0_title:'Welcome to Ceiling-run mode!',
-    tourpro_0_text:"This is Ceiling-run mode — for exposed wiring that stays visible after installation. It's the same line-drawing as In-wall chase mode, plus multi-port boxes/panels, routing zones, and automatic optimization of the whole drawing — because here the routing is actually on display. Let's walk through what's new.",
-    tourpro_1_title:'Boxes and panels with ports',
-    tourpro_1_text:'On the "Markers" tab, the Box and Panel types aren\'t just points anymore — they have several ports on each side. When creating your own type, you can choose "Box" or "Panel" and set the number of ports per side.',
-    tourpro_2_title:'The connecting port is chosen automatically',
-    tourpro_2_text:'When a line reaches a box, you don\'t have to pick the port by hand — the engine picks the best port for the path when you run "Optimize drawing" (next step).',
-    tourpro_3_title:'Mark where lines are allowed to run',
-    tourpro_3_text:'Right-click — start a free-form zone, click — add a point, double-click — close it. Overlapping zones are read as one continuous area. With no zones, the whole drawing area is allowed.',
-    tourpro_4_title:'Optimize drawing',
-    tourpro_4_text:'Rebuilds every line\'s path from scratch within the zones. Three sliders — length / crossings / trunks — plus three ready-made presets. The preview shows the result right on the drawing before you apply it.',
-    tourpro_5_title:'Boxes end up "facing" each other',
-    tourpro_5_text:'For box-to-box connections, the engine tries every port pair and picks the one with the fewest corners — where possible, the ports end up directly facing each other.',
-    tourpro_6_title:'Box placement suggestions',
-    tourpro_6_text:'The "Find box placement improvements" button in the optimizer dialog searches within a 50cm radius for a position that shortens line lengths. A move is only applied after you confirm it — one at a time.',
-    tourpro_7_title:'Auto-optimization',
-    tourpro_7_text:'On by default — ports and stubs recompute after every action. Turn it off if you want to manually polish a finished drawing without automatic adjustments.',
+    tourpro_0_title:'Welcome to the tutorial!',
+    tourpro_0_text:"Let's walk through the whole path — from loading a plan to a finished estimate — using Ceiling-run mode as the example (since that's the mode you're in right now). Each step highlights the button you need, right in the interface. Click \"Skip\" any time and pick up later from the same spot.",
+    tourpro_1_title:'Quick start: load a plan',
+    tourpro_1_text:"The fastest, most accurate way is to upload a photo or scan of the room's plan and trace it. It's faster and more reliable than drawing walls from scratch by hand — though you can draw walls yourself too, with the \"Walls\" button right next to it.",
+    tourpro_2_title:'Set the scale',
+    tourpro_2_text:"Mark a segment of known length on the plan (a doorway's width, say) and enter its real length in metres. Without a scale, cable metrage can't be calculated at all.",
+    tourpro_3_title:'Room and run height',
+    tourpro_3_text:"Set the ceiling height and the default route height — needed to work out the vertical stretches of cable, from an outlet or switch up to the run itself.",
+    tourpro_4_title:'Pick an installation method',
+    tourpro_4_text:"Just two modes: \"In-wall chase\" — cable bundles inside the wall, \"Ceiling-run\" — exposed conduit along the ceiling. The tutorial continues in Ceiling-run mode from here, since that's what you've already picked.",
+    tourpro_5_title:'Mark cables by colour',
+    tourpro_5_text:"Each line colour is its own cable mark — one colour for the outlet circuit (e.g. VVGng 3×2.5), another for lighting (3×1.5). Pick a colour before you start drawing a line.",
+    tourpro_6_title:'Place your markers',
+    tourpro_6_text:'Outlet, switch, junction box, panel — these are all markers. Click the type you need in the list on the right, then place it on the plan where it belongs.',
+    tourpro_7_title:"A marker's facing side",
+    tourpro_7_text:"An outlet or switch's wire physically exits in only one direction. Hold the right mouse button on the marker and drag toward the direction you want — that sets which way the wire exits.",
+    tourpro_8_title:'Boxes and their ports',
+    tourpro_8_text:'A junction box is a branching point in the wiring. It has ports on each side that lines connect to. This is where — on the "Markers" tab — you set the number of ports and create your own marker types.',
+    tourpro_9_title:'Optimize ports',
+    tourpro_9_text:"When wires land on a box or panel in an awkward order, click \"Optimize ports\" (this button also toggles auto-mode): the tool rearranges them so lines don't cross or run needlessly long.",
+    tourpro_10_title:'Connecting the panel',
+    tourpro_10_text:"A panel grows with however many lines are connected to it, from one fixed edge — just like a real panel mounted on a wall. Place it against the wall first, before wiring anything into it, so it grows the right way rather than out into the room.",
+    tourpro_11_title:'Cable estimate',
+    tourpro_11_text:'A summary table of metrage for each cable mark separately — horizontal and vertical runs, plus connection allowance.',
+    tourpro_12_title:'Panel calculation',
+    tourpro_12_text:'Automatically picks breakers and RCDs/RCBOs based on the lines actually connected and their cable marks.',
+    tourpro_13_title:'Overall estimate',
+    tourpro_13_text:'Everything together: cable, mounting hardware, back boxes, trunking, panel equipment — a finished estimate you can send to a supplier over WhatsApp right from here.',
   },
   es: {
     upload_bg:'Subir fondo', tt_upload_bg:'Subir una foto o plano del local',
@@ -2040,7 +2073,7 @@ const translations = {
     modal_scale_title:'Escala', modal_scale_label:'Longitud de la línea dibujada (m):',
     modal_new_type:'Nuevo tipo de marcador', modal_edit_type:'Editar tipo de marcador',
     modal_edit_length_title:'Editar longitud', modal_edit_length_label:'Nueva longitud (m):',
-    tour_skip:'Saltar el tutorial', tour_prev:'Atrás', tour_next:'Siguiente', tour_finish:'Finalizar',
+    tour_skip:'Saltar el tutorial', tour_prev:'Atrás', tour_next:'Siguiente', tour_finish:'Finalizar', tour_restart:'Empezar de nuevo',
     tour_step_counter:'Paso {n} de {total}',
     tour_0_title:'¡Bienvenido, saco de carne!',
     tour_0_text:'Esto es una calculadora de cableado: dibuja un plano, tiende el cable y obtiene al instante los metros por color. Hay dos modos de instalación — «En roza de pared» (cableado oculto, la disposición de los puertos y los cruces de líneas no importan — todo queda escondido en la pared) y «Por el techo» (cableado visto, donde sí importa cómo van los cables). Veamos ambos en orden.',
@@ -2329,22 +2362,34 @@ const translations = {
     ports_more_hidden:'+{n} más',
     msg_declutter_done:'Zigzags pequeños eliminados.',
     msg_declutter_nothing:'Nada que quitar — no se encontraron puntos sobrantes (o están todos cerca de cajas, a menos de 30cm).',
-    tourpro_0_title:'¡Bienvenido al modo «Por el techo»!',
-    tourpro_0_text:'Este es el modo «Por el techo» — para cableado visto que queda a la vista tras la instalación. Aquí se traza igual que en el modo «En roza de pared», más cajas/paneles con varios puertos, zonas de tendido y optimización automática de todo el plano — porque aquí el trazado sí está a la vista. Repasemos las novedades.',
-    tourpro_1_title:'Cajas y paneles con puertos',
-    tourpro_1_text:'En la pestaña «Marcadores», los tipos Caja y Panel ya no son simples puntos: tienen varios puertos en cada lado. Al crear su propio tipo, puede elegir «Caja» o «Panel» y definir el número de puertos por lado.',
-    tourpro_2_title:'El puerto de conexión se elige automáticamente',
-    tourpro_2_text:'Cuando una línea llega a una caja, no hace falta elegir el puerto a mano — el motor elige el mejor puerto para la ruta al ejecutar «Optimizar plano» (paso siguiente).',
-    tourpro_3_title:'Marque por dónde se puede tender línea',
-    tourpro_3_text:'Clic derecho — iniciar una zona de forma libre, clic — añadir un punto, doble clic — cerrarla. Las zonas superpuestas se leen como una sola área continua. Sin zonas, se permite todo el plano.',
-    tourpro_4_title:'Optimizar plano',
-    tourpro_4_text:'Reconstruye la ruta de todas las líneas desde cero dentro de las zonas. Tres controles deslizantes — longitud / cruces / troncales — y tres preajustes listos. La vista previa muestra el resultado en el plano antes de aplicarlo.',
-    tourpro_5_title:'Las cajas terminan «mirándose» entre sí',
-    tourpro_5_text:'Para las conexiones caja-caja, el motor prueba cada par de puertos y elige el que tenga menos ángulos — cuando es posible, los puertos quedan directamente enfrentados.',
-    tourpro_6_title:'Sugerencias de ubicación de cajas',
-    tourpro_6_text:'El botón «Buscar mejoras de ubicación de cajas» del diálogo de optimización busca, en un radio de 50cm, una posición que acorte las líneas. El traslado solo se aplica tras su confirmación — uno a uno.',
-    tourpro_7_title:'Auto-optimización',
-    tourpro_7_text:'Activada por defecto — los puertos y derivaciones se recalculan tras cada acción. Desactívela si quiere pulir manualmente un plano terminado sin ajustes automáticos.',
+    tourpro_0_title:'¡Bienvenido al tutorial!',
+    tourpro_0_text:'Recorramos todo el camino, desde cargar un plano hasta un presupuesto terminado, usando el modo «Por el techo» como ejemplo (ya que es el modo en el que está ahora). Cada paso resalta el botón que necesita, directamente en la interfaz. Pulse «Saltar» en cualquier momento y continúe después desde el mismo punto.',
+    tourpro_1_title:'Inicio rápido: cargue un plano',
+    tourpro_1_text:'La forma más rápida y precisa es subir una foto o escaneo del plano del local y calcarlo encima. Es más rápido y fiable que dibujar las paredes desde cero a mano — aunque también puede dibujarlas usted mismo, con el botón «Paredes» justo al lado.',
+    tourpro_2_title:'Defina la escala',
+    tourpro_2_text:'Marque en el plano un segmento de longitud conocida (por ejemplo, el ancho de una puerta) e indique su medida real en metros. Sin escala, no se puede calcular el metraje de cable.',
+    tourpro_3_title:'Altura del local y del tendido',
+    tourpro_3_text:'Indique la altura del techo y la altura de tendido por defecto — necesarias para calcular los tramos verticales de cable, desde una toma o interruptor hasta el propio tendido.',
+    tourpro_4_title:'Elija el método de instalación',
+    tourpro_4_text:'Solo dos modos: «En roza de pared» — cable en haces dentro de la pared, «Por el techo» — en corrugado visto por el techo. El tutorial continúa en modo «Por el techo» a partir de aquí, ya que es el que ha elegido.',
+    tourpro_5_title:'Marque el cable por color',
+    tourpro_5_text:'Cada color de línea es una marca de cable distinta — un color para el circuito de tomas (p. ej. VVGng 3×2,5), otro para iluminación (3×1,5). Elija un color antes de empezar a trazar una línea.',
+    tourpro_6_title:'Coloque los iconos',
+    tourpro_6_text:'Toma, interruptor, caja de derivación, cuadro — todos son iconos. Haga clic en el tipo que necesite en la lista de la derecha y colóquelo en el plano donde corresponda.',
+    tourpro_7_title:'Lado de salida del icono',
+    tourpro_7_text:'El cable de una toma o interruptor sale físicamente solo en una dirección. Mantenga pulsado el botón derecho del ratón sobre el icono y arrastre hacia la dirección deseada — así se define por dónde sale el cable.',
+    tourpro_8_title:'Cajas y sus puertos',
+    tourpro_8_text:'Una caja de derivación es un punto de ramificación del cableado. Tiene puertos en cada lado a los que se conectan las líneas. Aquí, en la pestaña «Marcadores», se configura el número de puertos y se crean tipos de icono propios.',
+    tourpro_9_title:'Optimizar puertos',
+    tourpro_9_text:'Cuando los cables llegan a una caja o cuadro en un orden poco práctico, pulse «Optimizar puertos» (este botón también activa el modo automático): la herramienta los reordena para que las líneas no se crucen ni se alarguen sin necesidad.',
+    tourpro_10_title:'Conexión del cuadro',
+    tourpro_10_text:'El cuadro crece según el número de líneas conectadas, desde un borde fijo — igual que un cuadro real montado en la pared. Colóquelo junto a la pared antes de cablear nada hacia él, para que crezca hacia el lado correcto y no hacia el centro de la habitación.',
+    tourpro_11_title:'Presupuesto de cables',
+    tourpro_11_text:'Una tabla resumen del metraje de cada marca de cable por separado — tramos horizontales y verticales, más el margen de conexión.',
+    tourpro_12_title:'Cálculo del cuadro',
+    tourpro_12_text:'Selecciona automáticamente los interruptores automáticos y diferenciales según las líneas realmente conectadas y sus marcas de cable.',
+    tourpro_13_title:'Presupuesto general',
+    tourpro_13_text:'Todo junto: cable, sujeción, cajas de empotrar, canaletas, equipo del cuadro — un presupuesto terminado que puede enviar a un proveedor por WhatsApp desde aquí mismo.',
   },
   kk: {
     upload_bg:'Фонды жүктеу', tt_upload_bg:'Фото немесе үй-жай жоспарын жүктеу',
@@ -2429,7 +2474,7 @@ const translations = {
     modal_scale_title:'Масштаб', modal_scale_label:'Салынған сызықтың ұзындығы (м):',
     modal_new_type:'Жаңа белгіше түрі', modal_edit_type:'Белгіше түрін өзгерту',
     modal_edit_length_title:'Ұзындықты өзгерту', modal_edit_length_label:'Жаңа ұзындық (м):',
-    tour_skip:'Оқытуды өткізіп жіберу', tour_prev:'Артқа', tour_next:'Келесі', tour_finish:'Аяқтау',
+    tour_skip:'Оқытуды өткізіп жіберу', tour_prev:'Артқа', tour_next:'Келесі', tour_finish:'Аяқтау', tour_restart:'Қайтадан бастау',
     tour_step_counter:'{total} қадамның {n}-і',
     tour_0_title:'Қош келдіңіз, көнетерек!',
     tour_0_text:'Бұл — сым калькуляторы: жоспар саласыз, кабель тартасыз және дереу түс бойынша метражды аласыз. Екі монтаж режимі бар — «Штроба ішінде» (жасырын сым тарту, порттардың орналасуы мен сызықтардың қиылысуы маңызды емес — бәрі қабырға ішінде жасырын) және «Төбе бойымен» (сыртқы сым тарту, мұнда сымдардың қалай өтетіні маңызды). Екеуін де ретімен қарастырайық.',
@@ -2718,22 +2763,34 @@ const translations = {
     ports_more_hidden:'+{n} тағы',
     msg_declutter_done:'Кішкентай зигзагтар жойылды.',
     msg_declutter_nothing:'Жоятын ешнәрсе жоқ — артық нүктелер табылмады (немесе олардың барлығы қораптарға 30см жақын).',
-    tourpro_0_title:'«Төбе бойымен» режиміне қош келдіңіз!',
-    tourpro_0_text:'Бұл — «Төбе бойымен» режимі — монтаждан кейін көрініп тұратын сыртқы сым тарту үшін. Мұнда «Штроба ішінде» режиміндегідей сызық сызу, оған қоса бірнеше порты бар қораптар/щиттер, төсеу аймақтары және бүкіл сызбаны автоматты оңтайландыру бар — себебі мұнда тарту шынымен көрініп тұрады. Не жаңалық барын қарастырайық.',
-    tourpro_1_title:'Порттары бар қораптар мен щиттер',
-    tourpro_1_text:'«Белгішелер» қойындысында Кр және ЩР түрлері енді жай нүктелер емес — олардың әр жағында бірнеше порты бар. Өз түріңізді жасағанда «Қорап» немесе «Щит» таңдап, әр жақтағы порт санын орнатуға болады.',
-    tourpro_2_title:'Қосылу порты автоматты түрде таңдалады',
-    tourpro_2_text:'Сызық қорапқа жеткенде, портты қолмен таңдау міндетті емес — «Сызбаны оңтайландыру» іске қосылғанда (келесі қадам) қозғалтқыш жол үшін ең жақсы портты өзі таңдайды.',
-    tourpro_3_title:'Сызық тартуға болатын жерді белгілеңіз',
-    tourpro_3_text:'Оң жақ түйме — еркін пішінді аймақты бастау, шерту — нүкте қосу, қос шерту — жабу. Бір-бірімен қабаттасатын аймақтар бір тұтас аймақ ретінде оқылады. Аймақсыз бүкіл сызба ауданы рұқсат етіледі.',
-    tourpro_4_title:'Сызбаны оңтайландыру',
-    tourpro_4_text:'Барлық сызықтардың жолын аймақтарды ескере отырып қайта құрады. Үш жүгіртпе — ұзындық / қиылысулар / магистральдар — және үш дайын алдын ала орнату. Алдын ала қарау қолданбас бұрын нәтижені сызбада тікелей көрсетеді.',
-    tourpro_5_title:'Қораптар бір-біріне «қарайды»',
-    tourpro_5_text:'Қорап-қорап байланыстары үшін қозғалтқыш барлық порт жұптарын қарап шығып, бұрышы ең аз нұсқаны таңдайды — мүмкіндігінше порттар бір-біріне тура қарама-қарсы болады.',
-    tourpro_6_title:'Қораптардың орналасуын жақсарту ұсыныстары',
-    tourpro_6_text:'Оңтайландыру диалогындағы «Қораптардың орналасуын жақсартуды табу» түймесі 50см радиуста сызық ұзындығын қысқартатын позицияны іздейді. Жылжыту тек сіздің растауыңыздан кейін, бір-бірлеп қолданылады.',
-    tourpro_7_title:'Авто-оңтайландыру',
-    tourpro_7_text:'Әдепкі бойынша қосулы — порттар мен тұғырлар әр әрекеттен кейін қайта есептеледі. Дайын сызбаны автоматты түзетусіз қолмен түзеткіңіз келсе, өшіріңіз.',
+    tourpro_0_title:'Оқытуға қош келдіңіз!',
+    tourpro_0_text:'Жоспарды жүктеуден бастап дайын сметаға дейінгі бүкіл жолды өтейік — «Төбе бойымен» режимі мысалында (себебі қазір сіз дәл осы режимдесіз). Әр қадам интерфейстегі керекті түймені тікелей белгілейді. Кез келген сәтте «Өткізіп жіберу» басып, кейін дәл сол жерден жалғастыра аласыз.',
+    tourpro_1_title:'Жылдам бастау: жоспарды жүктеңіз',
+    tourpro_1_text:'Ең жылдам әрі дәл тәсіл — үй-жайдың фотосын немесе сканын жүктеп, соның үстінен сызу. Бұл қабырғаларды нөлден қолмен сызудан жылдам әрі сенімді — дегенмен қабырғаларды өзіңіз сызуға да болады, қасындағы «Қабырғалар» түймесімен.',
+    tourpro_2_title:'Масштабты орнатыңыз',
+    tourpro_2_text:'Жоспарда белгілі ұзындықтағы кесіндіні белгілеп (мысалы, есік ойығының ені), оның нақты өлшемін метрмен көрсетіңіз. Масштабсыз кабель метражын есептеу мүмкін емес.',
+    tourpro_3_title:'Үй-жай және трасса биіктігі',
+    tourpro_3_text:'Төбе биіктігі мен трассаны төсеудің әдепкі биіктігін көрсетіңіз — бұл розетка немесе выключательден трассаға дейінгі тік учаскелерді есептеу үшін керек.',
+    tourpro_4_title:'Төсеу тәсілін таңдаңыз',
+    tourpro_4_text:'Небәрі екі режим бар: «Штроба ішінде» — кабель қабырға ішінде будамен, «Төбе бойымен» — гофрада, төбе бойымен сыртқы тәсілмен. Оқыту осыдан былай «Төбе бойымен» режимінде жалғасады, себебі сіз дәл осыны таңдадыңыз.',
+    tourpro_5_title:'Кабельді түспен белгілеу',
+    tourpro_5_text:'Әр сызық түсі — бөлек кабель маркасы: мысалы, розетка тобы үшін бір түс (ВВГнг 3×2.5), жарықтандыру үшін басқасы (3×1.5). Сызық сызуды бастамас бұрын түсті таңдаңыз.',
+    tourpro_6_title:'Белгішелерді орналастырыңыз',
+    tourpro_6_text:'Розетка, выключатель, тарату қорабы, щит — булардың барлығы белгішелер. Оң жақтағы тізімнен керекті түрді басып, оны жоспарда керекті жерге қойыңыз.',
+    tourpro_7_title:'Белгіше шығу жағы',
+    tourpro_7_text:'Розетка немесе выключательдің сымы физикалық түрде тек бір жаққа шығады. Белгішенің үстінде тінтуірдің оң жақ түймесін басып тұрып, керекті жаққа тартыңыз — сымның шығу бағыты осылай белгіленеді.',
+    tourpro_8_title:'Қораптар және олардың порттары',
+    tourpro_8_text:'Тарату қорабы — сым тартудың тармақталу нүктесі. Оның әр жағында сызықтар қосылатын порттары бар. Дәл осы жерде, «Белгішелер» қойындысында, порт саны реттеледі және өз белгіше түрлеріңіз жасалады.',
+    tourpro_9_title:'Порттарды оңтайландыру',
+    tourpro_9_text:'Сымдар қорапқа немесе щитке ыңғайсыз ретпен қосылғанда, «Порттарды оңтайландыру» басыңыз (бұл түйме авто-режимді де қосады): құрал оларды сызықтар қиылыспайтындай және бекерге ұзармайтындай етіп қайта орналастырады.',
+    tourpro_10_title:'Щитті қосу',
+    tourpro_10_text:'Щит қосылған сызықтар санына қарай бір бекітілген жиектен өседі — қабырғаға орнатылған нақты щит сияқты. Оны сымдарды қоспас бұрын қабырғаға жақын орналастырыңыз, сонда ол бөлме ішіне емес, керекті жаққа өседі.',
+    tourpro_11_title:'Кабель бойынша смета',
+    tourpro_11_text:'Әр кабель маркасы бойынша бөлек жиынтық кесте — горизонталь және вертикаль учаскелер, қосылуға шығын.',
+    tourpro_12_title:'Щитті есептеу',
+    tourpro_12_text:'Нақты қосылған сызықтар мен олардың кабель маркалары бойынша автоматтар мен УЗО/дифавтоматтарды автоматты түрде таңдайды.',
+    tourpro_13_title:'Жалпы смета',
+    tourpro_13_text:'Бәрі бірге: кабель, бекіту, подрозетниктер, қораптар, щит жабдығы — осы жерден тікелей WhatsApp арқылы жеткізушіге жіберуге болатын дайын смета.',
   },
 };
 
@@ -2757,8 +2814,6 @@ function applyTranslations(){
   document.querySelectorAll('[data-i18n-html]').forEach(el=>{ el.innerHTML = t(el.getAttribute('data-i18n-html')); });
   document.querySelectorAll('[data-i18n-title]').forEach(el=>{ el.title = t(el.getAttribute('data-i18n-title')); });
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{ el.placeholder = t(el.getAttribute('data-i18n-placeholder')); });
-  const modeBtn=document.getElementById('btn-site-mode');
-  if(modeBtn) modeBtn.textContent = canUsePro() ? t('mode_pro') : t('mode_base');
   const langSel=document.getElementById('lang-switch');
   if(langSel) langSel.value = currentLang;
 }
@@ -2781,11 +2836,10 @@ function applySiteModeUI(){
   });
   const orthoBtn=document.getElementById('btn-ortho');
   if(orthoBtn) orthoBtn.style.display = pro? 'none' : '';
-  const modeBtn=document.getElementById('btn-site-mode');
-  if(modeBtn){
-    modeBtn.textContent = pro? t('mode_pro') : t('mode_base');
-    modeBtn.title = t('tt_toggle_mode');
-    modeBtn.classList.toggle('active', pro);
+  const baseSeg=document.getElementById('site-mode-base'), proSeg=document.getElementById('site-mode-pro');
+  if(baseSeg && proSeg){
+    baseSeg.classList.toggle('active', !pro);
+    proSeg.classList.toggle('active', pro);
   }
   const badge=document.getElementById('brand-badge');
   if(badge){ badge.textContent = pro? '⚡PRO' : '⚡Provodka'; }
@@ -10337,21 +10391,25 @@ document.getElementById('btn-ortho').addEventListener('click',()=>{
   setInfo(orthoOnly ? t('msg_ortho_on') : t('msg_ortho_off'));
 });
 
-document.getElementById('btn-site-mode').addEventListener('click',()=>{
-  const hasContent = markers.length||segments.length||lines.length||walls.length||zones.length||measurements.length;
-  if(hasContent){
-    if(!confirm(siteMode==='pro'? t('confirm_switch_to_base') : t('confirm_switch_to_pro'))) return;
-    clearWholeDrawing();
-  }
-  siteMode = siteMode==='pro' ? 'base' : 'pro';
-  localStorage.setItem('wiringSiteMode', siteMode);
-  markerTypes = canUsePro() ? defaultProMarkerTypes() : defaultBaseMarkerTypes();
-  selectedMarkerTypeId = markerTypes[0].id;
-  renderMarkerTypesList();
-  applySiteModeUI();
-  if(siteMode==='pro') highlightTourButton();
-  updatePropsPanel();redraw();updateResults();
-  setInfo(siteMode==='pro' ? t('msg_mode_pro_on') : t('msg_mode_base_on'));
+document.querySelectorAll('.site-mode-seg').forEach(seg=>{
+  seg.addEventListener('click',()=>{
+    const wantPro = seg.dataset.mode==='pro';
+    if(wantPro===canUsePro()) return; // already the active one, nothing to do
+    const hasContent = markers.length||segments.length||lines.length||walls.length||zones.length||measurements.length;
+    if(hasContent){
+      if(!confirm(siteMode==='pro'? t('confirm_switch_to_base') : t('confirm_switch_to_pro'))) return;
+      clearWholeDrawing();
+    }
+    siteMode = wantPro ? 'pro' : 'base';
+    localStorage.setItem('wiringSiteMode', siteMode);
+    markerTypes = canUsePro() ? defaultProMarkerTypes() : defaultBaseMarkerTypes();
+    selectedMarkerTypeId = markerTypes[0].id;
+    renderMarkerTypesList();
+    applySiteModeUI();
+    if(siteMode==='pro') highlightTourButton();
+    updatePropsPanel();redraw();updateResults();
+    setInfo(siteMode==='pro' ? t('msg_mode_pro_on') : t('msg_mode_base_on'));
+  });
 });
 applySiteModeUI();
 applyTranslations();
@@ -13397,13 +13455,48 @@ const TOUR_STEPS = [
   { target: '#btn-export-img', titleKey:'tour_9_title', textKey:'tour_9_text' },
 ];
 
+// Two small icon-only diagrams (no embedded text — an SVG string can't be
+// translated per-language, so anything it needs to say lives in the
+// step's own titleKey/textKey instead; these purely reinforce a gesture
+// that's awkward to picture from words alone).
+const TOUR_SVG_FACING = `<svg viewBox="0 0 240 90" style="width:100%;height:auto;display:block">
+  <rect x="30" y="30" width="30" height="30" rx="4" fill="#2a2a2a" stroke="#e24b4a" stroke-width="2.5"/>
+  <line x1="60" y1="45" x2="98" y2="45" stroke="#e24b4a" stroke-width="3"/>
+  <path d="M98,45 L88,39 L88,51 Z" fill="#e24b4a"/>
+  <path d="M50,26 A22,22 0 1 1 26,46" stroke="#4a9eff" stroke-width="2" fill="none" stroke-dasharray="3,3"/>
+  <path d="M26,46 L22,36 L34,40 Z" fill="#4a9eff"/>
+  <g transform="translate(150,18)">
+    <rect x="0" y="0" width="30" height="46" rx="14" fill="none" stroke="#999" stroke-width="2.5"/>
+    <line x1="15" y1="0" x2="15" y2="20" stroke="#999" stroke-width="1.5"/>
+    <path d="M15,0 A15,15 0 0 1 30,15 L30,20 L15,20 Z" fill="#4a9eff" opacity="0.55"/>
+  </g>
+</svg>`;
+const TOUR_SVG_BUS_ANCHOR = `<svg viewBox="0 0 240 90" style="width:100%;height:auto;display:block">
+  <line x1="26" y1="10" x2="26" y2="80" stroke="#555" stroke-width="7"/>
+  <circle cx="26" cy="22" r="4.5" fill="#f0c040"/>
+  <rect x="20" y="22" width="12" height="48" fill="#2a2a2a" stroke="#4a9eff" stroke-width="2.5"/>
+  <line x1="55" y1="22" x2="55" y2="66" stroke="#4a9eff" stroke-width="2" stroke-dasharray="3,3"/>
+  <path d="M55,66 L50,58 L60,58 Z" fill="#4a9eff"/>
+  <line x1="80" y1="30" x2="140" y2="30" stroke="#e24b4a" stroke-width="2"/>
+  <line x1="80" y1="45" x2="140" y2="45" stroke="#e24b4a" stroke-width="2"/>
+  <line x1="80" y1="60" x2="140" y2="60" stroke="#e24b4a" stroke-width="2"/>
+</svg>`;
+
 const TOUR_STEPS_PRO = [
   { target: null, titleKey:'tourpro_0_title', textKey:'tourpro_0_text' },
-  { target: '#tab-markers-cfg', showTab:'markers-cfg', titleKey:'tourpro_1_title', textKey:'tourpro_1_text' },
-  { target: '#btn-line', titleKey:'tourpro_2_title', textKey:'tourpro_2_text' },
-  { target: null, titleKey:'tourpro_5_title', textKey:'tourpro_5_text' },
-  { target: null, titleKey:'tourpro_6_title', textKey:'tourpro_6_text' },
-  { target: '#btn-autofixup', titleKey:'tourpro_7_title', textKey:'tourpro_7_text' },
+  { target: '#file-in', targetParent:true, titleKey:'tourpro_1_title', textKey:'tourpro_1_text' },
+  { target: '#btn-scale', titleKey:'tourpro_2_title', textKey:'tourpro_2_text' },
+  { target: '#btn-heights', titleKey:'tourpro_3_title', textKey:'tourpro_3_text' },
+  { target: '#site-mode-toggle', titleKey:'tourpro_4_title', textKey:'tourpro_4_text' },
+  { target: '#color-picker-row', targetParent:true, titleKey:'tourpro_5_title', textKey:'tourpro_5_text' },
+  { target: '#btn-marker', titleKey:'tourpro_6_title', textKey:'tourpro_6_text' },
+  { target: null, titleKey:'tourpro_7_title', textKey:'tourpro_7_text', svg:TOUR_SVG_FACING },
+  { target: '#tab-markers-cfg', showTab:'markers-cfg', titleKey:'tourpro_8_title', textKey:'tourpro_8_text' },
+  { target: '#btn-autofixup', titleKey:'tourpro_9_title', textKey:'tourpro_9_text' },
+  { target: null, titleKey:'tourpro_10_title', textKey:'tourpro_10_text', svg:TOUR_SVG_BUS_ANCHOR },
+  { target: '#btn-cable-estimate', titleKey:'tourpro_11_title', textKey:'tourpro_11_text' },
+  { target: '#btn-panel-calc', titleKey:'tourpro_12_title', textKey:'tourpro_12_text' },
+  { target: '#btn-overall-estimate', titleKey:'tourpro_13_title', textKey:'tourpro_13_text' },
 ];
 
 let tourIdx = 0;
@@ -13414,8 +13507,24 @@ function getTourTargetRect(step){
   let el = document.querySelector(step.target);
   if(!el) return null;
   if(step.targetParent && el.parentElement) el = el.parentElement;
-  return el.getBoundingClientRect();
+  // Defensive: a step whose target is currently hidden (desktop-only
+  // button, wrong tab, wrong site mode...) must NOT render as a broken
+  // zero-size hole pinned to the top-left corner — treat it exactly like
+  // "no target" instead, so it just centres the card. This is what broke
+  // before (see chat): a PRO step could point at an element the base UI
+  // hides, or vice versa.
+  if(el.offsetParent===null) return null;
+  const rect = el.getBoundingClientRect();
+  if(rect.width<1 || rect.height<1) return null;
+  return rect;
 }
+
+// Resume-where-you-left-off (see chat: "начать практику и вернуться туда,
+// где остановился") — persisted per tour (base vs PRO have separate
+// progress, since they're different curricula), keyed by step index. Only
+// PRO actually uses this right now; base tour is unchanged.
+function tourProgressKey(){ return canUsePro() ? 'tourProgressPro' : 'tourProgressBase'; }
+function saveTourProgress(){ localStorage.setItem(tourProgressKey(), String(tourIdx)); }
 
 function renderTourStep(){
   const step = activeTourSteps[tourIdx];
@@ -13426,12 +13535,16 @@ function renderTourStep(){
   const hole = document.getElementById('tour-hole');
   const holeBorder = document.getElementById('tour-hole-border');
   const card = document.getElementById('tour-card');
+  const svgWrap = document.getElementById('tour-svg-wrap');
 
   document.getElementById('tour-step-counter').textContent = t('tour_step_counter').replace('{n}',tourIdx+1).replace('{total}',activeTourSteps.length);
   document.getElementById('tour-title').textContent = t(step.titleKey);
   document.getElementById('tour-text').textContent = t(step.textKey);
   document.getElementById('tour-prev').style.visibility = tourIdx===0 ? 'hidden' : 'visible';
   document.getElementById('tour-next').textContent = tourIdx===activeTourSteps.length-1 ? t('tour_finish') : t('tour_next');
+  document.getElementById('tour-restart').style.display = tourIdx>0 ? '' : 'none';
+  if(step.svg){ svgWrap.innerHTML=step.svg; svgWrap.style.display='block'; }
+  else { svgWrap.style.display='none'; svgWrap.innerHTML=''; }
 
   const rect = getTourTargetRect(step);
   const PAD = 8;
@@ -13454,7 +13567,7 @@ function renderTourStep(){
   }
 
   // Position card: below target if room, else above; else centred for intro steps
-  const cardW = 320, cardMaxH = 220;
+  const cardW = 320, cardMaxH = step.svg ? 300 : 220;
   let cardX, cardY;
   if(rect){
     cardX = Math.min(Math.max(12, rect.left), window.innerWidth - cardW - 12);
@@ -13470,11 +13583,13 @@ function renderTourStep(){
   }
   card.style.left = cardX+'px';
   card.style.top  = cardY+'px';
+  saveTourProgress();
 }
 
-function startTour(){
-  tourIdx = 0;
+function startTour(forceRestart){
   activeTourSteps = canUsePro() ? TOUR_STEPS_PRO : TOUR_STEPS;
+  const saved = forceRestart ? null : parseInt(localStorage.getItem(tourProgressKey()),10);
+  tourIdx = (saved!=null && !isNaN(saved) && saved>=0 && saved<activeTourSteps.length-1) ? saved : 0;
   document.getElementById('tour-overlay').style.display='block';
   renderTourStep();
 }
@@ -13482,7 +13597,8 @@ function endTour(){
   document.getElementById('tour-overlay').style.display='none';
 }
 
-document.getElementById('btn-tour').addEventListener('click', startTour);
+document.getElementById('btn-tour').addEventListener('click', ()=>startTour(false));
+document.getElementById('tour-restart').addEventListener('click', ()=>startTour(true));
 document.getElementById('tour-skip').addEventListener('click', endTour);
 document.getElementById('tour-next').addEventListener('click', ()=>{
   if(tourIdx < activeTourSteps.length-1){ tourIdx++; renderTourStep(); }

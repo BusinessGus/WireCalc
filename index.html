@@ -470,6 +470,10 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     <div id="tour-svg-wrap" style="display:none;margin-bottom:10px"></div>
     <div style="font-size:13px;font-weight:600;color:#e8e8e8;margin-bottom:6px" id="tour-title"></div>
     <div style="font-size:12px;color:#aaa;line-height:1.55;margin-bottom:14px" id="tour-text"></div>
+    <a id="tour-video-link" href="#" target="_blank" rel="noopener" style="display:none;align-items:center;gap:6px;font-size:12px;color:#7dc4ff;text-decoration:none;margin:-6px 0 14px;padding:7px 10px;background:#1a2535;border:1px solid #2a3a4a;border-radius:7px">
+      <i class="ti ti-brand-youtube" style="font-size:16px;color:#ff5050"></i>
+      <span data-i18n="tour_video_link">Смотреть видео-инструкцию на YouTube</span>
+    </a>
     <div style="display:flex;gap:8px;justify-content:space-between;align-items:center">
       <button id="tour-skip" data-i18n="tour_skip" style="font-size:11px;color:#666;background:none;border:none;cursor:pointer">Пропустить тур</button>
       <div style="display:flex;gap:6px">
@@ -1271,7 +1275,7 @@ const translations = {
     modal_scale_title:'Масштаб', modal_scale_label:'Длина нарисованной линии (м):',
     modal_new_type:'Новый тип значка', modal_edit_type:'Изменить тип значка',
     modal_edit_length_title:'Изменить длину', modal_edit_length_label:'Новая длина (м):',
-    tour_skip:'Пропустить тур', tour_prev:'Назад', tour_next:'Далее', tour_finish:'Завершить', tour_restart:'Начать заново',
+    tour_skip:'Пропустить тур', tour_prev:'Назад', tour_next:'Далее', tour_finish:'Завершить', tour_restart:'Начать заново', tour_video_link:'Смотреть видео-инструкцию на YouTube',
     tour_step_counter:'Шаг {n} из {total}',
     tour_0_title:'Добро пожаловать, кожаный мешок!',
     tour_0_text:'Это калькулятор проводки: рисуете план, прокладываете кабель и сразу получаете метраж по цветам. Есть два режима монтажа — «В штробах» (скрытая проводка, расположение портов и пересечения линий не важны — всё спрятано в стене) и «По потолку» (открытая проводка, тут уже важно, как именно идут провода). Разберём оба по порядку.',
@@ -1672,7 +1676,7 @@ const translations = {
     modal_scale_title:'Scale', modal_scale_label:'Length of the drawn line (m):',
     modal_new_type:'New marker type', modal_edit_type:'Edit marker type',
     modal_edit_length_title:'Edit length', modal_edit_length_label:'New length (m):',
-    tour_skip:'Skip tour', tour_prev:'Back', tour_next:'Next', tour_finish:'Finish', tour_restart:'Start over',
+    tour_skip:'Skip tour', tour_prev:'Back', tour_next:'Next', tour_finish:'Finish', tour_restart:'Start over', tour_video_link:'Watch the video walkthrough on YouTube',
     tour_step_counter:'Step {n} of {total}',
     tour_0_title:'Welcome, meatbag!',
     tour_0_text:"This is a wiring calculator: draw a plan, route the cable, and get the length per color right away. There are two installation modes — In-wall chase (concealed wiring, port layout and line crossings don't matter — it's all hidden inside the wall) and Ceiling-run (exposed wiring, where how the wires actually run does matter). Let's go through both.",
@@ -2073,7 +2077,7 @@ const translations = {
     modal_scale_title:'Escala', modal_scale_label:'Longitud de la línea dibujada (m):',
     modal_new_type:'Nuevo tipo de marcador', modal_edit_type:'Editar tipo de marcador',
     modal_edit_length_title:'Editar longitud', modal_edit_length_label:'Nueva longitud (m):',
-    tour_skip:'Saltar el tutorial', tour_prev:'Atrás', tour_next:'Siguiente', tour_finish:'Finalizar', tour_restart:'Empezar de nuevo',
+    tour_skip:'Saltar el tutorial', tour_prev:'Atrás', tour_next:'Siguiente', tour_finish:'Finalizar', tour_restart:'Empezar de nuevo', tour_video_link:'Ver el video tutorial en YouTube',
     tour_step_counter:'Paso {n} de {total}',
     tour_0_title:'¡Bienvenido, saco de carne!',
     tour_0_text:'Esto es una calculadora de cableado: dibuja un plano, tiende el cable y obtiene al instante los metros por color. Hay dos modos de instalación — «En roza de pared» (cableado oculto, la disposición de los puertos y los cruces de líneas no importan — todo queda escondido en la pared) y «Por el techo» (cableado visto, donde sí importa cómo van los cables). Veamos ambos en orden.',
@@ -2474,7 +2478,7 @@ const translations = {
     modal_scale_title:'Масштаб', modal_scale_label:'Салынған сызықтың ұзындығы (м):',
     modal_new_type:'Жаңа белгіше түрі', modal_edit_type:'Белгіше түрін өзгерту',
     modal_edit_length_title:'Ұзындықты өзгерту', modal_edit_length_label:'Жаңа ұзындық (м):',
-    tour_skip:'Оқытуды өткізіп жіберу', tour_prev:'Артқа', tour_next:'Келесі', tour_finish:'Аяқтау', tour_restart:'Қайтадан бастау',
+    tour_skip:'Оқытуды өткізіп жіберу', tour_prev:'Артқа', tour_next:'Келесі', tour_finish:'Аяқтау', tour_restart:'Қайтадан бастау', tour_video_link:'YouTube-тағы видео-нұсқаулықты қарау',
     tour_step_counter:'{total} қадамның {n}-і',
     tour_0_title:'Қош келдіңіз, көнетерек!',
     tour_0_text:'Бұл — сым калькуляторы: жоспар саласыз, кабель тартасыз және дереу түс бойынша метражды аласыз. Екі монтаж режимі бар — «Штроба ішінде» (жасырын сым тарту, порттардың орналасуы мен сызықтардың қиылысуы маңызды емес — бәрі қабырға ішінде жасырын) және «Төбе бойымен» (сыртқы сым тарту, мұнда сымдардың қалай өтетіні маңызды). Екеуін де ретімен қарастырайық.',
@@ -13443,7 +13447,7 @@ window.addEventListener('resize', ()=>{
 // INTERACTIVE TOUR
 // ═══════════════════════════════════════════════════════
 const TOUR_STEPS = [
-  { target: null, titleKey:'tour_0_title', textKey:'tour_0_text' },
+  { target: null, titleKey:'tour_0_title', textKey:'tour_0_text', videoUrl:'https://youtu.be/zCjeM-DhiSs' },
   { target: '#file-in', targetParent: true, titleKey:'tour_1_title', textKey:'tour_1_text' },
   { target: '#btn-scale', titleKey:'tour_2_title', textKey:'tour_2_text' },
   { target: '#btn-wall', titleKey:'tour_3_title', textKey:'tour_3_text' },
@@ -13483,7 +13487,7 @@ const TOUR_SVG_BUS_ANCHOR = `<svg viewBox="0 0 240 90" style="width:100%;height:
 </svg>`;
 
 const TOUR_STEPS_PRO = [
-  { target: null, titleKey:'tourpro_0_title', textKey:'tourpro_0_text' },
+  { target: null, titleKey:'tourpro_0_title', textKey:'tourpro_0_text', videoUrl:'https://youtu.be/zCjeM-DhiSs' },
   { target: '#file-in', targetParent:true, titleKey:'tourpro_1_title', textKey:'tourpro_1_text' },
   { target: '#btn-scale', titleKey:'tourpro_2_title', textKey:'tourpro_2_text' },
   { target: '#btn-heights', titleKey:'tourpro_3_title', textKey:'tourpro_3_text' },
@@ -13545,6 +13549,9 @@ function renderTourStep(){
   document.getElementById('tour-restart').style.display = tourIdx>0 ? '' : 'none';
   if(step.svg){ svgWrap.innerHTML=step.svg; svgWrap.style.display='block'; }
   else { svgWrap.style.display='none'; svgWrap.innerHTML=''; }
+  const videoLink=document.getElementById('tour-video-link');
+  if(step.videoUrl){ videoLink.href=step.videoUrl; videoLink.style.display='flex'; }
+  else { videoLink.style.display='none'; }
 
   const rect = getTourTargetRect(step);
   const PAD = 8;
@@ -13567,7 +13574,7 @@ function renderTourStep(){
   }
 
   // Position card: below target if room, else above; else centred for intro steps
-  const cardW = 320, cardMaxH = step.svg ? 300 : 220;
+  const cardW = 320, cardMaxH = (step.svg?300:220) + (step.videoUrl?46:0);
   let cardX, cardY;
   if(rect){
     cardX = Math.min(Math.max(12, rect.left), window.innerWidth - cardW - 12);

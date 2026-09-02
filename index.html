@@ -878,7 +878,23 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     <button id="whatsnew-close" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#666;font-size:22px;cursor:pointer;line-height:1">✕</button>
     <h2 data-i18n="whatsnew_h2" style="font-size:18px;font-weight:700;margin-bottom:20px;color:#e8e8e8">Последние обновления</h2>
 
-    <div class="whatsnew-date" data-i18n="wn_r6_date" style="font-size:12px;font-weight:700;color:#7dc4ff;margin-bottom:10px;text-transform:uppercase;letter-spacing:.03em">29 августа 2026</div>
+    <div class="whatsnew-date" data-i18n="wn_r7_date" style="font-size:12px;font-weight:700;color:#7dc4ff;margin-bottom:10px;text-transform:uppercase;letter-spacing:.03em">2 сентября 2026</div>
+
+    <div class="guide-step">
+      <div class="guide-body" style="margin-left:0">
+        <div class="guide-title" data-i18n="wn_r7_1_title">«Оптимизировать порты» — отдельная отмена для связей с коробками и щитом</div>
+        <div class="guide-text" data-i18n-html="wn_r7_1_text">Если после оптимизации не понравилось, как перестроился путь именно между коробками (или до щита) — теперь можно отменить (Ctrl+Z) только эту часть, не теряя улучшения, которые она же внесла для розеток и выключателей.</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-body" style="margin-left:0">
+        <div class="guide-title" data-i18n="wn_r7_2_title">«Оптимизировать порты» заметно быстрее на больших проектах</div>
+        <div class="guide-text" data-i18n-html="wn_r7_2_text">Устранено замедление, из-за которого на крупных чертежах кнопка могла подвиснуть на несколько секунд — проверка на пересечения линий больше не сканирует весь проект целиком там, где в этом нет нужды.</div>
+      </div>
+    </div>
+
+    <div class="whatsnew-date" data-i18n="wn_r6_date" style="font-size:12px;font-weight:700;color:#7dc4ff;margin:22px 0 10px;text-transform:uppercase;letter-spacing:.03em;border-top:1px solid #333;padding-top:18px">29 августа 2026</div>
 
     <div class="guide-step">
       <div class="guide-body" style="margin-left:0">
@@ -1316,6 +1332,11 @@ const translations = {
     wn_5_title:'Курсор больше не «убегает»',
     wn_5_text:'Исправлено расхождение между тем, где реально происходит клик, и тем, где показывалось перекрестие — особенно заметно было при смене режима (линия/значок/выбор).',
     wn_footer_prompt:'Нашли баг или есть предложение?', wn_footer_link:'Написать разработчику',
+    wn_r7_date:'2 сентября 2026',
+    wn_r7_1_title:'«Оптимизировать порты» — отдельная отмена для связей с коробками и щитом',
+    wn_r7_1_text:'Если после оптимизации не понравилось, как перестроился путь именно между коробками (или до щита) — теперь можно отменить (Ctrl+Z) только эту часть, не теряя улучшения, которые она же внесла для розеток и выключателей.',
+    wn_r7_2_title:'«Оптимизировать порты» заметно быстрее на больших проектах',
+    wn_r7_2_text:'Устранено замедление, из-за которого на крупных чертежах кнопка могла подвиснуть на несколько секунд — проверка на пересечения линий больше не сканирует весь проект целиком там, где в этом нет нужды.',
     wn_r6_date:'29 августа 2026',
     wn_r6_1_title:'Новое: «Посчитать подрозетники» прямо по чертежу',
     wn_r6_1_text:'Выделите на подложке чертежа образец розетки, выключателя или целой рамки на несколько постов и укажите, сколько подрозетников в нём — сервис сам найдёт все похожие места по всему плану и подсветит их с указанием количества. Результат можно поправить вручную и одной кнопкой применить в общую смету.',
@@ -1541,7 +1562,7 @@ const translations = {
     bus_anchor_left:'Слева', bus_anchor_right:'Справа', bus_anchor_top:'Сверху', bus_anchor_bottom:'Снизу',
     bus_auto_swap:'Оптимизировать при каждом новом подключении',
     bus_auto_swap_hint:'При добавлении новой линии к щиту может поменять местами порты уже подключённых линий, чтобы уменьшить пересечения — трогает только ближайший к щиту участок, не весь путь линии.',
-    optimize_ports_btn:'Оптимизировать порты',
+    optimize_ports_btn:'Оптимизировать порты', optimize_ports_tt:'Пересчитывает порты и пути линий этого значка. Изменения между коробками/щитом можно отменить отдельно (Ctrl+Z), не потеряв улучшения для розеток и выключателей.',
     mtype_base_label:'База', mtype_edit_tt:'Изменить', mtype_del_tt:'Удалить',
     color_dot_tt:'(ПКМ — подпись, 2×клик — марка кабеля)',
     color_dot_tt2:'(ПКМ — подпись цвета)', cable_label_prefix:'кабель',
@@ -1717,6 +1738,11 @@ const translations = {
     wn_5_title:"The cursor no longer drifts",
     wn_5_text:"Fixed a mismatch between where a click actually registered and where the crosshair was shown — most noticeable when switching modes (line/marker/select).",
     wn_footer_prompt:'Found a bug or have a suggestion?', wn_footer_link:'Message the developer',
+    wn_r7_date:'September 2, 2026',
+    wn_r7_1_title:'"Optimize ports" — undo box/panel connections separately',
+    wn_r7_1_text:"If you didn't like how the box-to-box (or panel) path changed after optimizing, you can now undo (Ctrl+Z) just that part — without losing the improvements it also made to the outlets and switches.",
+    wn_r7_2_title:'"Optimize ports" is noticeably faster on large projects',
+    wn_r7_2_text:"Fixed a slowdown that could hang the button for several seconds on big drawings — the line-crossing check no longer scans the whole project where it doesn't need to.",
     wn_r6_date:'August 29, 2026',
     wn_r6_1_title:'New: "Count boxes" straight from the drawing',
     wn_r6_1_text:"Select a sample socket, switch, or a whole multi-gang frame on the drawing's underlay and say how many boxes it represents — the tool finds every similar spot across the whole plan and highlights them with a count. Adjust the result by hand if needed, then apply it to the overall estimate with one button.",
@@ -1942,7 +1968,7 @@ const translations = {
     bus_anchor_left:'Left', bus_anchor_right:'Right', bus_anchor_top:'Top', bus_anchor_bottom:'Bottom',
     bus_auto_swap:'Optimise on every new connection',
     bus_auto_swap_hint:'When a new line connects to this panel, may swap which ports the already-connected lines use, to cut down crossings — only touches the stretch nearest the panel, never the rest of a line route.',
-    optimize_ports_btn:'Optimize ports',
+    optimize_ports_btn:'Optimize ports', optimize_ports_tt:"Recomputes the ports and line paths for this marker. Changes between boxes/panel can be undone separately (Ctrl+Z), without losing the improvements made to outlets and switches.",
     mtype_base_label:'Base', mtype_edit_tt:'Edit', mtype_del_tt:'Delete',
     color_dot_tt:'(right-click — label, double-click — cable type)',
     color_dot_tt2:'(right-click — color label)', cable_label_prefix:'cable',
@@ -2118,6 +2144,11 @@ const translations = {
     wn_5_title:'El cursor ya no se desvía',
     wn_5_text:'Se corrigió un desajuste entre el lugar donde realmente ocurría el clic y donde se mostraba la cruceta — era especialmente notorio al cambiar de modo (línea/elemento/selección).',
     wn_footer_prompt:'¿Encontró un error o tiene una sugerencia?', wn_footer_link:'Escribir al desarrollador',
+    wn_r7_date:'2 de septiembre de 2026',
+    wn_r7_1_title:'"Optimizar puertos" — deshacer conexiones de cajas y cuadro por separado',
+    wn_r7_1_text:'Si no le gustó cómo cambió la ruta entre cajas (o hacia el cuadro) tras optimizar, ahora puede deshacer (Ctrl+Z) solo esa parte, sin perder las mejoras que también hizo en las tomas e interruptores.',
+    wn_r7_2_title:'"Optimizar puertos" es notablemente más rápido en proyectos grandes',
+    wn_r7_2_text:'Se corrigió una lentitud que podía congelar el botón durante varios segundos en planos grandes — la comprobación de cruces de líneas ya no recorre todo el proyecto cuando no hace falta.',
     wn_r6_date:'29 de agosto de 2026',
     wn_r6_1_title:'Novedad: "Contar cajas" directamente desde el plano',
     wn_r6_1_text:'Seleccione una muestra de toma, interruptor o un marco completo de varios puestos en la imagen de fondo del plano e indique cuántas cajas representa — la herramienta encuentra todos los lugares similares en todo el plano y los resalta con la cantidad. Puede ajustar el resultado manualmente y aplicarlo al presupuesto general con un solo botón.',
@@ -2343,7 +2374,7 @@ const translations = {
     bus_anchor_left:'Izquierda', bus_anchor_right:'Derecha', bus_anchor_top:'Arriba', bus_anchor_bottom:'Abajo',
     bus_auto_swap:'Optimizar en cada nueva conexión',
     bus_auto_swap_hint:'Al conectar una nueva línea a este cuadro, puede intercambiar los puertos de las líneas ya conectadas para reducir cruces — solo afecta el tramo más cercano al cuadro, nunca el resto del recorrido de la línea.',
-    optimize_ports_btn:'Optimizar puertos',
+    optimize_ports_btn:'Optimizar puertos', optimize_ports_tt:'Recalcula los puertos y las rutas de línea de este icono. Los cambios entre cajas/cuadro se pueden deshacer por separado (Ctrl+Z), sin perder las mejoras hechas en tomas e interruptores.',
     mtype_base_label:'Base', mtype_edit_tt:'Editar', mtype_del_tt:'Eliminar',
     color_dot_tt:'(clic derecho — etiqueta, doble clic — tipo de cable)',
     color_dot_tt2:'(clic derecho — etiqueta de color)', cable_label_prefix:'cable',
@@ -2519,6 +2550,11 @@ const translations = {
     wn_5_title:'Курсор енді «қашпайды»',
     wn_5_text:'Шертудің нақты орны мен айқас белгінің көрсетілетін орны арасындағы алшақтық түзетілді — режимді ауыстырғанда (сызық/белгіше/таңдау) әсіресе байқалатын.',
     wn_footer_prompt:'Қате таптыңыз ба немесе ұсынысыңыз бар ма?', wn_footer_link:'Әзірлеушіге жазу',
+    wn_r7_date:'2026 жылғы 2 қыркүйек',
+    wn_r7_1_title:'«Порттарды оңтайландыру» — қорап/щит байланыстарын бөлек болдырмау',
+    wn_r7_1_text:'Оңтайландырудан кейін қораптар арасындағы (немесе щитке дейінгі) жол қалай өзгергені ұнамаса, енді осы бөлікті ғана болдырмауға болады (Ctrl+Z) — розетка мен выключательге жасалған жақсартулар сол қалпында қалады.',
+    wn_r7_2_title:'«Порттарды оңтайландыру» үлкен жобаларда айтарлықтай жылдамырақ',
+    wn_r7_2_text:'Үлкен сызбаларда түйме бірнеше секундқа ілініп қалуы мүмкін еді — бұл түзетілді: сызықтардың қиылысуын тексеру енді қажет болмаған жерде бүкіл жобаны түгел қарамайды.',
     wn_r6_date:'2026 жылғы 29 тамыз',
     wn_r6_1_title:'Жаңалық: сызба бойынша «Подрозетниктерді санау»',
     wn_r6_1_text:'Сызба тінінде розетка, выключатель немесе бірнеше посттық рамка үлгісін белгілеп, онда неше подрозетник бар екенін көрсетіңіз — қызмет бүкіл жоспар бойынша осындай орындарды өзі тауып, санымен бірге белгілейді. Нәтижені қолмен түзетуге болады, содан кейін бір батырмамен жалпы сметаға қолдануға болады.',
@@ -2744,7 +2780,7 @@ const translations = {
     bus_anchor_left:'Солда', bus_anchor_right:'Оңда', bus_anchor_top:'Жоғарыда', bus_anchor_bottom:'Төменде',
     bus_auto_swap:'Әр жаңа қосылымда оңтайландыру',
     bus_auto_swap_hint:'Щитке жаңа сызық қосылғанда, қиылысуларды азайту үшін бұрыннан қосылған сызықтардың порттарын ауыстыруы мүмкін — тек щитке ең жақын учаскеге әсер етеді, сызықтың қалған жолына тимейді.',
-    optimize_ports_btn:'Порттарды оңтайландыру',
+    optimize_ports_btn:'Порттарды оңтайландыру', optimize_ports_tt:'Осы белгішенің порттары мен сызық жолдарын қайта есептейді. Қораптар/щит арасындағы өзгерістерді бөлек болдырмауға болады (Ctrl+Z) — розетка мен выключательге жасалған жақсартулар сол қалпында қалады.',
     mtype_base_label:'Негізгі', mtype_edit_tt:'Өзгерту', mtype_del_tt:'Жою',
     color_dot_tt:'(оң жақ түйме — жазба, қос шерту — кабель маркасы)',
     color_dot_tt2:'(оң жақ түйме — түс жазбасы)', cable_label_prefix:'кабель',
@@ -5475,6 +5511,37 @@ function updateLinesForMarker(mk){
   const savedPtsAll=cLines.map(({line})=>line.pts.map(p=>({...p})));
   const baselineLengths=new Map(cLines.map(({line},i)=>[line.id, lineLengthFromPts(savedPtsAll[i])]));
 
+  // totalCrossings() (below) used to compare every candidate against
+  // EVERY line in the whole project — O(N²) in total project size, run
+  // repeatedly (once per candidate port combination tried) even though
+  // only mk's own lines can possibly change here. On a real large project
+  // this was the actual cost behind a multi-second hang on "Оптимизация
+  // портов" — not the search itself, which only touches mk's connections
+  // (see chat). A candidate path can only run within a bounded area
+  // around mk and whatever it's connecting to, so pre-filter down to just
+  // the lines whose own extent could plausibly overlap that area — a
+  // single O(N) pass done ONCE here, not per candidate.
+  const searchRegion=(()=>{
+    let minX=mk.wx, minY=mk.wy, maxX=mk.wx, maxY=mk.wy;
+    const extend=(x,y)=>{ if(x<minX)minX=x; if(x>maxX)maxX=x; if(y<minY)minY=y; if(y>maxY)maxY=y; };
+    cLines.forEach(({line,conn})=>{
+      const otherConn=conn===line.connStart?line.connEnd:line.connStart;
+      const otherMk=otherConn?.markerId?markers.find(m=>m.id===otherConn.markerId):null;
+      if(otherMk) extend(otherMk.wx,otherMk.wy);
+      line.pts?.forEach(p=>extend(p.wx,p.wy)); // covers the line's own current/original extent too, in case a detour needs to route around something already near there
+    });
+    const MARGIN=mToW(3); // generous on purpose — missing a real crossing is worse than keeping a few extra lines in the check
+    return {minX:minX-MARGIN, minY:minY-MARGIN, maxX:maxX+MARGIN, maxY:maxY+MARGIN};
+  })();
+  function lineOverlapsRegion(line){
+    if(!line.pts?.length) return false;
+    let lx0=Infinity, ly0=Infinity, lx1=-Infinity, ly1=-Infinity;
+    line.pts.forEach(p=>{ if(p.wx<lx0)lx0=p.wx; if(p.wx>lx1)lx1=p.wx; if(p.wy<ly0)ly0=p.wy; if(p.wy>ly1)ly1=p.wy; });
+    lineStubSegments(line).forEach(s=>{ [s.a,s.b].forEach(p=>{ if(p.wx<lx0)lx0=p.wx; if(p.wx>lx1)lx1=p.wx; if(p.wy<ly0)ly0=p.wy; if(p.wy>ly1)ly1=p.wy; }); });
+    return lx0<=searchRegion.maxX && lx1>=searchRegion.minX && ly0<=searchRegion.maxY && ly1>=searchRegion.minY;
+  }
+  const nearbyLines=lines.filter(lineOverlapsRegion);
+
   // If the OTHER end of this line is a point-kind marker (socket/switch),
   // the path can be freely rebuilt to the minimal connector for any
   // candidate port — there's no manual routing worth preserving there.
@@ -5562,10 +5629,10 @@ function updateLinesForMarker(mk){
   // ran another line's stub straight through it.
   function totalCrossings(){
     let n=0;
-    const stubCache=lines.map(l=>lineStubSegments(l));
-    for(let i=0;i<lines.length;i++){
-      for(let j=i+1;j<lines.length;j++){
-        const A=lines[i], B=lines[j];
+    const stubCache=nearbyLines.map(l=>lineStubSegments(l));
+    for(let i=0;i<nearbyLines.length;i++){
+      for(let j=i+1;j<nearbyLines.length;j++){
+        const A=nearbyLines[i], B=nearbyLines[j];
         if(!A.pts||!B.pts) continue;
         for(let a=0;a<A.pts.length-1;a++){
           for(let b=0;b<B.pts.length-1;b++){
@@ -5895,6 +5962,56 @@ function updateLinesForMarker(mk){
   rebuildLinesAdaptively(mk, cLines);
   compactBusPorts(mk);
   // magistralizeLines(mk, cLines); // TEMPORARILY DISABLED — investigating a reported bug where it produces extra segments near stubs
+}
+
+// Reveals the result of updateLinesForMarker in TWO separate undo steps
+// instead of one (see chat): point-marker lines land first, box-to-box
+// ("anchor") lines land second — so undoing once only reverts the anchor
+// change, leaving whatever the point-marker lines improved to in place.
+// Deliberately does NOT touch the actual search/scoring logic above —
+// anchors still get first pick of ports internally (needed for point
+// lines to fill in well around them, see the anchorEntries-first comment),
+// this only stages WHEN the already-computed anchor result becomes
+// visible/undoable, not HOW it's computed. Zero risk to result quality.
+function updateLinesForMarkerStaged(mk){
+  function isAnchorLine(line){
+    const startsHere=line.connStart?.markerId===mk.id, endsHere=line.connEnd?.markerId===mk.id;
+    if(!startsHere && !endsHere) return false;
+    const other=endsHere?line.connStart:line.connEnd;
+    if(!other?.markerId) return false;
+    const otherMk=markers.find(m=>m.id===other.markerId);
+    return otherMk && isBoxKind(otherMk);
+  }
+  const anchorLines=lines.filter(isAnchorLine);
+  const before=anchorLines.map(l=>({
+    pts:l.pts.map(p=>({...p})),
+    connStart:{...l.connStart},
+    connEnd:{...l.connEnd},
+  }));
+
+  updateLinesForMarker(mk);
+
+  if(!anchorLines.length) return; // nothing anchor-shaped here — one undo step is already the right answer
+
+  const after=anchorLines.map(l=>({
+    pts:l.pts.map(p=>({...p})),
+    connStart:{...l.connStart},
+    connEnd:{...l.connEnd},
+  }));
+  const changed=anchorLines.some((l,i)=>
+    JSON.stringify(before[i].pts)!==JSON.stringify(after[i].pts) ||
+    before[i].connStart.side!==after[i].connStart.side || before[i].connStart.portIdx!==after[i].connStart.portIdx ||
+    before[i].connEnd.side!==after[i].connEnd.side || before[i].connEnd.portIdx!==after[i].connEnd.portIdx
+  );
+  if(!changed) return; // anchors ended up exactly where they started — no second step needed
+
+  // Roll anchors back to their pre-optimise shape and commit THAT —
+  // "point-marker lines already improved, anchors still untouched" is
+  // its own place on the undo stack.
+  anchorLines.forEach((l,i)=>{ l.pts=before[i].pts; l.connStart=before[i].connStart; l.connEnd=before[i].connEnd; });
+  saveHistory();
+  // Now reveal the anchor change — this is the step a single Ctrl+Z undoes.
+  anchorLines.forEach((l,i)=>{ l.pts=after[i].pts; l.connStart=after[i].connStart; l.connEnd=after[i].connEnd; });
 }
 
 // The port SEARCH picks each anchor's (side, idx) using a cheap, un-escalated
@@ -9065,7 +9182,7 @@ function updatePropsPanel(){
     let optimiseHtml='';
     if(mt?.kind==='multi'||mt?.kind==='bus'){
       optimiseHtml=`<div style="margin-top:8px">
-        <button id="btn-optimise-ports" class="prop-btn" style="background:#1a2a3a;border-color:#2a4a6a;color:#7dc4ff">
+        <button id="btn-optimise-ports" class="prop-btn" title="${t('optimize_ports_tt')}" style="background:#1a2a3a;border-color:#2a4a6a;color:#7dc4ff">
           <i class="ti ti-wand" style="font-size:11px"></i> ${t('optimize_ports_btn')}
         </button>
       </div>`;
@@ -9185,7 +9302,7 @@ function updatePropsPanel(){
       });
     }
     document.getElementById('btn-optimise-ports')?.addEventListener('click',()=>{
-      saveHistory();updateLinesForMarker(obj);
+      saveHistory();updateLinesForMarkerStaged(obj);
       redraw();updateResults();updatePropsPanel();
     });
 
@@ -13342,7 +13459,7 @@ document.getElementById('whatsnew-modal').addEventListener('click',e=>{ if(e.tar
 
 // Bump this string whenever new entries are added to the What's New modal —
 // anyone who hasn't seen THIS version yet gets the red dot on the button.
-const WHATSNEW_VERSION='2026-08-29';
+const WHATSNEW_VERSION='2026-09-02';
 function updateWhatsNewDot(){
   const seen=localStorage.getItem('wiringSeenWhatsNew');
   document.getElementById('whatsnew-dot').style.display = (seen===WHATSNEW_VERSION) ? 'none' : 'block';

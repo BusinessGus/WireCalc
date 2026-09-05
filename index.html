@@ -1567,6 +1567,7 @@ const translations = {
     res_lines_prefix:'Линии',
     no_connected_lines:'Нет подключённых линий', conn_connected:'Подключён',
     tt_toggle_conn_type:'Переключить тип', partner_fallback:'Партнёр', unit_cm:'см', unit_pcs:'шт',
+    ad_placeholder_name:'Место для вашей рекламы', ad_placeholder_whatsapp_msg:'Здравствуйте! Хочу разместить рекламу в калькуляторе проводки (provodka.org)',
     ropt_calculating:'Считаю…',
     ropt_no_nets:'Нет линий с обоими подключёнными концами — нечего трассировать.',
     ropt_no_grid:'Не удалось построить сетку (нет ни зон, ни содержимого чертежа).',
@@ -1976,6 +1977,7 @@ const translations = {
     res_lines_prefix:'Lines',
     no_connected_lines:'No connected lines', conn_connected:'Connected',
     tt_toggle_conn_type:'Toggle type', partner_fallback:'Partner', unit_cm:'cm', unit_pcs:'pc',
+    ad_placeholder_name:'Advertise here', ad_placeholder_whatsapp_msg:'Hello! I\'d like to advertise on the wiring calculator (provodka.org)',
     ropt_calculating:'Calculating…',
     ropt_no_nets:'No lines with both ends connected — nothing to route.',
     ropt_no_grid:'Could not build a grid (no zones, no drawing content).',
@@ -2385,6 +2387,7 @@ const translations = {
     res_lines_prefix:'Líneas',
     no_connected_lines:'Sin líneas conectadas', conn_connected:'Conectado',
     tt_toggle_conn_type:'Cambiar tipo', partner_fallback:'Socio', unit_cm:'cm', unit_pcs:'ud',
+    ad_placeholder_name:'Anúnciese aquí', ad_placeholder_whatsapp_msg:'¡Hola! Quiero anunciarme en la calculadora de cableado (provodka.org)',
     ropt_calculating:'Calculando…',
     ropt_no_nets:'No hay líneas con ambos extremos conectados — no hay nada que trazar.',
     ropt_no_grid:'No se pudo construir la cuadrícula (no hay zonas ni contenido en el plano).',
@@ -2794,6 +2797,7 @@ const translations = {
     res_lines_prefix:'Сызықтар',
     no_connected_lines:'Қосылған сызықтар жоқ', conn_connected:'Қосылған',
     tt_toggle_conn_type:'Түрді ауыстыру', partner_fallback:'Серіктес', unit_cm:'см', unit_pcs:'дана',
+    ad_placeholder_name:'Жарнамаңыз үшін орын', ad_placeholder_whatsapp_msg:'Сәлеметсіз бе! Сым калькуляторында (provodka.org) жарнама орналастырғым келеді',
     ropt_calculating:'Есептеп жатыр…',
     ropt_no_nets:'Екі ұшы да қосылған сызықтар жоқ — тарта ешнәрсе жоқ.',
     ropt_no_grid:'Тор құру мүмкін болмады (зоналар да, сызба мазмұны да жоқ).',
@@ -9648,18 +9652,33 @@ function buildPartnerActionButton(kind, p){
 }
 
 async function showPartnerCard(onContinue){
-  // Fixed, single partner per slot now (see chat) — no more random pick
-  // among a weighted pool. This slot ("_save_slot_partner") is the shop
-  // shown at save/export time; a different, separate slot
-  // ("_props_slot_partner", see renderPropsAdBanner below) is the
-  // manufacturer shown in the working window. gis2/website are dropped —
-  // never actually used — but the photo stays: unlike the shop-request
-  // list (never had one), these ARE paid ad placements and a photo/logo
-  // is exactly what makes an ad placement worth paying for (see chat).
-  const p = (partnersConfig && partnersConfig._save_slot_partner) || null;
+  // Fixed, ONE partner per city now (see chat) — shops buy ad placement
+  // BY CITY (a hardware store in Almaty has no reason to advertise to a
+  // visitor in Astana), so "_save_slot_partner" is keyed by city:
+  // {"Алматы": {...}, "Астана": {...}, ...} — exactly one shop per city,
+  // no rotation, no weight (a "weight" isn't something an ad buyer can
+  // reason about — city is the obvious, sellable unit here). The OTHER
+  // slot ("_props_slot_partner", see renderPropsAdBanner below) stays a
+  // single global partner regardless of city — a manufacturer selling
+  // nationwide has no reason to target one city over another.
+  // gis2/website are dropped — never actually used — but the photo
+  // stays: these ARE paid ad placements, and a photo/logo is exactly
+  // what makes a placement worth paying for (see chat).
+  const city = await ensureCityDetected(); // cached after first call — instant on repeat saves/exports
+  let p = (partnersConfig && partnersConfig._save_slot_partner && partnersConfig._save_slot_partner[city]) || null;
+  const adWhatsapp = partnersConfig && partnersConfig._ad_slot_whatsapp;
+  let isPlaceholder = false;
+  if(!p && adWhatsapp){
+    // Slot not sold yet — show a "advertise here" placeholder with the
+    // owner's own contact instead of just skipping the card, so a shop
+    // owner using the calculator actually discovers the opportunity
+    // exists (see chat: a slot nobody can see can't be sold either).
+    p = { name: t('ad_placeholder_name'), whatsapp: adWhatsapp, whatsappMsg: t('ad_placeholder_whatsapp_msg') };
+    isPlaceholder = true;
+  }
   if(!p){
-    // Nothing configured — skip the card entirely rather than show an
-    // empty/broken one, and just proceed with the save/export directly.
+    // Truly nothing configured (not even a contact) — skip the card
+    // entirely rather than show a dead end, proceed with save/export directly.
     if(onContinue) onContinue();
     return;
   }
@@ -9690,18 +9709,17 @@ async function showPartnerCard(onContinue){
   if(btn) actions.appendChild(btn);
   actions.style.display = actions.children.length ? 'flex' : 'none';
 
-  // Dedicated "advertise here" contact — ALWAYS shown, independent of which partner
-  // was randomly picked above. This is the site owner's own contact for selling ad
-  // placements, never rotates, read fresh from partners.json each time so the owner
-  // can change the number themselves on GitHub without touching code.
+  // Dedicated "advertise here" contact — shown alongside a REAL partner
+  // (independent of which one), but skipped when the card ABOVE is
+  // already the placeholder itself (see chat) — same contact number
+  // twice on one small card would just be clutter, not extra discoverability.
   const adSlotLink = document.getElementById('ad-slot-contact');
-  const adWhatsapp = partnersConfig && partnersConfig._ad_slot_whatsapp;
-  if(adWhatsapp){
+  if(adWhatsapp && !isPlaceholder){
     adSlotLink.href = `https://wa.me/${adWhatsapp}?text=${encodeURIComponent('Здравствуйте! Хочу разместить рекламу в калькуляторе проводки (provodka.org)')}`;
     adSlotLink.parentElement.style.display='block';
     adSlotLink.onclick = ()=>{ if(typeof gtag==='function') gtag('event', 'ad_slot_click'); };
   } else {
-    adSlotLink.parentElement.style.display='none'; // no contact configured — hide the slot entirely rather than show a dead link
+    adSlotLink.parentElement.style.display='none'; // no contact configured, or already shown as the main placeholder card above
   }
 
   partnerCardPendingAction = onContinue;
@@ -9715,7 +9733,17 @@ async function showPartnerCard(onContinue){
 function renderPropsAdBanner(){
   const wrap=document.getElementById('props-ad-banner');
   if(!wrap) return;
-  const p=partnersConfig && partnersConfig._props_slot_partner;
+  let p=partnersConfig && partnersConfig._props_slot_partner;
+  if(!p){
+    // Slot not sold yet — same placeholder treatment as showPartnerCard
+    // above, using the owner's own contact, so this slot is ALSO
+    // discoverable (see chat) rather than silently hiding — this one
+    // sits in front of the person for the whole time they're not
+    // actively editing something, arguably more visible than the
+    // save/export modal card.
+    const adWhatsapp=partnersConfig && partnersConfig._ad_slot_whatsapp;
+    if(adWhatsapp) p={ name:t('ad_placeholder_name'), whatsapp:adWhatsapp, whatsappMsg:t('ad_placeholder_whatsapp_msg') };
+  }
   if(!p){ wrap.style.display='none'; return; }
   wrap.innerHTML=`
     <div style="margin-top:18px;padding:12px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px">

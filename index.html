@@ -6963,10 +6963,17 @@ function redraw(){
     }
     ctx.stroke();
 
-    // Endpoint dots at real (unshifted) positions
+    // Endpoint dots at real (unshifted) positions. Connected (green) dots
+    // are sized in real-world cm (see chat: 4cm = 2× the line's own
+    // physical width), scaling with zoom exactly like the line itself —
+    // LINE_W already IS that same physical width in current screen px
+    // (computed once above), so reusing it directly keeps both perfectly
+    // in sync at every zoom level without a second unit conversion.
+    // Free-end dots (unconnected) keep their previous fixed 3px — only
+    // the connected ones were asked for here.
     [[line.pts[0],line.connStart],[line.pts[line.pts.length-1],line.connEnd]].forEach(([pt,conn])=>{
       const pp=w2c(pt.wx,pt.wy);
-      ctx.beginPath();ctx.arc(pp.cx,pp.cy,conn?.markerId?5:3,0,Math.PI*2);
+      ctx.beginPath();ctx.arc(pp.cx,pp.cy,conn?.markerId?LINE_W:3,0,Math.PI*2);
       ctx.fillStyle=conn?.markerId?'#6dca5a':line.color;ctx.fill();
     });
 

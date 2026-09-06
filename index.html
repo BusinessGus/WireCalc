@@ -423,7 +423,9 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 <!-- Partner shop card (shown before save/export) -->
 <div id="partner-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:550;align-items:center;justify-content:center">
   <div style="background:#1e1e1e;border:1px solid #444;border-radius:14px;width:320px;padding:0;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.6)">
-    <img id="partner-banner" style="display:none;width:100%;height:120px;object-fit:cover">
+    <a id="partner-banner-link" href="#" target="_blank" rel="noopener" style="display:none">
+      <img id="partner-banner" style="width:100%;height:120px;object-fit:cover;display:block;cursor:pointer">
+    </a>
     <div style="background:linear-gradient(135deg,#1a3a5c,#16314d);padding:18px 20px 14px">
       <div data-i18n="partner_kicker" style="font-size:10px;color:#7dc4ff;text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-bottom:4px">Материалы для вашего проекта</div>
       <div style="font-size:16px;font-weight:700;color:#fff" id="partner-name">Электро-Маркет</div>
@@ -9685,14 +9687,21 @@ async function showPartnerCard(onContinue){
 
   document.getElementById('partner-name').textContent = p.name || t('partner_fallback');
 
+  const bannerLink = document.getElementById('partner-banner-link');
   const banner = document.getElementById('partner-banner');
   if(p.image){
-    banner.onerror = ()=>{ banner.style.display='none'; }; // broken/missing file — just hide, no broken-image icon
-    banner.onload = ()=>{ banner.style.display='block'; };
+    // The banner itself is clickable — see chat: goes to the partner's
+    // own link if given ("website"), otherwise falls back to the same
+    // WhatsApp chat the button below opens, so a tap on the picture
+    // always does SOMETHING useful rather than being a dead image.
+    bannerLink.href = p.website || (p.whatsapp ? `https://wa.me/${p.whatsapp}?text=${encodeURIComponent(p.whatsappMsg||'')}` : '#');
+    bannerLink.onclick = ()=>{ if(typeof gtag==='function') gtag('event', 'partner_click', {partner_name:p.name||'unknown', kind:'banner'}); };
+    banner.onerror = ()=>{ bannerLink.style.display='none'; }; // broken/missing file — just hide, no broken-image icon
+    banner.onload = ()=>{ bannerLink.style.display='block'; };
     banner.src = p.image;
   } else {
     banner.removeAttribute('src');
-    banner.style.display='none';
+    bannerLink.style.display='none';
   }
 
   const addrRow = document.getElementById('partner-address-row');
@@ -9747,7 +9756,7 @@ function renderPropsAdBanner(){
   if(!p){ wrap.style.display='none'; return; }
   wrap.innerHTML=`
     <div style="margin-top:18px;padding:12px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px">
-      ${p.image?`<img src="${p.image}" style="width:100%;border-radius:6px;margin-bottom:8px;display:block" onerror="this.style.display='none'">`:''}
+      ${p.image?`<a href="${(p.website || (p.whatsapp?`https://wa.me/${p.whatsapp}?text=${encodeURIComponent(p.whatsappMsg||'')}`:'#')).replace(/"/g,'&quot;')}" target="_blank" rel="noopener" style="display:block;margin-bottom:8px" data-track-partner="${(p.name||'').replace(/"/g,'&quot;')}"><img src="${p.image}" style="width:100%;border-radius:6px;display:block" onerror="this.parentElement.style.display='none'"></a>`:''}
       <div style="font-size:12px;font-weight:600;color:#ccc;margin-bottom:8px">${p.name||t('partner_fallback')}</div>
       <div id="props-ad-actions" style="display:flex;gap:6px;flex-wrap:wrap"></div>
     </div>`;
@@ -9755,6 +9764,10 @@ function renderPropsAdBanner(){
   const btn=buildPartnerActionButton('whatsapp', p);
   if(btn){ btn.style.flex='none'; btn.style.minWidth='0'; btn.style.padding='6px 10px'; btn.style.fontSize='11px'; actions.appendChild(btn); }
   wrap.style.display = actions.children.length ? 'block' : 'none';
+  const bannerLink=wrap.querySelector('[data-track-partner]');
+  if(bannerLink) bannerLink.addEventListener('click', ()=>{
+    if(typeof gtag==='function') gtag('event', 'partner_click', {partner_name:bannerLink.dataset.trackPartner||'unknown', kind:'banner'});
+  });
 }
 
 function hidePartnerCardAndProceed(){

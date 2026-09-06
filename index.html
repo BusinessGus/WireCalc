@@ -43,6 +43,9 @@
 
 <!-- ═══════════════════════════════════════════════════════
      GOOGLE ANALYTICS — Measurement ID: G-3W2LP3HPNG (provodka.org ресурс)
+     GOOGLE ADS — Conversion ID: AW-18433780853
+     Один и тот же gtag.js обслуживает оба — не грузим библиотеку дважды,
+     просто два вызова gtag('config', ...) с разными ID.
      ═══════════════════════════════════════════════════════ -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-3W2LP3HPNG"></script>
 <script>
@@ -50,6 +53,7 @@
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
   gtag('config', 'G-3W2LP3HPNG');
+  gtag('config', 'AW-18433780853');
 </script>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css">
@@ -6970,16 +6974,16 @@ function redraw(){
     ctx.stroke();
 
     // Endpoint dots at real (unshifted) positions. Connected (green) dots
-    // are sized in real-world cm (see chat: 4cm = 2× the line's own
-    // physical width), scaling with zoom exactly like the line itself —
-    // LINE_W already IS that same physical width in current screen px
-    // (computed once above), so reusing it directly keeps both perfectly
-    // in sync at every zoom level without a second unit conversion.
-    // Free-end dots (unconnected) keep their previous fixed 3px — only
-    // the connected ones were asked for here.
+    // are sized in real-world cm (see chat: dot diameter = 2cm = same as
+    // the line's own physical width), scaling with zoom exactly like the
+    // line itself — LINE_W already IS that physical width (diameter,
+    // computed once above) in current screen px, so radius = LINE_W/2
+    // keeps both perfectly in sync at every zoom level without a second
+    // unit conversion. Free-end dots (unconnected) keep their previous
+    // fixed 3px — only the connected ones were asked for here.
     [[line.pts[0],line.connStart],[line.pts[line.pts.length-1],line.connEnd]].forEach(([pt,conn])=>{
       const pp=w2c(pt.wx,pt.wy);
-      ctx.beginPath();ctx.arc(pp.cx,pp.cy,conn?.markerId?LINE_W:3,0,Math.PI*2);
+      ctx.beginPath();ctx.arc(pp.cx,pp.cy,conn?.markerId?LINE_W/2:3,0,Math.PI*2);
       ctx.fillStyle=conn?.markerId?'#6dca5a':line.color;ctx.fill();
     });
 

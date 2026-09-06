@@ -116,6 +116,9 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
   .mobile-hint:not(.hidden){display:flex}
 }
 .spanel{flex:1;overflow-y:auto;display:none;padding:10px}
+#tab-props.active{display:flex !important;flex-direction:column;overflow-y:hidden;padding:0}
+#tab-props-scroll{flex:1;overflow-y:auto;min-height:0;padding:10px}
+#props-ad-banner{padding:0 10px 10px}
 .spanel.active{display:block}
 .res-row{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid #2a2a2a}
 .res-row:last-child{border-bottom:none}
@@ -376,6 +379,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
       </div>
 
       <div id="tab-props" class="spanel">
+        <div id="tab-props-scroll">
         <div class="prop-group" id="current-color-cable-group">
           <div class="prop-label" style="display:flex;align-items:center;gap:6px">
             <span class="current-color-dot" id="current-color-dot" style="width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0"></span>
@@ -394,7 +398,6 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
           <div id="current-color-height-hint" style="font-size:10px;color:#666;margin-top:3px"></div>
         </div>
         <div id="no-selection" data-i18n="no_selection">Выберите объект в режиме «Выбор»</div>
-        <div id="props-ad-banner" style="display:none"></div>
         <div id="props-content" style="display:none">
           <div class="prop-group">
             <div class="prop-label" data-i18n="prop_color">Цвет</div>
@@ -416,6 +419,13 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
           <button class="prop-btn" id="prop-apply"><i class="ti ti-check" style="font-size:12px"></i> <span data-i18n="prop_apply">Применить</span></button>
           <button class="prop-btn del" id="prop-delete"><i class="ti ti-trash" style="font-size:12px"></i> <span data-i18n="prop_delete">Удалить</span></button>
         </div>
+        </div>
+        <!-- Outside the scrolling wrapper above, on purpose (see chat): a
+             fixed footer at the bottom of the whole tab, always visible
+             regardless of selection state or how tall the properties
+             content above happens to be — not something you'd have to
+             scroll past the selected object's fields to notice. -->
+        <div id="props-ad-banner" style="display:none;flex-shrink:0"></div>
       </div>
 
       <div id="total-row"><span style="color:#666" data-i18n="total_label">Всего:</span><span id="total-val">0.00 м</span></div>
@@ -1120,6 +1130,18 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 
 <script>
 'use strict';
+
+// ═══════════════════════════════════════════════════════
+// GOOGLE ADS CONVERSION TRACKING (AW-18433780853)
+// Fires the actual per-action conversion events at the SAME points as
+// the existing GA4 analytics events — not as separate page-load scripts
+// the way Google's own snippet generator presents them, since there's no
+// dedicated "thank you" page here; the action and the conversion happen
+// on the same page, in the same click. See chat for the two conversion
+// labels currently wired up: project save/export, shop request sent.
+function fireAdConversion(label){
+  if(typeof gtag==='function') gtag('event', 'conversion', {send_to: 'AW-18433780853/'+label});
+}
 
 // ═══════════════════════════════════════════════════════
 // CONSTANTS
@@ -9058,13 +9080,17 @@ function showPropsTab(){
 function updatePropsPanel(){
   const noSel=document.getElementById('no-selection');
   const content=document.getElementById('props-content');
+  // Ad banner (see chat: "должно быть видно всегда... в самом низу") —
+  // rendered unconditionally, regardless of which branch below runs, so
+  // it's a fixed footer for the whole tab rather than tied to the empty
+  // "nothing selected" state specifically.
+  renderPropsAdBanner();
   if(selType===null){
     noSel.style.display='block';content.style.display='none';
     updateCurrentColorCableUI();
-    renderPropsAdBanner();
     return;
   }
-  noSel.style.display='none';document.getElementById('props-ad-banner').style.display='none';
+  noSel.style.display='none';
   content.style.display='block';
   const obj=selType==='segment'?segments[selIdx]:selType==='line'?lines[selIdx]:markers[selIdx];
 
@@ -9759,7 +9785,7 @@ function renderPropsAdBanner(){
   }
   if(!p){ wrap.style.display='none'; return; }
   wrap.innerHTML=`
-    <div style="margin-top:18px;padding:12px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px">
+    <div style="margin-top:10px;padding:12px;padding-top:14px;border-top:1px solid #2a2a2a;background:#1a1a1a;border-radius:8px">
       ${p.image?`<a href="${(p.website || (p.whatsapp?`https://wa.me/${p.whatsapp}?text=${encodeURIComponent(p.whatsappMsg||'')}`:'#')).replace(/"/g,'&quot;')}" target="_blank" rel="noopener" style="display:block;margin-bottom:8px" data-track-partner="${(p.name||'').replace(/"/g,'&quot;')}"><img src="${p.image}" style="width:100%;border-radius:6px;display:block" onerror="this.parentElement.style.display='none'"></a>`:''}
       <div style="font-size:12px;font-weight:600;color:#ccc;margin-bottom:8px">${p.name||t('partner_fallback')}</div>
       <div id="props-ad-actions" style="display:flex;gap:6px;flex-wrap:wrap"></div>
@@ -9807,7 +9833,7 @@ function doSaveProject(){
   const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download=safeFileName(name)+'.wiring';a.click();
-  if(typeof gtag==='function'){ gtag('event', 'save_project'); gtag('event', 'project_saved', {method:'wiring'}); }
+  if(typeof gtag==='function'){ gtag('event', 'save_project'); gtag('event', 'project_saved', {method:'wiring'}); } fireAdConversion('5pGjCLO2z-8cEPXY9NVE');
 }
 document.getElementById('btn-save').addEventListener('click',()=>{
   showPartnerCard(doSaveProject);
@@ -11602,7 +11628,7 @@ function doExportForTheme(theme){
         a.href=URL.createObjectURL(blob);
         a.download=safeFileName(getProjectName())+`-full-${dpr}x-${theme}.png`;
         a.click();
-        if(typeof gtag==='function'){ gtag('event', 'export_png', {scope:'full', quality:dpr+'x', theme}); gtag('event', 'project_saved', {method:'png_full'}); }
+        if(typeof gtag==='function'){ gtag('event', 'export_png', {scope:'full', quality:dpr+'x', theme}); gtag('event', 'project_saved', {method:'png_full'}); } fireAdConversion('5pGjCLO2z-8cEPXY9NVE');
       },'image/png');
     }, fullDelay);
 
@@ -11626,7 +11652,7 @@ function doExportForTheme(theme){
         a.href=URL.createObjectURL(blob);
         a.download=safeFileName(getProjectName())+`-${dpr}x-${theme}.png`;
         a.click();
-        if(typeof gtag==='function'){ gtag('event', 'export_png', {scope:'viewport', quality:dpr+'x', theme}); gtag('event', 'project_saved', {method:'png_viewport'}); }
+        if(typeof gtag==='function'){ gtag('event', 'export_png', {scope:'viewport', quality:dpr+'x', theme}); gtag('event', 'project_saved', {method:'png_viewport'}); } fireAdConversion('5pGjCLO2z-8cEPXY9NVE');
       },'image/png');
     }, viewportDelay);
   }
@@ -12369,7 +12395,7 @@ function exportPortsDiagramForTheme(theme){
         a.href=URL.createObjectURL(blob);
         a.download=safeFileName(getProjectName())+`-ports-${theme}${pageSuffix}.png`;
         a.click();
-        if(page===numPages-1 && typeof gtag==='function'){ gtag('event', 'export_png', {scope:'ports-diagram', theme, pages:numPages}); gtag('event', 'project_saved', {method:'png_ports'}); }
+        if(page===numPages-1 && typeof gtag==='function'){ gtag('event', 'export_png', {scope:'ports-diagram', theme, pages:numPages}); gtag('event', 'project_saved', {method:'png_ports'}); fireAdConversion('5pGjCLO2z-8cEPXY9NVE'); }
       },'image/png');
     }, delay);
   }
@@ -12923,7 +12949,7 @@ function openShopRequestModal(cityKey){
   // straight from GA4 without guessing from a mix of click types.
   listWrap.querySelectorAll('.shop-request-send-link').forEach(a=>{
     a.addEventListener('click', ()=>{
-      if(typeof gtag==='function') gtag('event', 'shop_request_sent', {shop_name:a.dataset.shop, city:cityKey});
+      if(typeof gtag==='function') gtag('event', 'shop_request_sent', {shop_name:a.dataset.shop, city:cityKey}); fireAdConversion('km4TCP7e2O8cEPXY9NVE');
     });
   });
   const addOwnBtn=document.getElementById('shop-request-add-own');

@@ -8788,6 +8788,193 @@ window.addEventListener('load', mobileShowInfoOnce);
 
 
 // ═══════════════════════════════════════════════════════
+// TABLET TOUCH LAYER — full drawing/editing via touch on wide-enough
+// touchscreens (see chat). Gated the OPPOSITE way from the mobile
+// view-mode above: only runs when the screen is wide enough that the
+// full desktop toolbar already shows (isMobileMode() is false) AND the
+// device actually has touch. A tablet doesn't need a new UI — the only
+// missing piece is translating gestures into the mouse events the
+// existing drag/select/draw machinery already understands, so this
+// layer synthesises real MouseEvents and dispatches them at the
+// draw-canvas rather than reimplementing any drag behaviour.
+//
+// Gesture model (see chat):
+//   - One finger, on an empty spot / in a drawing mode → behaves exactly
+//     like a mouse: dispatched as mousedown, tracked as mousemove,
+//     released as mouseup (a quick tap-and-lift with no real movement
+//     naturally reads as a click to the underlying select-mode logic).
+//   - A second finger joining an ALREADY-ACTIVE single-finger drag adds a
+//     precision-refinement option: from that point, finger 2's movement
+//     drives the drag instead of finger 1's (finger 1 can sit still,
+//     out of the way of what it's dragging) — but ONLY once the actual
+//     movement pattern confirms that's what's happening (finger 1
+//     roughly still, finger 2 clearly moving), never assumed just
+//     because a second finger touched down.
+//   - Two fingers moving together (roughly constant distance apart) →
+//     pan, regardless of what finger 1 happened to first touch.
+//   - Two fingers' distance changing → pinch-zoom, likewise regardless
+//     of what finger 1 first touched — a real pinch must never be
+//     hijacked into an object-drag just because it started over a marker.
+// Classification is decided ONCE per two-finger gesture (first movement
+// pattern clear enough to tell) and held for the rest of it — not
+// re-evaluated frame to frame, so it can't flip mid-gesture.
+// ═══════════════════════════════════════════════════════
+function isTabletTouchMode(){
+  return !isMobileMode() && (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
+}
+
+(function setupTabletTouch(){
+  const NOISE = 10;        // px — "did this finger actually move" tolerance (see chat)
+  const SPAWN_DELAY = 50;  // ms — wait this long after finger 1 touches down before
+                            // committing to a single-finger mousedown, in case a second
+                            // finger is about to arrive — otherwise a 2-finger pan/zoom
+                            // that happens to start with finger 1 over the canvas could
+                            // accidentally trigger whatever finger-1-alone would do (e.g.
+                            // placing a new line point in drawing mode) before we know
+                            // a second finger was coming at all.
+
+  let touch1=null;      // {id,x0,y0,x,y,mousedownDispatched,dragActive}
+  let touch2=null;      // {id,x0,y0,x,y} — only once a 2nd finger has joined
+  let pendingTimer=null;
+  let classification=null; // null | 'drag' | 'pan' | 'zoom'
+  let zoomAnchor=null;  // {worldX,worldY} under the pinch midpoint, set once at zoom classification
+  let panAnchor=null;   // {bgX0,bgY0,midX0,midY0} set once at pan classification
+
+  function dispatchMouse(type, x, y){
+    drC.dispatchEvent(new MouseEvent(type, {clientX:x, clientY:y, bubbles:true, cancelable:true, button:0, buttons:(type==='mouseup')?0:1}));
+  }
+  function canvasXY(clientX, clientY){
+    const r=drC.getBoundingClientRect();
+    return {x:clientX-r.left, y:clientY-r.top};
+  }
+
+  function commitSingleFingerStart(){
+    pendingTimer=null;
+    if(!touch1 || touch2) return; // a 2nd finger beat the timer — this was always a 2-finger gesture
+    dispatchMouse('mousedown', touch1.x, touch1.y);
+    touch1.mousedownDispatched=true;
+    touch1.dragActive=!!((isDragging && dragObj) || markerPlaceDrag);
+  }
+
+  function endGesture(lastX, lastY){
+    if(touch1 && touch1.mousedownDispatched){
+      dispatchMouse('mouseup', lastX, lastY);
+    }
+    if(pendingTimer){ clearTimeout(pendingTimer); pendingTimer=null; }
+    touch1=null; touch2=null; classification=null; zoomAnchor=null; panAnchor=null;
+  }
+
+  drC.addEventListener('touchstart', e=>{
+    if(!isTabletTouchMode()) return;
+    if(e.touches.length===1 && !touch1){
+      e.preventDefault();
+      const t=e.touches[0];
+      touch1={id:t.identifier, x0:t.clientX, y0:t.clientY, x:t.clientX, y:t.clientY, mousedownDispatched:false, dragActive:false};
+      pendingTimer=setTimeout(commitSingleFingerStart, SPAWN_DELAY);
+    } else if(e.touches.length===2 && touch1 && !touch2){
+      e.preventDefault();
+      if(pendingTimer){ clearTimeout(pendingTimer); pendingTimer=null; } // cancel the deferred single-finger mousedown — this is a 2-finger gesture
+      const t2=[...e.touches].find(t=>t.identifier!==touch1.id);
+      touch2={id:t2.identifier, x0:t2.clientX, y0:t2.clientY, x:t2.clientX, y:t2.clientY};
+      // Reference points reset to NOW — classification looks at movement
+      // since the two-finger gesture began, not since finger 1's original touchdown.
+      touch1.x0=touch1.x; touch1.y0=touch1.y;
+      classification=null;
+    }
+  }, {passive:false});
+
+  drC.addEventListener('touchmove', e=>{
+    if(!isTabletTouchMode() || !touch1) return;
+    e.preventDefault();
+    const t1=[...e.touches].find(t=>t.identifier===touch1.id);
+    if(t1){ touch1.x=t1.clientX; touch1.y=t1.clientY; }
+
+    if(!touch2){
+      // Plain single-finger movement — once mousedown has actually been
+      // dispatched (the SPAWN_DELAY has elapsed with no 2nd finger
+      // showing up), just forward movement 1:1, exactly like a mouse.
+      if(touch1.mousedownDispatched) dispatchMouse('mousemove', touch1.x, touch1.y);
+      return;
+    }
+
+    const t2=[...e.touches].find(t=>t.identifier===touch2.id);
+    if(t2){ touch2.x=t2.clientX; touch2.y=t2.clientY; }
+
+    const d1=Math.hypot(touch1.x-touch1.x0, touch1.y-touch1.y0);
+    const d2=Math.hypot(touch2.x-touch2.x0, touch2.y-touch2.y0);
+    const distStart=Math.hypot(touch2.x0-touch1.x0, touch2.y0-touch1.y0);
+    const distNow=Math.hypot(touch2.x-touch1.x, touch2.y-touch1.y);
+    const distChange=Math.abs(distNow-distStart);
+
+    if(!classification){
+      if(d1<NOISE && d2>NOISE*1.5 && touch1.dragActive){
+        classification='drag';
+      } else if(distChange>NOISE*1.5 && distChange>d1 && distChange>d2){
+        classification='zoom';
+        const mid=canvasXY((touch1.x0+touch2.x0)/2, (touch1.y0+touch2.y0)/2);
+        zoomAnchor={worldX:(mid.x-bgX)/bgS, worldY:(mid.y-bgY)/bgS, distStart, bgS0:bgS};
+      } else if(d1>NOISE && d2>NOISE && distChange<NOISE){
+        classification='pan';
+        const mid=canvasXY((touch1.x0+touch2.x0)/2, (touch1.y0+touch2.y0)/2);
+        panAnchor={bgX0:bgX, bgY0:bgY, midX0:mid.x, midY0:mid.y};
+      }
+      // else: pattern not clear enough yet — wait for the next touchmove
+    }
+
+    if(classification==='drag'){
+      dispatchMouse('mousemove', touch2.x, touch2.y); // finger 1 stays the anchor, finger 2 drives it — see chat
+    } else if(classification==='zoom'){
+      const ns=Math.max(0.02, Math.min(20, zoomAnchor.bgS0*(distNow/(zoomAnchor.distStart||1))));
+      const mid=canvasXY((touch1.x+touch2.x)/2, (touch1.y+touch2.y)/2);
+      bgX=mid.x-zoomAnchor.worldX*ns; bgY=mid.y-zoomAnchor.worldY*ns; bgS=ns;
+      updateAllConnectedEndpoints();
+      redrawBg(); redraw();
+    } else if(classification==='pan'){
+      const mid=canvasXY((touch1.x+touch2.x)/2, (touch1.y+touch2.y)/2);
+      bgX=panAnchor.bgX0+(mid.x-panAnchor.midX0); bgY=panAnchor.bgY0+(mid.y-panAnchor.midY0);
+      redrawBg(); redraw();
+    }
+  }, {passive:false});
+
+  drC.addEventListener('touchend', e=>{
+    if(!isTabletTouchMode() || !touch1) return;
+    e.preventDefault();
+    const remaining=[...e.touches];
+    const touch1Lifted = !remaining.some(t=>t.identifier===touch1.id);
+    const touch2Lifted = touch2 && !remaining.some(t=>t.identifier===touch2.id);
+
+    if(touch2 && classification==='drag' && (touch2Lifted || touch1Lifted)){
+      endGesture(touch2.x, touch2.y);
+      return;
+    }
+    if(touch2 && (touch2Lifted || touch1Lifted) && classification!=='drag'){
+      // Pan/zoom ending (or never classified) — nothing to commit, mousedown
+      // was never dispatched for this gesture, just reset.
+      touch1=null; touch2=null; classification=null; zoomAnchor=null; panAnchor=null;
+      return;
+    }
+    if(!touch2 && touch1Lifted){
+      if(pendingTimer){
+        // Finger lifted before the deferred mousedown ever fired — a
+        // quick, genuine single tap. Fire the whole click sequence now
+        // rather than waiting out the rest of a delay that no longer
+        // serves any purpose (nothing left that could still turn into a
+        // 2-finger gesture).
+        clearTimeout(pendingTimer); pendingTimer=null;
+        dispatchMouse('mousedown', touch1.x, touch1.y);
+        dispatchMouse('mouseup', touch1.x, touch1.y);
+        drC.dispatchEvent(new MouseEvent('click', {clientX:touch1.x, clientY:touch1.y, bubbles:true, cancelable:true, button:0}));
+        touch1=null;
+        return;
+      }
+      endGesture(touch1.x, touch1.y);
+    }
+  }, {passive:false});
+  drC.addEventListener('touchcancel', ()=>{ endGesture(touch1?touch1.x:0, touch1?touch1.y:0); }, {passive:false});
+})();
+
+
+// ═══════════════════════════════════════════════════════
 // KEYBOARD
 // ═══════════════════════════════════════════════════════
 document.addEventListener('keydown',e=>{

@@ -1313,7 +1313,7 @@ const translations = {
     mt_height_ph_box:'не задано — 0 вертикали',
     ok_btn:'Ок',
     marker_height_label:'Высота значка', marker_height_hint_own:'Своё значение для этого значка.',
-    marker_height_hint_default:'Сейчас используется значение по умолчанию из типа: {v}.',
+    marker_height_hint_default:'Сейчас используется значение по умолчанию из типа: {v}.', marker_height_hint_route:'Сейчас равна высоте трассы: {v} — изменится вместе с ней, если поменять высоту трассы.',
     with_verticals_short:'верт.', with_allowance_short:'полная длина',
     horiz_label:'гор.', vert_label:'верт.',
     panel_cable_counts_label:'Линий по маркам кабеля',
@@ -1729,7 +1729,7 @@ const translations = {
     mt_height_ph_box:'not set — zero vertical run',
     ok_btn:'OK',
     marker_height_label:'Marker height', marker_height_hint_own:'This marker has its own value.',
-    marker_height_hint_default:'Currently using the type default: {v}.',
+    marker_height_hint_default:'Currently using the type default: {v}.', marker_height_hint_route:'Currently equal to the route height: {v} — will change along with it if you change the route height.',
     with_verticals_short:'vert.', with_allowance_short:'total length',
     horiz_label:'horiz.', vert_label:'vert.',
     panel_cable_counts_label:'Lines by cable mark',
@@ -2145,7 +2145,7 @@ const translations = {
     mt_height_ph_box:'sin definir — sin tramo vertical',
     ok_btn:'Aceptar',
     marker_height_label:'Altura del elemento', marker_height_hint_own:'Este elemento tiene su propio valor.',
-    marker_height_hint_default:'Actualmente se usa el valor por defecto del tipo: {v}.',
+    marker_height_hint_default:'Actualmente se usa el valor por defecto del tipo: {v}.', marker_height_hint_route:'Actualmente igual a la altura de la traza: {v} — cambiará junto con ella si modifica la altura de la traza.',
     with_verticals_short:'vert.', with_allowance_short:'longitud total',
     horiz_label:'horiz.', vert_label:'vert.',
     panel_cable_counts_label:'Líneas por marca de cable',
@@ -2561,7 +2561,7 @@ const translations = {
     mt_height_ph_box:'көрсетілмеген — тік учаске жоқ',
     ok_btn:'Жарайды',
     marker_height_label:'Белгіше биіктігі', marker_height_hint_own:'Бұл белгіше үшін өз мәні бар.',
-    marker_height_hint_default:'Қазір түрдің әдепкі мәні қолданылады: {v}.',
+    marker_height_hint_default:'Қазір түрдің әдепкі мәні қолданылады: {v}.', marker_height_hint_route:'Қазір трасса биіктігіне тең: {v} — трасса биіктігін өзгертсеңіз, бұл да өзгереді.',
     with_verticals_short:'тік.', with_allowance_short:'толық ұзындық',
     horiz_label:'көлд.', vert_label:'тік.',
     panel_cable_counts_label:'Кабель маркасы бойынша сызықтар',
@@ -3118,18 +3118,18 @@ let markers = [];
 // extra: metres of material per instance (base cost just for placing the device)
 function defaultBaseMarkerTypes(){
   return [
-    {id:uid(), abbr:'Рз', desc:'Розетка',          extra:0.5, size:12, kind:'point', portsPerSide:1},
-    {id:uid(), abbr:'Вк', desc:'Выключатель',       extra:0.3, size:12, kind:'point', portsPerSide:1},
+    {id:uid(), abbr:'Рз', desc:'Розетка',          extra:0.5, size:12, kind:'point', portsPerSide:1, heightM:0.9, heightRef:'floor'},
+    {id:uid(), abbr:'Вк', desc:'Выключатель',       extra:0.3, size:12, kind:'point', portsPerSide:1, heightM:0.9, heightRef:'floor'},
     {id:uid(), abbr:'Кр', desc:'Коробка распределительная', extra:0.5, size:12, kind:'point', portsPerSide:1},
-    {id:uid(), abbr:'ЩР', desc:'Щит распределительный',    extra:2.0, size:14, kind:'point', portsPerSide:1},
+    {id:uid(), abbr:'ЩР', desc:'Щит распределительный',    extra:2.0, size:14, kind:'point', portsPerSide:1, heightM:1.6, heightRef:'floor'},
   ];
 }
 function defaultProMarkerTypes(){
   return [
-    {id:uid(), abbr:'Рз', desc:'Розетка',          extra:0.5, size:12, kind:'point', portsPerSide:1},
-    {id:uid(), abbr:'Вк', desc:'Выключатель',       extra:0.3, size:12, kind:'point', portsPerSide:1},
+    {id:uid(), abbr:'Рз', desc:'Розетка',          extra:0.5, size:12, kind:'point', portsPerSide:1, heightM:0.9, heightRef:'floor'},
+    {id:uid(), abbr:'Вк', desc:'Выключатель',       extra:0.3, size:12, kind:'point', portsPerSide:1, heightM:0.9, heightRef:'floor'},
     {id:uid(), abbr:'Кр', desc:'Распредкоробка',    extra:0.4, size:14, kind:'multi', portsPerSide:2},
-    {id:uid(), abbr:'ЩР', desc:'Щит распределит.', extra:4.0, size:18, kind:'bus', portsPerSide:12},
+    {id:uid(), abbr:'ЩР', desc:'Щит распределит.', extra:4.0, size:18, kind:'bus', portsPerSide:12, heightM:1.6, heightRef:'floor'},
   ];
 }
 let markerTypes = canUsePro() ? defaultProMarkerTypes() : defaultBaseMarkerTypes();
@@ -6352,10 +6352,15 @@ function getMarkerHeightM(mk){
   if(mt.heightM!=null) return heightToFloorRel(mt.heightM, mt.heightRef||'floor'); // then the type's own default
   // Nothing configured anywhere: point-kind devices (sockets/switches)
   // almost always sit well below the route, so assume a sensible standard
-  // height rather than silently dropping the vertical run to zero. Box-kind
-  // markers (Кр/ЩР) are usually mounted close to route height, so with
-  // nothing configured, assume zero extra run rather than guessing.
+  // height rather than silently dropping the vertical run to zero.
   if(mt.kind==='point') return heightToFloorRel(0.3,'floor');
+  // Junction boxes (Кр, kind='multi') default to whatever the route height
+  // itself currently is (see chat) — a box is physically mounted along the
+  // route, not at some independent height, so with nothing explicitly
+  // configured its height should just track the project's default route
+  // height rather than being treated as "zero extra run" (which used to be
+  // the effective behaviour here, via returning null).
+  if(mt.kind==='multi') return heightToFloorRel(defaultRouteHeightM, defaultRouteHeightRef);
   return null;
 }
 
@@ -9584,11 +9589,30 @@ function updatePropsPanel(){
     // Height override — falls back to the type's own default (shown as
     // placeholder) until the user sets a value here. Same for every kind of
     // marker now (used to be point-only, made consistent on request).
+    // Junction boxes (kind='multi') with no type-level default fall back to
+    // the project's route height (see chat) — matches getMarkerHeightM()'s
+    // own fallback chain exactly, and the hint below says so explicitly
+    // rather than presenting it as just another number.
+    // typeDefaultM/typeDefaultRef/hintKey are declared here (not inside the
+    // block below) because the live-update handler further down also needs
+    // them — they were previously block-scoped to just the render step,
+    // which meant the "update hint while typing" handler was silently
+    // referencing out-of-scope variables (a pre-existing bug, unrelated to
+    // the height-source change here, just surfaced while fixing this).
     let heightHtml='';
+    let typeDefaultM, typeDefaultRef, hintKey;
     {
-      const typeDefaultM = mt?.heightM!=null ? mt.heightM : 0.3;
-      const typeDefaultRef = mt?.heightRef || 'floor';
+      let fromRouteHeight=false;
+      if(mt?.heightM!=null){
+        typeDefaultM=mt.heightM; typeDefaultRef=mt.heightRef||'floor';
+      } else if(mt?.kind==='multi'){
+        typeDefaultM=defaultRouteHeightM; typeDefaultRef=defaultRouteHeightRef;
+        fromRouteHeight=true;
+      } else {
+        typeDefaultM=0.3; typeDefaultRef='floor';
+      }
       const hasOwn = obj.heightM!=null;
+      hintKey = fromRouteHeight ? 'marker_height_hint_route' : 'marker_height_hint_default';
       heightHtml=`<div class="prop-group" style="margin-top:8px">
         <div class="prop-label">${t('marker_height_label')}</div>
         <div style="display:flex;gap:6px;margin-top:4px">
@@ -9599,7 +9623,7 @@ function updatePropsPanel(){
             <option value="ceiling"${(obj.heightRef||typeDefaultRef)==='ceiling'?' selected':''}>${t('height_ref_ceiling')}</option>
           </select>
         </div>
-        <div id="marker-height-hint" style="font-size:10px;color:#666;margin-top:3px">${hasOwn?t('marker_height_hint_own'):t('marker_height_hint_default').replace('{v}', typeDefaultM+' '+t(typeDefaultRef==='ceiling'?'height_ref_ceiling':'height_ref_floor'))}</div>
+        <div id="marker-height-hint" style="font-size:10px;color:#666;margin-top:3px">${hasOwn?t('marker_height_hint_own'):t(hintKey).replace('{v}', typeDefaultM+' '+t(typeDefaultRef==='ceiling'?'height_ref_ceiling':'height_ref_floor'))}</div>
       </div>`;
     }
 
@@ -9641,7 +9665,7 @@ function updatePropsPanel(){
         if(hintEl){
           hintEl.textContent = obj.heightM!=null
             ? t('marker_height_hint_own')
-            : t('marker_height_hint_default').replace('{v}', typeDefaultM+' '+t(typeDefaultRef==='ceiling'?'height_ref_ceiling':'height_ref_floor'));
+            : t(hintKey).replace('{v}', typeDefaultM+' '+t(typeDefaultRef==='ceiling'?'height_ref_ceiling':'height_ref_floor'));
         }
       };
       heightInput?.addEventListener('input', applyMarkerHeight);

@@ -362,6 +362,10 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
       </div>
 
       <div id="tab-results" class="spanel active">
+        <div id="results-incomplete-hint" style="display:none;font-size:11px;color:#f0c040;background:#2a2410;border:1px solid #4a3a10;border-radius:7px;padding:9px 10px;margin-bottom:10px;line-height:1.5">
+          <span data-i18n="results_incomplete_warning">⚠ Здесь только длина линий по чертежу, без учёта вертикальных участков (от розетки/выключателя до трассы) — это неполный итог.</span>
+          <a href="#" id="results-goto-cable-estimate" data-i18n="results_goto_cable_estimate" style="color:#7dc4ff;text-decoration:underline;display:inline-block;margin-top:4px">Открыть «Смета по кабелям» — там полный расчёт →</a>
+        </div>
         <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
           <button id="btn-show-all" data-i18n-title="tt_show_all" style="font-size:11px;padding:3px 8px;background:#2a2a2a;border:1px solid #444;border-radius:4px;color:#888;cursor:pointer" title="Показать все скрытые линии">
             <i class="ti ti-eye" style="font-size:11px"></i> <span data-i18n="show_all">Показать все</span>
@@ -903,7 +907,11 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     <button id="panel-calc-close" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#666;font-size:22px;cursor:pointer;line-height:1">✕</button>
     <h2 data-i18n="panel_calc_h2" style="font-size:18px;font-weight:700;margin-bottom:18px;color:#e8e8e8">Расчёт щитка</h2>
     <div id="panel-calc-body"></div>
-    <button id="panel-calc-close-bottom" data-i18n="wn_close_btn" style="margin-top:20px;width:100%;padding:10px;background:#1a3a5c;border:1px solid #4a9eff;border-radius:7px;color:#7dc4ff;font-size:13px;font-weight:600;cursor:pointer">Понятно</button>
+    <div style="font-size:12px;color:#8aff8a;background:#16231a;border:1px solid #234a23;border-radius:7px;padding:10px 12px;margin-top:16px;line-height:1.5">
+      <span data-i18n="panel_calc_goto_overall_hint">Кабель и щиток посчитаны — в «Общей смете» соберётся полный список расходников (плюс крепёж и подрозетники), который можно скачать или сразу отправить на расчёт стоимости.</span>
+      <a href="#" id="panel-calc-goto-overall" data-i18n="panel_calc_goto_overall_link" style="color:#8aff8a;text-decoration:underline;display:inline-block;margin-top:4px">Открыть «Общую смету» →</a>
+    </div>
+    <button id="panel-calc-close-bottom" data-i18n="wn_close_btn" style="margin-top:16px;width:100%;padding:10px;background:#1a3a5c;border:1px solid #4a9eff;border-radius:7px;color:#7dc4ff;font-size:13px;font-weight:600;cursor:pointer">Понятно</button>
   </div>
 </div>
 
@@ -914,7 +922,11 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     <h2 data-i18n="cable_estimate_h2" style="font-size:18px;font-weight:700;margin-bottom:20px;color:#e8e8e8">Смета по кабелям</h2>
     <div id="cable-estimate-unmarked"></div>
     <div id="cable-estimate-table-wrap"></div>
-    <button id="cable-estimate-close-bottom" data-i18n="wn_close_btn" style="margin-top:20px;width:100%;padding:10px;background:#1a3a5c;border:1px solid #4a9eff;border-radius:7px;color:#7dc4ff;font-size:13px;font-weight:600;cursor:pointer">Понятно</button>
+    <div style="font-size:12px;color:#7dc4ff;background:#16233a;border:1px solid #234;border-radius:7px;padding:10px 12px;margin-top:16px;line-height:1.5">
+      <span data-i18n="cable_estimate_goto_panel_hint">Метраж и марки кабеля определены — теперь можно правильно подобрать защитные автоматы и оптимальный размер щитка под них.</span>
+      <a href="#" id="cable-estimate-goto-panel" data-i18n="cable_estimate_goto_panel_link" style="color:#7dc4ff;text-decoration:underline;display:inline-block;margin-top:4px">Открыть «Щиток» →</a>
+    </div>
+    <button id="cable-estimate-close-bottom" data-i18n="wn_close_btn" style="margin-top:16px;width:100%;padding:10px;background:#1a3a5c;border:1px solid #4a9eff;border-radius:7px;color:#7dc4ff;font-size:13px;font-weight:600;cursor:pointer">Понятно</button>
   </div>
 </div>
 
@@ -1270,7 +1282,7 @@ const translations = {
     upload_bg:'Загрузить фон', tt_upload_bg:'Загрузить фотографию или план помещения',
     project_name_ph:'Название проекта', tt_project_name:'Название проекта — используется как имя файла при сохранении и экспорте',
     save:'Сохранить', tt_export_png:'Экспорт в PNG высокого качества', open:'Открыть',
-    scale:'Масштаб', scale_set:'Масштаб задан',
+    scale:'Масштаб', scale_set:'Масштаб задан', scale_guessed:'Масштаб примерный', scale_guessed_tt:'Задан автоматически при начале рисования стен, чтобы длины отображались не в пикселях. Для точного расчёта задайте масштаб вручную (кнопка «Масштаб») по известному отрезку.',
     walls:'Стены', tt_walls:'Нарисовать стены (контур помещения)',
     line:'Линия', ortho:'Ортого', tt_ortho:'Только горизонтальные и вертикальные линии (режим «В штробах»)',
     marker:'Значок', select:'Выбор',
@@ -1502,6 +1514,12 @@ const translations = {
     res_summary_table:'Сводная таблица', res_total_col:'Итог:',
     tt_cable_estimate:'Сводная таблица метража по маркам кабеля: горизонтальные и вертикальные участки, расход на подключение',
     cable_estimate_btn:'Смета по кабелям', cable_estimate_h2:'Смета по кабелям',
+    results_incomplete_warning:'⚠ Здесь только длина линий по чертежу, без учёта вертикальных участков (от розетки/выключателя до трассы) — это неполный итог.',
+    results_goto_cable_estimate:'Открыть «Смета по кабелям» — там полный расчёт →',
+    cable_estimate_goto_panel_hint:'Метраж и марки кабеля определены — теперь можно правильно подобрать защитные автоматы и оптимальный размер щитка под них.',
+    cable_estimate_goto_panel_link:'Открыть «Щиток» →',
+    panel_calc_goto_overall_hint:'Кабель и щиток посчитаны — в «Общей смете» соберётся полный список расходников (плюс крепёж и подрозетники), который можно скачать или сразу отправить на расчёт стоимости.',
+    panel_calc_goto_overall_link:'Открыть «Общую смету» →',
     tt_panel_calc:'Расчёт состава щитка: автоматы, УЗО/дифавтоматы, контактор, реле напряжения — по линиям проекта',
     panel_calc_btn:'Щиток', panel_calc_h2:'Расчёт щитка',
     panel_no:'Нет', panel_yes:'Да',
@@ -1680,7 +1698,7 @@ const translations = {
     upload_bg:'Upload background', tt_upload_bg:'Upload a photo or floor plan',
     project_name_ph:'Project name', tt_project_name:'Project name — used as the filename when saving and exporting',
     save:'Save', tt_export_png:'Export high-quality PNG', open:'Open',
-    scale:'Scale', scale_set:'Scale set',
+    scale:'Scale', scale_set:'Scale set', scale_guessed:'Scale is a rough guess', scale_guessed_tt:"Auto-assigned when wall drawing started, just so lengths show up in real units instead of raw pixels. For an accurate calculation, set the scale properly (the \"Scale\" button) against a segment of known length.",
     walls:'Walls', tt_walls:'Draw walls (room outline)',
     line:'Line', ortho:'Ortho', tt_ortho:'Horizontal/vertical lines only (In-wall chase mode)',
     marker:'Marker', select:'Select',
@@ -1912,6 +1930,12 @@ const translations = {
     res_summary_table:'Summary table', res_total_col:'Total:',
     tt_cable_estimate:'Summary table of metres by cable mark: horizontal and vertical runs, connection allowance',
     cable_estimate_btn:'Cable estimate', cable_estimate_h2:'Cable estimate',
+    results_incomplete_warning:"\u26a0 This is just the line length from the drawing, without vertical runs (from an outlet/switch up to the route) — an incomplete total.",
+    results_goto_cable_estimate:'Open "Cable estimate" — the full calculation is there →',
+    cable_estimate_goto_panel_hint:"Cable metrage and marks are set — now you can properly size the breakers and pick the right panel enclosure for them.",
+    cable_estimate_goto_panel_link:'Open "Panel" →',
+    panel_calc_goto_overall_hint:'Cable and panel are done — "Overall estimate" will compile the full materials list (plus mounting hardware and back boxes) that you can download or send out for pricing right away.',
+    panel_calc_goto_overall_link:'Open "Overall estimate" →',
     tt_panel_calc:'Distribution panel composition: breakers, RCDs/diffavtomats, contactor, voltage relay — based on the project\'s circuits',
     panel_calc_btn:'Panel', panel_calc_h2:'Panel calculation',
     panel_no:'No', panel_yes:'Yes',
@@ -2090,7 +2114,7 @@ const translations = {
     upload_bg:'Subir fondo', tt_upload_bg:'Subir una foto o plano del local',
     project_name_ph:'Nombre del proyecto', tt_project_name:'Nombre del proyecto — se usa como nombre de archivo al guardar y exportar',
     save:'Guardar', tt_export_png:'Exportar PNG de alta calidad', open:'Abrir',
-    scale:'Escala', scale_set:'Escala definida',
+    scale:'Escala', scale_set:'Escala definida', scale_guessed:'Escala aproximada', scale_guessed_tt:'Asignada automáticamente al empezar a dibujar paredes, solo para que las longitudes se muestren en unidades reales y no en píxeles. Para un cálculo preciso, defina la escala correctamente (botón «Escala») sobre un tramo de longitud conocida.',
     walls:'Paredes', tt_walls:'Dibujar paredes (contorno del local)',
     line:'Línea', ortho:'Orto', tt_ortho:'Solo líneas horizontales/verticales (modo «En roza de pared»)',
     marker:'Marcador', select:'Seleccionar',
@@ -2322,6 +2346,12 @@ const translations = {
     res_summary_table:'Tabla resumen', res_total_col:'Total:',
     tt_cable_estimate:'Tabla resumen de metros por marca de cable: tramos horizontales y verticales, margen de conexión',
     cable_estimate_btn:'Presupuesto de cables', cable_estimate_h2:'Presupuesto de cables',
+    results_incomplete_warning:'⚠ Aquí solo se muestra la longitud de las líneas del plano, sin los tramos verticales (de la toma/interruptor hasta el recorrido) — un total incompleto.',
+    results_goto_cable_estimate:'Abrir «Presupuesto de cables» — ahí está el cálculo completo →',
+    cable_estimate_goto_panel_hint:'El metraje y las marcas de cable ya están definidos — ahora puede elegir bien los interruptores automáticos y el tamaño óptimo del cuadro para ellos.',
+    cable_estimate_goto_panel_link:'Abrir «Cuadro» →',
+    panel_calc_goto_overall_hint:'Cable y cuadro ya calculados — en «Presupuesto general» se reunirá la lista completa de materiales (más sujeción y cajas de empotrar), que puede descargar o enviar a cotizar de inmediato.',
+    panel_calc_goto_overall_link:'Abrir «Presupuesto general» →',
     tt_panel_calc:'Composición del cuadro eléctrico: interruptores, diferenciales/magnetotérmicos combinados, contactor, relé de tensión — según los circuitos del proyecto',
     panel_calc_btn:'Cuadro', panel_calc_h2:'Cálculo del cuadro',
     panel_no:'No', panel_yes:'Sí',
@@ -2500,7 +2530,7 @@ const translations = {
     upload_bg:'Фонды жүктеу', tt_upload_bg:'Фото немесе үй-жай жоспарын жүктеу',
     project_name_ph:'Жоба атауы', tt_project_name:'Жоба атауы — сақтау және экспорттау кезінде файл атауы ретінде қолданылады',
     save:'Сақтау', tt_export_png:'Жоғары сапалы PNG экспорттау', open:'Ашу',
-    scale:'Масштаб', scale_set:'Масштаб берілген',
+    scale:'Масштаб', scale_set:'Масштаб берілген', scale_guessed:'Масштаб болжамды', scale_guessed_tt:'Қабырға сызуды бастағанда автоматты түрде берілді — тек ұзындықтар пиксельмен емес, нақты бірліктермен көрінуі үшін. Дәл есептеу үшін масштабты белгілі кесінді бойынша қолмен дұрыстап беріңіз («Масштаб» түймесі).',
     walls:'Қабырғалар', tt_walls:'Қабырғаларды салу (бөлме контуры)',
     line:'Сызық', ortho:'Орто', tt_ortho:'Тек көлденең/тік сызықтар (режим «Штроба ішінде»)',
     marker:'Белгіше', select:'Таңдау',
@@ -2732,6 +2762,12 @@ const translations = {
     res_summary_table:'Жиынтық кесте', res_total_col:'Жиыны:',
     tt_cable_estimate:'Кабель маркалары бойынша метраждың жиынтық кестесі: көлденең және тік учаскелер, қосылуға шығын',
     cable_estimate_btn:'Кабель сметасы', cable_estimate_h2:'Кабель сметасы',
+    results_incomplete_warning:'⚠ Мұнда тек сызбадағы сызық ұзындығы, тік учаскелерсіз (розетка/выключательден трассаға дейін) — бұл толық емес қорытынды.',
+    results_goto_cable_estimate:'«Кабель сметасын» ашыңыз — толық есеп сонда →',
+    cable_estimate_goto_panel_hint:'Кабель метражы мен маркалары анықталды — енді қорғаныш автоматтары мен оларға сай щит өлшемін дұрыс таңдауға болады.',
+    cable_estimate_goto_panel_link:'«Щитті» ашу →',
+    panel_calc_goto_overall_hint:'Кабель мен щит есептелді — «Жалпы смета» бөлімінде толық шығын тізімі (крепеж бен подрозетниктермен қоса) жиналады, оны жүктеп алуға немесе бағасын есептеуге дереу жіберуге болады.',
+    panel_calc_goto_overall_link:'«Жалпы сметаны» ашу →',
     tt_panel_calc:'Щиток құрамын есептеу: автоматтар, УЗО/дифавтоматтар, контактор, кернеу релесі — жоба сызықтары бойынша',
     panel_calc_btn:'Щиток', panel_calc_h2:'Щитокты есептеу',
     panel_no:'Жоқ', panel_yes:'Иә',
@@ -3064,6 +3100,7 @@ let zoneDragMode = null;  // 'vertex' | 'move' | null
 let zoneDragInfo = null;
 const ZONE_VERTEX_R = 8;  // px, vertex grab radius
 let scale = null; // metres per world-px
+let scaleIsGuessed = false; // true if scale was auto-assigned when wall-drawing started (see chat), not from actual "Задать масштаб" calibration — cleared once real calibration happens
 
 // Segments: {id, wx1,wy1,wx2,wy2, color, real,
 //            connStart:{markerId,type} | null,
@@ -6415,6 +6452,59 @@ const connPopup=document.getElementById('conn-popup');
 const c2w=(cx,cy)=>({wx:(cx-bgX)/bgS, wy:(cy-bgY)/bgS});
 const w2c=(wx,wy)=>({cx:wx*bgS+bgX, cy:wy*bgS+bgY});
 
+// Snap/alignment dashed guide line — with a dark "halo" underneath so it
+// stays visible on ANY background brightness, not just dark canvases (see
+// chat: a pale, half-transparent line reads fine on the app's own dark
+// background but nearly vanishes on a bright white floor-plan scan).
+// Used everywhere a horizontal/vertical alignment guide is drawn — wall
+// drawing, wall vertex dragging, marker placement, marker dragging — so
+// fixing it here fixes all of them at once.
+function drawAlignGuideLine(x1,y1,x2,y2){
+  ctx.setLineDash([4,4]);
+  ctx.lineWidth=3; ctx.strokeStyle='rgba(0,0,0,0.5)';
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  ctx.lineWidth=1; ctx.strokeStyle='rgba(255,200,80,0.95)';
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+// Auto-assigns a rough starting scale the moment wall-drawing begins, if
+// none is set yet (see chat: drawing walls doesn't logically need scale
+// set up front — the person is just tracing an outline). This is a GUESS,
+// not real calibration — it only exists so length readouts and typed
+// lengths work immediately instead of showing raw, meaningless pixel
+// counts. Real calibration via "Задать масштаб" always fully overwrites
+// it later; nothing about already-drawn walls/lines needs to change when
+// that happens, since they're stored in world units, not metres.
+function autoAssignScaleIfNeeded(){
+  if(scale!==null) return;
+  const GUESS_SPAN_M = 10; // rough single-room assumption for a loaded photo's longer side
+  if(bgImg){
+    scale = GUESS_SPAN_M / Math.max(bgImg.width, bgImg.height);
+  } else {
+    scale = 0.01; // no photo — 1 world-unit = 1cm, matches the "imaginary grid" convention used elsewhere
+  }
+  scaleIsGuessed = true;
+  window._physLineW = 0.02 / scale;
+  window._physLineGap = 0.01 / scale;
+  window._physMarkerR = 0.05 / scale;
+  updateScaleBadge();
+}
+function updateScaleBadge(){
+  const badge=document.getElementById('scale-badge');
+  if(scale===null){ badge.style.display='none'; return; }
+  badge.style.display='flex';
+  if(scaleIsGuessed){
+    badge.style.background='#3a2f1a'; badge.style.borderColor='#5a4a2a'; badge.style.color='#e0b86d';
+    badge.querySelector('span').textContent=t('scale_guessed');
+    badge.title=t('scale_guessed_tt');
+  } else {
+    badge.style.background='#1a3a2a'; badge.style.borderColor='#2a5a3a'; badge.style.color='#6dca8a';
+    badge.querySelector('span').textContent=t('scale_set');
+    badge.title='';
+  }
+}
+
 // ═══════════════════════════════════════════════════════
 // RESIZE
 // ═══════════════════════════════════════════════════════
@@ -7101,12 +7191,10 @@ function redraw(){
   if(mode==='marker' && mousePos && !(isDragging&&dragObj) && !markerPlaceDrag){
     const snap=markerAlignSnap(mousePos.x, mousePos.y, -1);
     if(snap.hLine!==null){
-      ctx.strokeStyle='rgba(255,200,80,0.55)'; ctx.lineWidth=1;
-      ctx.beginPath();ctx.moveTo(0,snap.hLine);ctx.lineTo(drC.width,snap.hLine);ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+      drawAlignGuideLine(0,snap.hLine,drC.width,snap.hLine);
     }
     if(snap.vLine!==null){
-      ctx.strokeStyle='rgba(255,200,80,0.55)'; ctx.lineWidth=1;
-      ctx.beginPath();ctx.moveTo(snap.vLine,0);ctx.lineTo(snap.vLine,drC.height);ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+      drawAlignGuideLine(snap.vLine,0,snap.vLine,drC.height);
     }
     // Ghost preview of marker at (possibly snapped) position
     const ghostX = snap.sx!==null?snap.sx:mousePos.x;
@@ -7139,12 +7227,10 @@ function redraw(){
   // ── Alignment guides while dragging an existing marker ──
   if(isDragging && dragObj && dragObj.type==='marker'){
     if(dragObj.guideH!=null){
-      ctx.strokeStyle='rgba(255,200,80,0.55)'; ctx.lineWidth=1;
-      ctx.beginPath();ctx.moveTo(0,dragObj.guideH);ctx.lineTo(drC.width,dragObj.guideH);ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+      drawAlignGuideLine(0,dragObj.guideH,drC.width,dragObj.guideH);
     }
     if(dragObj.guideV!=null){
-      ctx.strokeStyle='rgba(255,200,80,0.55)'; ctx.lineWidth=1;
-      ctx.beginPath();ctx.moveTo(dragObj.guideV,0);ctx.lineTo(dragObj.guideV,drC.height);ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+      drawAlignGuideLine(dragObj.guideV,0,dragObj.guideV,drC.height);
     }
   }
 
@@ -7189,13 +7275,11 @@ function redraw(){
         });
       });
       if(alignH!==null){
-        ctx.strokeStyle='rgba(255,200,80,0.55)'; ctx.lineWidth=1;
-        ctx.beginPath();ctx.moveTo(0,alignH);ctx.lineTo(drC.width,alignH);ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+        drawAlignGuideLine(0,alignH,drC.width,alignH);
         ey=alignH; // snap to alignment
       }
       if(alignV!==null){
-        ctx.strokeStyle='rgba(255,200,80,0.55)'; ctx.lineWidth=1;
-        ctx.beginPath();ctx.moveTo(alignV,0);ctx.lineTo(alignV,drC.height);ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+        drawAlignGuideLine(alignV,0,alignV,drC.height);
         ex=alignV;
       }
     }
@@ -7212,13 +7296,18 @@ function redraw(){
       ctx.beginPath();ctx.arc(attachPt.cx,attachPt.cy,7,0,Math.PI*2);ctx.stroke();
     }
 
-    // Length readout (instead of angle)
-    const w2=c2w(ex,ey);
-    const distWorld=Math.hypot(w2.wx-wallStartPt.wx,w2.wy-wallStartPt.wy);
-    const lenLabel = scale!==null ? (distWorld*scale).toFixed(2)+'м' : Math.round(Math.hypot(ex-spC.cx,ey-spC.cy))+'px';
-    ctx.font='bold 12px sans-serif';
-    ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillText(lenLabel, ex+9, ey-7);
-    ctx.fillStyle='#cfd8e3'; ctx.fillText(lenLabel, ex+8, ey-8);
+    // Length readout (instead of angle) — only shown once scale is actually
+    // set. Without it, a raw pixel count ("347px") is meaningless to
+    // someone who's just tracing a wall outline before ever calibrating —
+    // see chat: walls don't need scale, so don't surface it as if they did.
+    if(scale!==null){
+      const w2=c2w(ex,ey);
+      const distWorld=Math.hypot(w2.wx-wallStartPt.wx,w2.wy-wallStartPt.wy);
+      const lenLabel=(distWorld*scale).toFixed(2)+'м';
+      ctx.font='bold 12px sans-serif';
+      ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillText(lenLabel, ex+9, ey-7);
+      ctx.fillStyle='#cfd8e3'; ctx.fillText(lenLabel, ex+8, ey-8);
+    }
 
     // Typed-length indicator (shows what's being entered before Enter)
     if(wallLenInput.length>0){
@@ -7323,13 +7412,11 @@ function redraw(){
       // startPt is excluded so the line doesn't try to align with its own origin.
       const mSnap=markerAlignSnap(ex,ey,-1,startPt);
       if(mSnap.hLine!==null){
-        ctx.strokeStyle='rgba(255,200,80,0.55)'; ctx.lineWidth=1;
-        ctx.beginPath();ctx.moveTo(0,mSnap.hLine);ctx.lineTo(drC.width,mSnap.hLine);ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+        drawAlignGuideLine(0,mSnap.hLine,drC.width,mSnap.hLine);
         ey=mSnap.hLine; snapped=true;
       }
       if(mSnap.vLine!==null){
-        ctx.strokeStyle='rgba(255,200,80,0.55)'; ctx.lineWidth=1;
-        ctx.beginPath();ctx.moveTo(mSnap.vLine,0);ctx.lineTo(mSnap.vLine,drC.height);ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+        drawAlignGuideLine(mSnap.vLine,0,mSnap.vLine,drC.height);
         ex=mSnap.vLine; snapped=true;
       }
     }
@@ -8534,6 +8621,7 @@ drC.addEventListener('click',e=>{
   } else if(mode==='wall'){
     const p=getPos(e);
     if(!wallStartPt){
+      autoAssignScaleIfNeeded();
       const snapped=findWallAttachPoint(p.x,p.y);
       const pw=c2w(p.x,p.y);
       wallStartPt = snapped || {wx:pw.wx, wy:pw.wy};
@@ -9052,6 +9140,7 @@ function confirmDefaultModal(){
   modal.classList.remove('show');
   if(pendingAction?.type==='scale'){
     scale=val/pendingAction.worldPx;
+    scaleIsGuessed=false; // real calibration now — overwrites any earlier auto-guess (see chat)
     // Lock physical world sizes based on real-world measurements:
     // LINE_W = 2cm, LINE_GAP = 1cm, marker size = 10cm
     // scale is metres/world_px → physical_world_px = physical_metres / scale
@@ -9059,7 +9148,7 @@ function confirmDefaultModal(){
     window._physLineGap = 0.01 / scale; // 1cm in world units
     window._physMarkerR = 0.05 / scale; // 5cm radius (10cm diameter) in world units
     segments.forEach(seg=>{ seg.real=Math.hypot(seg.wx2-seg.wx1,seg.wy2-seg.wy1)*scale; });
-    document.getElementById('scale-badge').style.display='flex';
+    updateScaleBadge();
     setInfo(t('msg_scale_set_draw_lines'));
     setMode('line');
   }
@@ -9720,7 +9809,8 @@ function snapshot(){
     colorLabels:JSON.parse(JSON.stringify(colorLabels)),
     colorCableTypes:JSON.parse(JSON.stringify(colorCableTypes)),
     hiddenColors:[...hiddenColors],
-    scale
+    scale,
+    scaleIsGuessed
   };
 }
 function saveHistory(){
@@ -9729,9 +9819,9 @@ function saveHistory(){
   redoStack=[];
 }
 function applySnapshot(h){
-  segments=h.segments;lines=h.lines||[];markers=h.markers;walls=h.walls||walls;measurements=h.measurements||[];markerTypes=h.markerTypes||markerTypes;colorLabels=h.colorLabels||colorLabels;colorCableTypes=h.colorCableTypes||colorCableTypes;hiddenColors=new Set(h.hiddenColors||[]);scale=h.scale;
+  segments=h.segments;lines=h.lines||[];markers=h.markers;walls=h.walls||walls;measurements=h.measurements||[];markerTypes=h.markerTypes||markerTypes;colorLabels=h.colorLabels||colorLabels;colorCableTypes=h.colorCableTypes||colorCableTypes;hiddenColors=new Set(h.hiddenColors||[]);scale=h.scale;scaleIsGuessed=!!h.scaleIsGuessed;
   selType=null;selIdx=null;startPt=null;currentLine=null;
-  document.getElementById('scale-badge').style.display=scale!==null?'flex':'none';
+  updateScaleBadge();
   renderMarkerTypesList();updatePropsPanel();redraw();
 }
 function undo(){if(!undoStack.length) return;redoStack.push(snapshot());applySnapshot(undoStack.pop());}
@@ -10014,7 +10104,7 @@ function safeFileName(name){
 }
 function doSaveProject(){
   const name=getProjectName();
-  const data={version:10,pro:true,projectName:name,scale,segments,lines,markers,walls,measurements,markerTypes,colorLabels,colorCableTypes,hiddenColors:[...hiddenColors],bg:bgImgDataUrl,bgX,bgY,bgS,bgOpacity,bgWhiten,markerSnapRadius,crossingPenaltyCm,autoFixupEnabled,zones,ceilingHeightM,defaultRouteHeightM,defaultRouteHeightRef,colorRouteHeight,
+  const data={version:10,pro:true,projectName:name,scale,scaleIsGuessed,segments,lines,markers,walls,measurements,markerTypes,colorLabels,colorCableTypes,hiddenColors:[...hiddenColors],bg:bgImgDataUrl,bgX,bgY,bgS,bgOpacity,bgWhiten,markerSnapRadius,crossingPenaltyCm,autoFixupEnabled,zones,ceilingHeightM,defaultRouteHeightM,defaultRouteHeightRef,colorRouteHeight,
     panelPhases,panelHasInputBreaker,panelInputBreakerRating,panelHasVoltageRelay,panelHasContactor,panelContactorRating,panelVoltageRelayRating,panelProtectionScheme,panelRcdCount,panelRcdRating,panelNeutralBusChoice,panelMountType,colorBreakerRating,
     overallHasMountingGun,overallMarginPct,overallBackBoxCountOverride,overallBoxSizeText,overallBoxBaseCount,overallBoxExtraInfo,cableMarkNotes,overallRowNotes,overallRowConfig};
   const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
@@ -10039,6 +10129,7 @@ function applyProjectData(d){
   zones=d.zones||[];
   markerTypes=d.markerTypes||markerTypes;
   scale=d.scale||null;
+  scaleIsGuessed=!!d.scaleIsGuessed;
   colorLabels=d.colorLabels||{};
   colorCableTypes=d.colorCableTypes||{};
   hiddenColors=new Set(d.hiddenColors||[]);
@@ -10101,7 +10192,7 @@ function applyProjectData(d){
     window._physLineGap=0.01/scale;
     window._physMarkerR=0.05/scale;
   }
-  document.getElementById('scale-badge').style.display=scale!==null?'flex':'none';
+  updateScaleBadge();
   // Snap all line endpoints to current port positions after load
   updateAllConnectedEndpoints();
   // Clean up float noise / non-orthogonal segments — safe and
@@ -10578,8 +10669,14 @@ function updateResults(){
 
   if(!lineKeys.length&&!mkKeys.length&&!tallyList.length){
     el.innerHTML=`<p style="font-size:12px;color:#555">${t('no_data')}</p>`;
-    document.getElementById('total-val').textContent='0.00 '+t('unit_m');return;
+    document.getElementById('total-val').textContent='0.00 '+t('unit_m');
+    document.getElementById('results-incomplete-hint').style.display='none';
+    return;
   }
+  // The warning only makes sense once there's actual line length being
+  // shown here — an empty drawing, or one with only markers/tally
+  // measurements and no lines yet, has nothing "incomplete" to flag.
+  document.getElementById('results-incomplete-hint').style.display = lineKeys.length ? 'block' : 'none';
 
   let html='';
   if(cableKeys.length){
@@ -10691,6 +10788,21 @@ function setMode(m){
 }
 document.getElementById('btn-show-all').addEventListener('click',()=>{
   hiddenColors.clear(); redraw();
+});
+
+document.getElementById('results-goto-cable-estimate').addEventListener('click', e=>{
+  e.preventDefault();
+  document.getElementById('btn-cable-estimate').click();
+});
+document.getElementById('cable-estimate-goto-panel').addEventListener('click', e=>{
+  e.preventDefault();
+  document.getElementById('cable-estimate-modal').style.display='none';
+  document.getElementById('btn-panel-calc').click();
+});
+document.getElementById('panel-calc-goto-overall').addEventListener('click', e=>{
+  e.preventDefault();
+  document.getElementById('panel-calc-modal').style.display='none';
+  document.getElementById('btn-overall-estimate').click();
 });
 
 ['wall','line','scale','marker','select','pan','zones','dim','measure'].forEach(m=>

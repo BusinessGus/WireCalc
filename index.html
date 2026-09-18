@@ -212,13 +212,6 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 .guide-text{font-size:12px;color:#888;line-height:1.6}
 .guide-body{flex:1}
 /* Marker connections list in props */
-.conn-list-item{display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #2a2a2a;font-size:11px;color:#aaa}
-.conn-list-item:last-child{border-bottom:none}
-.conn-badge{font-size:10px;padding:1px 5px;border-radius:3px;font-weight:600}
-.conn-badge.connected{background:#1a3a1a;color:#6dca5a;border:1px solid #2a5a2a}
-.conn-badge.transit{background:#2a1a0a;color:#f08840;border:1px solid #4a2a0a}
-.conn-toggle{background:none;border:none;color:#555;cursor:pointer;font-size:11px;padding:2px 5px;border-radius:3px;margin-left:auto}
-.conn-toggle:hover{color:#ccc;background:#333}
 </style>
 </head>
 <body>
@@ -416,11 +409,11 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
             <div class="prop-label" data-i18n="prop_marker_type">Тип значка</div>
             <select class="prop-input" id="prop-mtype"></select>
           </div>
-          <!-- Connections list shown for markers -->
-          <div class="prop-group" id="prop-conns-group" style="display:none">
-            <div class="prop-label" data-i18n="prop_connections">Подключения</div>
-            <div id="prop-conns-list"></div>
-          </div>
+          <!-- Connections list shown for markers used to live here (see
+               chat) — removed: the toggle it held (⇄, switching a
+               connection between "Подключён"/"Транзит") was styled at
+               #555-on-dark with no border, so in practice it read as
+               plain static text, not something to click. -->
           <button class="prop-btn" id="prop-apply"><i class="ti ti-check" style="font-size:12px"></i> <span data-i18n="prop_apply">Применить</span></button>
           <button class="prop-btn del" id="prop-delete"><i class="ti ti-trash" style="font-size:12px"></i> <span data-i18n="prop_delete">Удалить</span></button>
         </div>
@@ -432,9 +425,18 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
              scroll past the selected object's fields to notice.
              Two stacked slots here now (see chat): the city-matched one
              (props-ad-banner-city, same partner data as the save/export
-             card) ABOVE the fixed global one (props-ad-banner) below it. -->
-        <div id="props-ad-banner-city" style="display:none;flex-shrink:0"></div>
-        <div id="props-ad-banner" style="display:none;flex-shrink:0"></div>
+             card) ABOVE the fixed global one (props-ad-banner) below it.
+             The two together are capped at 42% of the tab's height and
+             scroll internally past that (see chat) — on a short laptop
+             screen, with a selected object whose own fields already fill
+             most of the panel, two full-size ad blocks stacked above them
+             could otherwise crowd the property fields down to almost
+             nothing. This guarantees the fields keep the majority of the
+             space no matter how short the viewport gets. -->
+        <div id="props-ad-banners" style="flex-shrink:0;max-height:42vh;overflow-y:auto">
+          <div id="props-ad-banner-city" style="display:none;flex-shrink:0"></div>
+          <div id="props-ad-banner" style="display:none;flex-shrink:0"></div>
+        </div>
       </div>
 
       <div id="total-row"><span style="color:#666" data-i18n="total_label">Всего:</span><span id="total-val">0.00 м</span></div>
@@ -9404,7 +9406,6 @@ function updatePropsPanel(){
 
   document.getElementById('prop-len-group').style.display=(selType==='segment')?'block':'none';
   document.getElementById('prop-mtype-group').style.display=(selType==='marker')?'block':'none';
-  document.getElementById('prop-conns-group').style.display=(selType==='marker')?'block':'none';
   if(selType!=='marker'){
     const orientElClear=document.getElementById('bus-orient-group');
     if(orientElClear) orientElClear.innerHTML='';
@@ -9714,20 +9715,6 @@ function updatePropsPanel(){
       saveHistory();updateLinesForMarkerStaged(obj);
       redraw();updateResults();updatePropsPanel();
     });
-
-    // Show connections list
-    const cl=document.getElementById('prop-conns-list');
-    const conns=getMarkerConnections(obj.id);
-    if(!conns.length){cl.innerHTML=`<div style="font-size:11px;color:#555">${t('no_connected_lines')}</div>`;return;}
-    cl.innerHTML=conns.map(c=>{
-      const typeLabel=c.type==='connected'?t('conn_connected'):t('conn_transit');
-      const colorNameV2=colorName(c.color);
-      return `<div class="conn-list-item">
-        <span class="conn-badge ${c.type}">${typeLabel}</span>
-        <span>${colorNameV2}</span>
-        <button class="conn-toggle" data-segid="${c.segId}" data-end="${c.end}" title="${t('tt_toggle_conn_type')}">⇄</button>
-      </div>`;
-    }).join('');
   }
 }
 
@@ -9744,19 +9731,6 @@ function getMarkerConnections(markerId){
   });
   return result;
 }
-
-// Toggle connection type from props
-document.getElementById('prop-conns-list').addEventListener('click',e=>{
-  const btn=e.target.closest('.conn-toggle');
-  if(!btn) return;
-  const segId=btn.dataset.segid,end=btn.dataset.end;
-  const seg=segments.find(s=>s.id===segId);
-  if(!seg) return;
-  saveHistory();
-  const connKey=end==='start'?'connStart':'connEnd';
-  if(seg[connKey]) seg[connKey].type=seg[connKey].type==='connected'?'transit':'connected';
-  redraw();updatePropsPanel();
-});
 
 document.getElementById('prop-apply').addEventListener('click',()=>{
   if(selType===null) return;
@@ -10163,7 +10137,7 @@ function renderPropsAdBanner(){
   if(!p){ wrap.style.display='none'; return; }
   wrap.innerHTML=`
     <div style="margin-top:10px;padding:12px;padding-top:14px;border-top:1px solid #2a2a2a;background:#1a1a1a;border-radius:8px">
-      ${p.image?`<a href="${(p.website || (p.whatsapp?`https://wa.me/${p.whatsapp}?text=${encodeURIComponent(p.whatsappMsg||'')}`:'#')).replace(/"/g,'&quot;')}" target="_blank" rel="noopener" style="display:block;margin-bottom:8px" data-track-partner="${(p.name||'').replace(/"/g,'&quot;')}"><img src="${p.image}" style="width:100%;border-radius:6px;display:block" onerror="this.parentElement.style.display='none'"></a>`:''}
+      ${p.image?`<a href="${(p.website || (p.whatsapp?`https://wa.me/${p.whatsapp}?text=${encodeURIComponent(p.whatsappMsg||'')}`:'#')).replace(/"/g,'&quot;')}" target="_blank" rel="noopener" style="display:block;margin-bottom:8px;width:100%;aspect-ratio:1.91/1;border-radius:6px;overflow:hidden;background:#12151b" data-track-partner="${(p.name||'').replace(/"/g,'&quot;')}"><img src="${p.image}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.closest('a').style.display='none'"></a>`:''}
       <div style="font-size:12px;font-weight:600;color:#ccc;margin-bottom:8px">${p.name||t('partner_fallback')}</div>
       <div id="props-ad-actions" style="display:flex;gap:6px;flex-wrap:wrap"></div>
     </div>`;

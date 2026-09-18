@@ -119,6 +119,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 #tab-props.active{display:flex !important;flex-direction:column;overflow-y:hidden;padding:0}
 #tab-props-scroll{flex:1;overflow-y:auto;min-height:0;padding:10px}
 #props-ad-banner{padding:0 10px 10px}
+#props-ad-banner-city{padding:0 10px 10px}
 .spanel.active{display:block}
 .res-row{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid #2a2a2a}
 .res-row:last-child{border-bottom:none}
@@ -428,7 +429,11 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
              fixed footer at the bottom of the whole tab, always visible
              regardless of selection state or how tall the properties
              content above happens to be — not something you'd have to
-             scroll past the selected object's fields to notice. -->
+             scroll past the selected object's fields to notice.
+             Two stacked slots here now (see chat): the city-matched one
+             (props-ad-banner-city, same partner data as the save/export
+             card) ABOVE the fixed global one (props-ad-banner) below it. -->
+        <div id="props-ad-banner-city" style="display:none;flex-shrink:0"></div>
         <div id="props-ad-banner" style="display:none;flex-shrink:0"></div>
       </div>
 
@@ -9372,6 +9377,7 @@ function updatePropsPanel(){
   // rendered unconditionally, regardless of which branch below runs, so
   // it's a fixed footer for the whole tab rather than tied to the empty
   // "nothing selected" state specifically.
+  renderPropsCityAdBanner();
   renderPropsAdBanner();
   if(selType===null){
     noSel.style.display='block';content.style.display='none';
@@ -9794,6 +9800,11 @@ function switchToTab(tabName){
   document.querySelectorAll('.stab').forEach(t=>t.classList.toggle('active',t===tab));
   document.querySelectorAll('.spanel').forEach(p=>p.classList.toggle('active',p.id==='tab-'+tabName));
   if(tabName==='markers-cfg') renderMarkerTypesList();
+  // Ad banners are otherwise only (re)drawn as a side effect of selection
+  // changes and similar edits (see updatePropsPanel) — without this, a
+  // visitor who opens the tab on a still-empty project, before doing
+  // anything else, would see neither slot at all (see chat).
+  if(tabName==='props') updatePropsPanel();
 }
 document.querySelectorAll('.stab').forEach(tab=>{
   tab.addEventListener('click',()=>switchToTab(tab.dataset.tab));
@@ -9904,6 +9915,14 @@ async function loadPartnersConfig(){
 }
 const partnersConfigReady = loadPartnersConfig(); // kick off immediately, store the promise so other
                                                     // code (e.g. city detection) can reliably wait for it
+partnersConfigReady.then(()=>{
+  // Covers the case where the "Свойства" tab is already open (or gets
+  // opened) before this fetch resolves — otherwise both ad slots would
+  // stay on their initial display:none until some unrelated action
+  // happens to call updatePropsPanel() (see chat).
+  renderPropsCityAdBanner();
+  renderPropsAdBanner();
+});
 
 // ═══════════════════════════════════════════════════════
 // GEOLOCATION — detect visitor's city via ipapi.is, used to pre-select
@@ -10071,6 +10090,56 @@ async function showPartnerCard(onContinue){
 
   partnerCardPendingAction = onContinue;
   document.getElementById('partner-modal').style.display='flex';
+}
+// City-matched ad block for the "Свойства" tab (see chat): square, full
+// sidebar width, sits ABOVE the fixed global slot (renderPropsAdBanner
+// below it). Deliberately reuses "_save_slot_partner" — the SAME
+// city-keyed partner data as the save/export card (showPartnerCard) —
+// rather than a new config key, so a shop that already bought the city
+// slot is now visible here too, for the whole time this tab is open, not
+// only at the moment someone saves or exports.
+//
+// Paints TWICE on a cold session (see chat): once immediately with
+// city=null (so the block shows something right away instead of sitting
+// on its initial display:none for however long the ipapi.is geolocation
+// call takes), then again once ensureCityDetected() actually resolves,
+// upgrading from the placeholder to the real per-city partner if one is
+// configured. Once cityDetectionDone is true (cached from an earlier
+// call this session) there's only the one, correct paint.
+function renderPropsCityAdBanner(){
+  const wrap=document.getElementById('props-ad-banner-city');
+  if(!wrap) return;
+  paintPropsCityAdBanner(wrap, cityDetectionDone ? userCity : null);
+  if(!cityDetectionDone){
+    ensureCityDetected().then(city=>paintPropsCityAdBanner(wrap, city));
+  }
+}
+function paintPropsCityAdBanner(wrap, city){
+  let p = (partnersConfig && partnersConfig._save_slot_partner && partnersConfig._save_slot_partner[city]) || null;
+  const adWhatsapp = partnersConfig && partnersConfig._ad_slot_whatsapp;
+  let isPlaceholder = false;
+  if(!p && adWhatsapp){
+    // Slot not sold for this city yet — same placeholder treatment as the
+    // other two ad slots, so this one stays discoverable too.
+    p = { name: t('ad_placeholder_name'), whatsapp: adWhatsapp, whatsappMsg: t('ad_placeholder_whatsapp_msg') };
+    isPlaceholder = true;
+  }
+  if(!p){ wrap.style.display='none'; return; }
+  const href = (p.website || (p.whatsapp ? `https://wa.me/${p.whatsapp}?text=${encodeURIComponent(p.whatsappMsg||'')}` : '#')).replace(/"/g,'&quot;');
+  const safeName = (p.name || t('partner_fallback')).replace(/</g,'&lt;');
+  wrap.innerHTML=`
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid #2a2a2a">
+      <a href="${href}" target="_blank" rel="noopener" data-track-partner="${(p.name||'').replace(/"/g,'&quot;')}"
+        style="display:block;position:relative;width:100%;aspect-ratio:1/1;border-radius:8px;overflow:hidden;background:#1a1a1a">
+        ${p.image?`<img src="${p.image}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.remove()">`:''}
+        <div style="position:absolute;left:0;right:0;bottom:0;padding:8px;background:linear-gradient(to top,rgba(0,0,0,.75),transparent);font-size:11px;font-weight:600;color:#fff">${safeName}</div>
+      </a>
+    </div>`;
+  wrap.style.display='block';
+  const bannerLink=wrap.querySelector('[data-track-partner]');
+  if(bannerLink) bannerLink.addEventListener('click', ()=>{
+    if(typeof gtag==='function') gtag('event', 'partner_click', {partner_name:bannerLink.dataset.trackPartner||'unknown', kind:'props_city_banner', is_placeholder:isPlaceholder});
+  });
 }
 // Second, independent ad slot (see chat) — the sidebar's "Свойства" tab
 // sits mostly empty whenever nothing is selected, which is most of the

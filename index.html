@@ -2988,7 +2988,10 @@ function setLang(lang){
   applyTranslations();
 }
 
-let siteMode = localStorage.getItem('wiringSiteMode') || 'base';
+let siteMode = localStorage.getItem('wiringSiteMode') || 'pro'; // default for anyone with no stored
+                                                                  // preference yet — first visit, or a
+                                                                  // browser that's cleared its storage
+                                                                  // (see chat) — was 'base' before
 
 function canUsePro(){ return siteMode==='pro'; }
 
@@ -3037,6 +3040,15 @@ let hiddenColors = new Set(); // colors whose segments are hidden
 let ceilingHeightM = 2.8;           // project-wide, one number, simpler than per-room
 let defaultRouteHeightM = 0;        // project-wide default route height — 0 from ceiling by default
 let defaultRouteHeightRef = 'ceiling'; // 'floor'|'ceiling'
+// Sticky box numbering (see chat): once a box marker (Кр/ЩР) gets a number
+// via getBoxNumberMap() below, that number is written onto the marker
+// itself (mk.boxNum) and never reassigned — editing the drawing later
+// (adding boxes, rerouting circuits) must not renumber a box an installer
+// has already wired up from a printed ports diagram. nextBoxNum is the
+// running counter that hands out numbers to not-yet-numbered boxes; it
+// only ever increases, even across deletions, so a retired number is
+// never accidentally reused for a different physical box later.
+let nextBoxNum = 1;
 let colorRouteHeight = {};          // {hex: {m, ref}} — optional per-colour override
 function heightToFloorRel(m, ref){ return ref==='ceiling' ? ceilingHeightM-m : m; }
 function routeHeightForColor(hex){
@@ -10178,7 +10190,7 @@ function safeFileName(name){
 }
 function doSaveProject(){
   const name=getProjectName();
-  const data={version:10,pro:true,projectName:name,scale,scaleIsGuessed,segments,lines,markers,walls,measurements,markerTypes,colorLabels,colorCableTypes,hiddenColors:[...hiddenColors],bg:bgImgDataUrl,bgX,bgY,bgS,bgOpacity,bgWhiten,markerSnapRadius,crossingPenaltyCm,autoFixupEnabled,zones,ceilingHeightM,defaultRouteHeightM,defaultRouteHeightRef,colorRouteHeight,
+  const data={version:10,pro:true,projectName:name,scale,scaleIsGuessed,segments,lines,markers,walls,measurements,markerTypes,colorLabels,colorCableTypes,hiddenColors:[...hiddenColors],bg:bgImgDataUrl,bgX,bgY,bgS,bgOpacity,bgWhiten,markerSnapRadius,crossingPenaltyCm,autoFixupEnabled,zones,ceilingHeightM,defaultRouteHeightM,defaultRouteHeightRef,colorRouteHeight,nextBoxNum,
     panelPhases,panelHasInputBreaker,panelInputBreakerRating,panelHasVoltageRelay,panelHasContactor,panelContactorRating,panelVoltageRelayRating,panelProtectionScheme,panelRcdCount,panelRcdRating,panelNeutralBusChoice,panelMountType,colorBreakerRating,
     overallHasMountingGun,overallMarginPct,overallBackBoxCountOverride,overallBoxSizeText,overallBoxBaseCount,overallBoxExtraInfo,cableMarkNotes,overallRowNotes,overallRowConfig};
   const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
@@ -10211,6 +10223,11 @@ function applyProjectData(d){
   defaultRouteHeightM=d.defaultRouteHeightM!=null?d.defaultRouteHeightM:0;
   defaultRouteHeightRef=d.defaultRouteHeightRef||'ceiling';
   colorRouteHeight=d.colorRouteHeight||{};
+  // Older project files predate sticky box numbering and have neither this
+  // counter nor any mk.boxNum on their markers — defaulting to 1 there just
+  // means numbering starts fresh the first time it's computed, same as
+  // before, and becomes sticky from that point on.
+  nextBoxNum=d.nextBoxNum!=null?d.nextBoxNum:1;
   panelPhases=d.panelPhases||1;
   panelHasInputBreaker=!!d.panelHasInputBreaker;
   panelInputBreakerRating=d.panelInputBreakerRating||'63А';
@@ -12624,15 +12641,28 @@ function drawPortList(ctx, mk, x, y, maxWidth, opts){
 // the panel, walk each circuit (colour) out to the boxes it reaches, in the
 // order that colour leaves the panel's own ports. Boxes not reachable this
 // way (disconnected topology) are appended at the end, untouched.
-// Sequential numbers for every box marker (Кр/ЩР), 1-indexed, in the same
-// order the ports-diagram export lists them (panel first, then each colour's
-// chain outward) — so "коробка №5" means the same box on the drawing and in
-// the printed diagram.
+// Sequential numbers for every box marker (Кр/ЩР), 1-indexed — but STICKY
+// (see chat): a box that already has a number (mk.boxNum, saved with the
+// project) keeps it for good, no matter how later edits reshuffle the
+// wiring topology around it. Only boxes that have never been numbered get
+// a fresh one, assigned in the panel-outward order above, using the
+// project's running nextBoxNum counter (never reused, even across
+// deletions) — this is what keeps "коробка №5" on a printed ports diagram
+// pointing at the same physical box after the drawing changes, instead of
+// silently drifting to a different one.
 function getBoxNumberMap(){
   const allBoxes=markers.filter(isBoxKind);
   const ordered=orderBoxesFromPanel(allBoxes);
   const map=new Map();
-  ordered.forEach((mk,i)=>{ map.set(mk.id, i+1); });
+  ordered.forEach(mk=>{
+    if(mk.boxNum!=null) map.set(mk.id, mk.boxNum);
+  });
+  ordered.forEach(mk=>{
+    if(mk.boxNum==null){
+      mk.boxNum=nextBoxNum++;
+      map.set(mk.id, mk.boxNum);
+    }
+  });
   return map;
 }
 

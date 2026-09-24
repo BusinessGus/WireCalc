@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Provodka PRO — схема электропроводки</title>
-<meta name="description" content="Бесплатный онлайн-калькулятор для электриков: загрузите план помещения, нарисуйте схему проводки и получите точный расчёт метража кабеля по маркам. Работает в браузере, без установки. Казахстан.">
+<title>Проводка орг (Provodka.org) — Онлайн-конструктор схем электропроводки</title>
+<meta name="description" content="Бесплатная программа на сайте Проводка орг для проектирования электрики в квартире своими руками. Чертите схемы проводки онлайн.">
 <meta name="keywords" content="калькулятор проводки, расчёт кабеля онлайн, схема электропроводки онлайн, сколько метров кабеля, расчёт проводки в квартире, расчёт проводки в доме, электрик калькулятор, метраж проводки, план проводки онлайн, электромонтаж расчёт, ВВГ расчёт метража, калькулятор электрика Казахстан">
 <meta name="author" content="Provodka.org">
 <meta name="robots" content="index, follow">
@@ -922,6 +922,27 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
   </div>
 </div>
 
+<!-- Panel BUILDER modal (конструктор щитка, see chat) — a separate, wider
+     modal from the Расчёт щитка one above: that one is a settings form,
+     this one is a spatial DIN-rail layout tool. -->
+<div id="panel-builder-modal" style="display:none;position:fixed;inset:0;background:#141414;z-index:700;flex-direction:column">
+  <div id="pb-toolbar" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#1e1e1e;border-bottom:1px solid #333;flex-wrap:wrap"></div>
+  <div style="display:flex;flex:1;overflow:hidden">
+    <div id="pb-sidebar" style="width:280px;flex-shrink:0;background:#1a1a1a;border-right:1px solid #333;display:flex;flex-direction:column;overflow:hidden">
+      <div style="display:flex;border-bottom:1px solid #333;flex-shrink:0">
+        <button class="pb-stab active" data-pbtab="equip" style="flex:1;padding:10px;background:none;border:none;color:#e8e8e8;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid #4a9eff">Оборудование</button>
+        <button class="pb-stab" data-pbtab="props" style="flex:1;padding:10px;background:none;border:none;color:#888;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent">Свойства</button>
+      </div>
+      <div id="pb-tab-equip" class="pb-spanel" style="flex:1;overflow-y:auto;padding:10px"></div>
+      <div id="pb-tab-props" class="pb-spanel" style="flex:1;overflow-y:auto;padding:10px;display:none"></div>
+    </div>
+    <div id="pb-grid-wrap" style="flex:1;position:relative;overflow:hidden;background:#0a0a0a">
+      <div id="pb-grid" style="position:absolute;top:0;left:0"></div>
+      <div style="position:absolute;left:12px;top:8px;font-size:12px;color:#666;background:rgba(10,10,10,.7);padding:4px 8px;border-radius:6px;pointer-events:none">Перетащите оборудование слева на свободную ячейку · тяните от точки к точке, чтобы соединить проводом текущего цвета · клик по проводу — выделить · колёсико — зум · средняя кнопка мыши — перемещение</div>
+    </div>
+  </div>
+</div>
+
 <!-- Cable Estimate modal -->
 <div id="cable-estimate-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;align-items:center;justify-content:center;overflow:auto;padding:20px">
   <div style="background:#1e1e1e;border:1px solid #444;border-radius:12px;max-width:min(94vw,900px);width:100%;max-height:90vh;overflow-y:auto;padding:28px 30px;position:relative">
@@ -1679,7 +1700,7 @@ const translations = {
     tourpro_0_title:'Добро пожаловать в обучение!',
     tourpro_0_text:'Пройдём весь путь — от загрузки плана до готовой сметы, на примере режима «По потолку в гофрах» (раз вы сейчас в нём). Каждый шаг подсвечивает нужную кнопку прямо в интерфейсе — можно в любой момент нажать «Пропустить» и вернуться позже с того же места.',
     tourpro_1_title:'Быстрый старт: загрузите план',
-    tourpro_1_text:'Самый быстрый и точный способ — загрузить фото или скан плана помещения и обвести его поверх. Это быстрее и надёжнее, чем чертить стены с нуля вручную — хотя нарисовать стены самому тоже можно, кнопкой «Стены» рядом.',
+    tourpro_1_text:'Самый быстрый и точный способ — загрузить фото или скан плана помещения и начертить схему поверх его. Это быстрее и надёжнее, чем чертить стены с нуля вручную — хотя нарисовать стены самому тоже можно, кнопкой «Стены» рядом.',
     tourpro_2_title:'Задайте масштаб',
     tourpro_2_text:'Отметьте на плане отрезок известной длины (например, ширину дверного проёма) и укажите его реальный размер в метрах. Без масштаба метраж кабеля посчитать невозможно.',
     tourpro_3_title:'Высота помещения и трассы',
@@ -1687,7 +1708,7 @@ const translations = {
     tourpro_4_title:'Выберите способ прокладки',
     tourpro_4_text:'Всего два режима: «В штробах» — кабель пучками в стене, «По потолку» — в гофре по потолку, открытым способом. Дальше обучение продолжится именно в режиме «По потолку», раз вы уже его выбрали.',
     tourpro_5_title:'Маркировка кабеля цветом',
-    tourpro_5_text:'Каждый цвет линии — это отдельная марка кабеля: например, один цвет для розеточной группы (ВВГнг 3×2.5), другой — для освещения (3×1.5). Выберите цвет перед тем, как начать рисовать линию.',
+    tourpro_5_text:'Каждый цвет линии — это отдельная линия для удобства: например, один цвет для силовой линии кухни (ВВГнг 3×2.5), другой — для силовой линии детской (3×2.5), марку кабеля можно поменять в любой момент. Выберите цвет перед тем, как начать рисовать линию.',
     tourpro_6_title:'Разместите значки',
     tourpro_6_text:'Розетка, выключатель, распредкоробка, щит — всё это значки. Кликните по нужному типу в списке справа, затем поставьте его на плане в нужном месте.',
     tourpro_7_title:'Сторона значка',
@@ -3073,6 +3094,58 @@ let panelRcdRating = '40А';
 let panelNeutralBusChoice = 'own';   // 'own' | 'separate'
 let panelMountType = 'flush';        // 'flush' | 'surface' — врезной / наружной установки
 let colorBreakerRating = {};         // {hex: 'С16'} — user-editable, one per circuit (colour)
+
+// ═══════════════════════════════════════════════════════
+// Panel BUILDER (конструктор щитка, see chat) — a separate spatial layout
+// on top of the settings above: physical equipment TYPES the user defines
+// (full name, abbreviation, DIN width, connection points), how instances
+// of them sit on the DIN rails, and how they're wired to each other and
+// to room circuits. Distinct from panelEquipmentList() above, which only
+// counts totals for the settings tab — this is "where and how wired".
+//
+// {id, fullName, abbr (≤5 chars), modulesEach, topPoints, bottomPoints} —
+// a user-defined equipment type, unlimited placements each (like
+// markerTypes on the main canvas — no per-type stock/quantity tracking).
+let panelEquipTypes = [];
+let panelGridRows = 1;
+let panelGridCols = 24;              // DIN modules per row
+// {id, row, pos:'top'|'bottom', kind:'wide'|'narrow', count}
+let panelBusbarGroups = [];
+// {id, typeId (null for a comb bar), name, abbr, modulesEach, spanCols,
+// topPoints, bottomPoints, row, col, kind:'item'|'comb'} — a placed
+// instance. name/abbr/modulesEach/topPoints/bottomPoints are copied from
+// the type at placement time (not looked up live) so editing or deleting
+// a type later never silently reshapes equipment already on the schematic.
+let panelPlacements = [];
+// {placementId, color} pairs — a placement can link to several room-
+// circuit colours, and a colour can link to several placements (see
+// chat); toggled, so a given pair appears at most once. Separate from
+// panelWireLinks below — this is "which circuit feeds this breaker", not
+// "how is this breaker wired to other equipment".
+let panelLinks = [];
+// {id, aId, aSide:'top'|'bottom', aIndex, bId, bSide, bIndex, colorKey} —
+// a wire between two specific connection POINTS (not just "top of A"),
+// drawn point-to-point exactly where the user dragged it.
+let panelWireLinks = [];
+// Interaction-only state (see chat) — never saved with the project.
+// (placement happens via native drag-and-drop — see renderPanelBuilderEquipTab
+// / panelBuilderPlaceAt below — so there's no more "armed, waiting for a
+// cell click" state)
+let panelBuilderSelectedId = null;
+let panelWireSelectedId = null;       // a selected WIRE (see chat) — separate from panelBuilderSelectedId, which is a selected placement
+let panelWireActiveColorKey = null;  // which palette colour new drags use; lazily defaulted to the palette's first entry
+let panelWireDrag = null;            // {aId, aSide, aIndex} while a drag is in progress — the ghost line itself is pure DOM, not re-rendered from this
+let panelBuilderDragInfo = null;     // the equipment being dragged from the stock list via native HTML5 drag-and-drop (see chat)
+// Undo/redo (see chat) — a simple snapshot stack over just the
+// panel-builder's own data (not the whole project's history, which is a
+// separate, coarser-grained mechanism used by the main canvas). Runtime
+// only, reset each time the builder is opened.
+let panelBuilderUndoStack = [];
+let panelBuilderView = {x:0, y:0, s:1}; // pan offset + scale (see chat — mirrors podrozetView), interaction-only, reset each time the builder opens
+let panelBuilderRedoStack = [];
+const PB_HISTORY_LIMIT = 60;
+
+
 
 // Overall estimate (общая смета) — mounting method choices, consumption
 // defaults, and manual overrides for items that can't be auto-derived
@@ -10192,6 +10265,7 @@ function doSaveProject(){
   const name=getProjectName();
   const data={version:10,pro:true,projectName:name,scale,scaleIsGuessed,segments,lines,markers,walls,measurements,markerTypes,colorLabels,colorCableTypes,hiddenColors:[...hiddenColors],bg:bgImgDataUrl,bgX,bgY,bgS,bgOpacity,bgWhiten,markerSnapRadius,crossingPenaltyCm,autoFixupEnabled,zones,ceilingHeightM,defaultRouteHeightM,defaultRouteHeightRef,colorRouteHeight,nextBoxNum,
     panelPhases,panelHasInputBreaker,panelInputBreakerRating,panelHasVoltageRelay,panelHasContactor,panelContactorRating,panelVoltageRelayRating,panelProtectionScheme,panelRcdCount,panelRcdRating,panelNeutralBusChoice,panelMountType,colorBreakerRating,
+    panelEquipTypes,panelGridRows,panelGridCols,panelBusbarGroups,panelPlacements,panelLinks,panelWireLinks,
     overallHasMountingGun,overallMarginPct,overallBackBoxCountOverride,overallBoxSizeText,overallBoxBaseCount,overallBoxExtraInfo,cableMarkNotes,overallRowNotes,overallRowConfig};
   const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
@@ -10241,6 +10315,17 @@ function applyProjectData(d){
   panelNeutralBusChoice=d.panelNeutralBusChoice||'own';
   panelMountType=d.panelMountType||'flush';
   colorBreakerRating=d.colorBreakerRating||{};
+  panelEquipTypes=d.panelEquipTypes||[];
+  panelGridRows=d.panelGridRows!=null?d.panelGridRows:1;
+  panelGridCols=d.panelGridCols!=null?d.panelGridCols:24;
+  panelBusbarGroups=d.panelBusbarGroups||[];
+  panelPlacements=d.panelPlacements||[];
+  panelLinks=d.panelLinks||[];
+  panelWireLinks=d.panelWireLinks||[];
+  panelBuilderSelectedId=null;
+  panelWireSelectedId=null;
+  panelWireActiveColorKey=null;
+  panelWireDrag=null;
   overallHasMountingGun=!!d.overallHasMountingGun;
   overallMarginPct=d.overallMarginPct!=null?d.overallMarginPct:15;
   overallBackBoxCountOverride=d.overallBackBoxCountOverride!=null?d.overallBackBoxCountOverride:null;
@@ -13038,14 +13123,1457 @@ function openPanelCalcModal(){
     <div class="res-section" style="margin-top:16px">${t('panel_circuits_title')}</div>
     <div id="panel-circuits-list"></div>
     <div id="panel-disconnected-list"></div>
-    <div id="panel-summary"></div>`;
+    <div id="panel-summary"></div>
+    <div style="font-size:12px;color:#7dc4ff;background:#16233a;border:1px solid #234;border-radius:7px;padding:10px 12px;margin-top:16px;line-height:1.5">
+      <span>Список выше — это только количества. Чтобы физически расставить автоматы по рейкам и привязать к ним линии, откройте конструктор.</span>
+      <a href="#" id="panel-calc-goto-builder" style="color:#7dc4ff;text-decoration:underline;display:inline-block;margin-top:4px">Открыть конструктор щитка →</a>
+    </div>`;
   buildUnmarkedColorsBanner(document.getElementById('panel-unmarked'), 'panel-calc-modal', panelUnmarkedConnectedColors());
   renderPanelTop();
   renderPanelCircuitList();
   renderPanelDisconnectedList();
   renderPanelSummary();
+  document.getElementById('panel-calc-goto-builder').addEventListener('click',e=>{
+    e.preventDefault();
+    document.getElementById('panel-calc-modal').style.display='none';
+    openPanelBuilder();
+  });
   document.getElementById('panel-calc-modal').style.display='flex';
 }
+
+// ═══════════════════════════════════════════════════════
+// Panel BUILDER (конструктор щитка) — equipment TYPE library, grid
+// rendering, placement, drag-and-drop wiring between connection points,
+// and colour-line linking. See the state block near the top of the file
+// (panelEquipTypes / panelGridRows / panelGridCols / panelBusbarGroups /
+// panelPlacements / panelLinks / panelWireLinks) for the data model.
+// ═══════════════════════════════════════════════════════
+
+// Reuses the same "actually connected" colour list the rest of the panel
+// module already works from (Расчёт щитка's circuit table), so the
+// swatches here match what's shown as a circuit there.
+function panelBuilderColors(){ return panelCircuitList(); }
+
+function openPanelBuilder(){
+  panelBuilderSelectedId=null;
+  panelWireSelectedId=null;
+  panelWireDrag=null;
+  panelBuilderUndoStack=[];
+  panelBuilderRedoStack=[];
+  panelBuilderView={x:0,y:0,s:1};
+  renderPanelBuilder();
+  panelBuilderSetupPanZoom();
+  panelBuilderSetupTabs();
+  document.getElementById('panel-builder-modal').style.display='flex';
+}
+
+// Snapshots just the fields a builder action can touch — not the whole
+// project — so undo/redo here never interferes with the main canvas's
+// own history.
+function panelBuilderSnapshot(){
+  return JSON.stringify({panelEquipTypes,panelGridRows,panelGridCols,panelBusbarGroups,panelPlacements,panelLinks,panelWireLinks});
+}
+function panelBuilderApplySnapshot(json){
+  const d = JSON.parse(json);
+  panelEquipTypes=d.panelEquipTypes; panelGridRows=d.panelGridRows; panelGridCols=d.panelGridCols;
+  panelBusbarGroups=d.panelBusbarGroups; panelPlacements=d.panelPlacements; panelLinks=d.panelLinks; panelWireLinks=d.panelWireLinks;
+  panelBuilderSelectedId=null;
+  panelWireSelectedId=null;
+}
+// Called at the START of every mutating action, BEFORE the change, so the
+// pushed snapshot is what undo should restore. Clears the redo stack —
+// same convention as the main canvas's own saveHistory().
+function panelBuilderSaveHistory(){
+  panelBuilderUndoStack.push(panelBuilderSnapshot());
+  if(panelBuilderUndoStack.length>PB_HISTORY_LIMIT) panelBuilderUndoStack.shift();
+  panelBuilderRedoStack=[];
+}
+function panelBuilderUndo(){
+  if(!panelBuilderUndoStack.length) return;
+  panelBuilderRedoStack.push(panelBuilderSnapshot());
+  panelBuilderApplySnapshot(panelBuilderUndoStack.pop());
+  renderPanelBuilder();
+}
+function panelBuilderRedo(){
+  if(!panelBuilderRedoStack.length) return;
+  panelBuilderUndoStack.push(panelBuilderSnapshot());
+  panelBuilderApplySnapshot(panelBuilderRedoStack.pop());
+  renderPanelBuilder();
+}
+
+function renderPanelBuilder(){
+  renderPanelBuilderToolbar();
+  renderPanelBuilderEquipTab();
+  renderPanelBuilderPropsTab();
+  renderPanelBuilderGrid();
+}
+
+// Always-visible controls (see chat): close, undo/redo, zoom, a delete
+// button acting on whatever's selected, plus grid/busbar/colour config —
+// all in the fixed top toolbar now that the whole module is full-screen,
+// so nothing here ever scrolls out of view.
+function renderPanelBuilderToolbar(){
+  const wrap=document.getElementById('pb-toolbar');
+  if(!wrap) return;
+  if(!panelWireActiveColorKey) panelWireActiveColorKey = panelWirePalette()[0].key;
+  const hasSelection = !!(panelWireSelectedId || panelBuilderSelectedId);
+  wrap.innerHTML=`
+    <div style="display:flex; flex-direction:column; gap:8px; width:100%">
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap">
+        <button id="pb-close" style="background:none; border:none; color:#888; font-size:20px; cursor:pointer; line-height:1">✕</button>
+        <span style="font-weight:700; color:#e8e8e8; font-size:14px">Конструктор щитка</span>
+        <div class="sep"></div>
+        <button id="pb-select-tool" title="Показывает, что сейчас выделено; клик — снять выделение (как Esc)"
+          style="padding:5px 10px; background:${hasSelection?'#1a3a5c':'#2a2a2a'}; border:1px solid ${hasSelection?'#4a9eff':'#444'}; border-radius:6px; color:${hasSelection?'#7dc4ff':'#ccc'}; font-size:11px; cursor:pointer">🖱 Выбор${hasSelection?' ✓':''}</button>
+        <div class="sep"></div>
+        <div style="display:flex; gap:4px">
+          <button id="pb-undo" title="Назад (Ctrl+Z)" ${panelBuilderUndoStack.length?'':'disabled'}
+            style="padding:5px 10px; background:#2a2a2a; border:1px solid #444; border-radius:6px; color:${panelBuilderUndoStack.length?'#ccc':'#555'}; font-size:11px; cursor:${panelBuilderUndoStack.length?'pointer':'default'}">↶ Назад</button>
+          <button id="pb-redo" title="Вперёд (Ctrl+Shift+Z)" ${panelBuilderRedoStack.length?'':'disabled'}
+            style="padding:5px 10px; background:#2a2a2a; border:1px solid #444; border-radius:6px; color:${panelBuilderRedoStack.length?'#ccc':'#555'}; font-size:11px; cursor:${panelBuilderRedoStack.length?'pointer':'default'}">Вперёд ↷</button>
+        </div>
+        <div style="display:flex; gap:4px; align-items:center">
+          <button id="pb-zoom-out" title="Уменьшить (или колёсико мыши)" style="width:26px; height:26px; background:#2a2a2a; border:1px solid #444; border-radius:6px; color:#ccc; font-size:14px; cursor:pointer">−</button>
+          <button id="pb-zoom-reset" title="Сбросить масштаб" style="padding:5px 8px; background:#2a2a2a; border:1px solid #444; border-radius:6px; color:#ccc; font-size:11px; cursor:pointer">${Math.round(panelBuilderView.s*100)}%</button>
+          <button id="pb-zoom-in" title="Увеличить (или колёсико мыши)" style="width:26px; height:26px; background:#2a2a2a; border:1px solid #444; border-radius:6px; color:#ccc; font-size:14px; cursor:pointer">+</button>
+        </div>
+        <button id="pb-delete-selected" ${hasSelection?'':'disabled'}
+          style="margin-left:auto; padding:5px 12px; background:${hasSelection?'#3a1a1a':'#2a2a2a'}; border:1px solid ${hasSelection?'#6a2a2a':'#444'}; border-radius:6px; color:${hasSelection?'#ff8a8a':'#555'}; font-size:11px; cursor:${hasSelection?'pointer':'default'}">🗑 Удалить${hasSelection?'':' (ничего не выбрано)'}</button>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; font-size:12px; color:#aaa">
+        <label style="display:flex; align-items:center; gap:6px">Рядов
+          <input type="number" id="pb-rows" class="prop-input" min="1" max="10" step="1" style="width:56px" value="${panelGridRows}">
+        </label>
+        <label style="display:flex; align-items:center; gap:6px">Модулей в ряду
+          <input type="number" id="pb-cols" class="prop-input" min="4" max="72" step="1" style="width:60px" value="${panelGridCols}">
+        </label>
+        <button id="pb-add-busbar" style="padding:5px 10px; background:#2a2a2a; border:1px solid #444; border-radius:6px; color:#ccc; font-size:11px; cursor:pointer">+ шина</button>
+        <div id="pb-busbar-list" style="display:flex; gap:6px; flex-wrap:wrap"></div>
+        <div class="sep"></div>
+        <span style="color:#888">Цвет провода:</span>
+        <div style="display:flex; gap:4px; flex-wrap:wrap">
+          ${panelWirePalette().map(c=>{
+            const active = c.key===panelWireActiveColorKey;
+            return `<button class="pb-wire-color-pick" data-key="${c.key}" title="${c.label}"
+              style="display:flex; align-items:center; gap:5px; padding:4px 9px; border-radius:6px; cursor:pointer;
+              background:${active?'#2a2a2a':'#1c1c1c'}; border:1px solid ${active?'#e8b84a':'#3a3a3a'}">
+              <span style="width:14px; height:4px; border-radius:2px; background:${c.color}; display:inline-block; ${c.halo?`box-shadow:0 0 0 1.5px ${c.halo}`:''}"></span>
+              <span style="font-size:11px; color:${active?'#eee':'#999'}">${c.label}</span>
+            </button>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('pb-close').addEventListener('click', ()=>{ document.getElementById('panel-builder-modal').style.display='none'; });
+  document.getElementById('pb-select-tool').addEventListener('click', panelBuilderClearSelection);
+  document.getElementById('pb-undo').addEventListener('click', panelBuilderUndo);
+  document.getElementById('pb-redo').addEventListener('click', panelBuilderRedo);
+  document.getElementById('pb-zoom-out').addEventListener('click', ()=>panelBuilderZoomBy(1/1.2));
+  document.getElementById('pb-zoom-in').addEventListener('click', ()=>panelBuilderZoomBy(1.2));
+  document.getElementById('pb-zoom-reset').addEventListener('click', ()=>{ panelBuilderView={x:0,y:0,s:1}; renderPanelBuilderGrid(); renderPanelBuilderToolbar(); });
+  if(hasSelection) document.getElementById('pb-delete-selected').addEventListener('click', panelBuilderDeleteSelected);
+  document.getElementById('pb-rows').addEventListener('change', function(){
+    const v = Math.max(1, Math.min(10, parseInt(this.value,10)||1));
+    if(v===panelGridRows) return;
+    panelBuilderSaveHistory();
+    panelGridRows=v;
+    // Drops anything that no longer fits rather than asking first — kept
+    // simple for this first version (see chat).
+    panelPlacements = panelPlacements.filter(p=>p.row < v);
+    panelBusbarGroups = panelBusbarGroups.filter(b=>b.row < v);
+    panelWireLinks = panelWireLinks.filter(w=>panelBuilderEndpointStillExists(w.aId) && panelBuilderEndpointStillExists(w.bId));
+    if(panelBuilderSelectedId && !panelPlacements.find(p=>p.id===panelBuilderSelectedId)) panelBuilderSelectedId=null;
+    renderPanelBuilder();
+  });
+  document.getElementById('pb-cols').addEventListener('change', function(){
+    const v = Math.max(4, Math.min(72, parseInt(this.value,10)||24));
+    if(v===panelGridCols) return;
+    panelBuilderSaveHistory();
+    panelGridCols=v;
+    panelPlacements = panelPlacements.filter(p=>p.col + (p.spanCols||p.modulesEach) <= v);
+    panelWireLinks = panelWireLinks.filter(w=>panelBuilderEndpointStillExists(w.aId) && panelBuilderEndpointStillExists(w.bId));
+    if(panelBuilderSelectedId && !panelPlacements.find(p=>p.id===panelBuilderSelectedId)) panelBuilderSelectedId=null;
+    renderPanelBuilder();
+  });
+  document.getElementById('pb-add-busbar').addEventListener('click', ()=>{
+    let row=0;
+    if(panelGridRows>1){
+      row = parseInt(prompt(`Для какого ряда (1–${panelGridRows})?`, '1'),10)-1;
+      if(isNaN(row) || row<0 || row>=panelGridRows) return;
+    }
+    const pos = confirm('Сверху ряда? ОК — сверху, Отмена — снизу') ? 'top' : 'bottom';
+    const kind = confirm('Широкие планки? ОК — широкие, Отмена — узкие') ? 'wide' : 'narrow';
+    const count = Math.max(1, parseInt(prompt('Сколько планок?', '2'),10)||2);
+    panelBuilderSaveHistory();
+    panelBusbarGroups.push({id:uid(), row, pos, kind, count});
+    renderPanelBuilder();
+  });
+  wrap.querySelectorAll('.pb-wire-color-pick').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ panelWireActiveColorKey = btn.dataset.key; renderPanelBuilderToolbar(); });
+  });
+  renderPanelBuilderBusbarList();
+}
+
+function panelBuilderZoomBy(factor){
+  panelBuilderView.s = Math.max(0.3, Math.min(3, panelBuilderView.s*factor));
+  renderPanelBuilderGrid();
+  renderPanelBuilderToolbar();
+}
+
+// Deletes whichever is currently selected — a wire or a placement — same
+// cleanup either one already had its own button for, just reachable from
+// the always-visible toolbar too.
+// Deselects whatever's currently selected — the "Выбор" toolbar button
+// and the Esc key both call this (see chat).
+function panelBuilderClearSelection(){
+  if(!panelBuilderSelectedId && !panelWireSelectedId) return;
+  panelBuilderSelectedId=null;
+  panelWireSelectedId=null;
+  renderPanelBuilder();
+}
+
+function panelBuilderDeleteSelected(){
+  if(panelWireSelectedId){
+    panelBuilderSaveHistory();
+    panelWireLinks = panelWireLinks.filter(x=>x.id!==panelWireSelectedId);
+    panelWireSelectedId=null;
+    renderPanelBuilder();
+    return;
+  }
+  if(panelBuilderSelectedId){
+    const id = panelBuilderSelectedId;
+    panelBuilderSaveHistory();
+    panelPlacements = panelPlacements.filter(x=>x.id!==id);
+    panelLinks = panelLinks.filter(l=>l.placementId!==id);
+    panelWireLinks = panelWireLinks.filter(w=>w.aId!==id && w.bId!==id);
+    panelBuilderSelectedId=null;
+    renderPanelBuilder();
+  }
+}
+
+function renderPanelBuilderBusbarList(){
+  const wrap=document.getElementById('pb-busbar-list');
+  if(!wrap) return;
+  if(!panelBusbarGroups.length){ wrap.innerHTML=''; return; }
+  wrap.innerHTML = panelBusbarGroups.map(b=>`
+    <span style="display:inline-flex; align-items:center; gap:6px; background:#2a2a2a; border:1px solid #444; border-radius:6px; padding:3px 8px; font-size:11px; color:#ccc">
+      Ряд ${b.row+1}, ${b.pos==='top'?'сверху':'снизу'}, ${b.kind==='wide'?'широкие':'узкие'} × ${b.count}
+      <button data-id="${b.id}" class="pb-busbar-remove" style="background:none; border:none; color:#888; cursor:pointer; font-size:13px; line-height:1">✕</button>
+    </span>`).join('');
+  wrap.querySelectorAll('.pb-busbar-remove').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      panelBuilderSaveHistory();
+      const removedId = btn.dataset.id;
+      panelBusbarGroups = panelBusbarGroups.filter(b=>b.id!==removedId);
+      const prefix = `bus:${removedId}:`;
+      panelWireLinks = panelWireLinks.filter(w=>w.aId.indexOf(prefix)!==0 && w.bId.indexOf(prefix)!==0);
+      renderPanelBuilder();
+    });
+  });
+}
+
+// Built-in presets (see chat) — always available, not editable/deletable
+// like user-created panelEquipTypes, so they don't need to be saved with
+// the project at all; re-derived fresh every time.
+const PB_PRESET_TYPES = [
+  {presetId:'breaker1p', fullName:'Автомат однополюсный', abbr:'АВ1П', modulesEach:1, topPoints:1, bottomPoints:1},
+  {presetId:'difavto',   fullName:'Дифавтомат',            abbr:'ДИФ',  modulesEach:2, topPoints:2, bottomPoints:2},
+];
+
+// "Оборудование" tab (see chat — analogous to the main canvas's marker-
+// type editor): the equipment-type LIBRARY (unlimited placements each,
+// no stock/quantity tracking) plus the built-in presets above, the
+// always-available comb bar, a quick way to pre-fill the new-type form
+// from what panelEquipmentList() already knows how to count, and the
+// form itself to define a new type (full name, abbreviation, width,
+// connection points).
+function renderPanelBuilderEquipTab(){
+  const wrap=document.getElementById('pb-tab-equip');
+  if(!wrap) return;
+  let html = `<div style="font-size:11px; font-weight:600; color:#888; margin-bottom:2px; text-transform:uppercase">Оборудование</div>
+  <div style="font-size:10px; color:#666; margin-bottom:8px">Перетащите на схему</div>`;
+  html += `<div class="pb-type-item" draggable="true" data-kind="comb" tabindex="0"
+    style="display:block; width:100%; text-align:left; padding:8px 10px; margin-bottom:6px; border-radius:6px; cursor:grab; user-select:none; box-sizing:border-box;
+    background:#242424; border:1px solid #3a3a3a">
+    <div style="font-size:12px; color:#e0e0e0">⌐ Гребёнка</div>
+    <div style="font-size:10px; color:#888; margin-top:2px">ширина и точки — по месту</div>
+  </div>`;
+  PB_PRESET_TYPES.forEach(t=>{
+    html += `<div class="pb-type-item" draggable="true" data-preset-id="${t.presetId}" tabindex="0"
+      style="display:block; width:100%; text-align:left; padding:8px 10px; margin-bottom:6px; border-radius:6px; cursor:grab; user-select:none; box-sizing:border-box;
+      background:#20242c; border:1px solid #34404f">
+      <div style="font-size:12px; color:#e0e0e0">${t.abbr} · ${t.fullName} <span style="color:#5a7ba0; font-size:9px">встроенный</span></div>
+      <div style="font-size:10px; color:#888; margin-top:2px">${t.modulesEach} мод. · сверху ${t.topPoints}, снизу ${t.bottomPoints}</div>
+    </div>`;
+  });
+  panelEquipTypes.forEach(t=>{
+    html += `<div style="position:relative; margin-bottom:6px">
+      <div class="pb-type-item" draggable="true" data-type-id="${t.id}" tabindex="0"
+        style="display:block; width:100%; text-align:left; padding:8px 28px 8px 10px; border-radius:6px; cursor:grab; user-select:none; box-sizing:border-box;
+        background:#242424; border:1px solid #3a3a3a">
+        <div style="font-size:12px; color:#e0e0e0">${t.abbr} · ${t.fullName}</div>
+        <div style="font-size:10px; color:#888; margin-top:2px">${t.modulesEach} мод. · сверху ${t.topPoints}, снизу ${t.bottomPoints}</div>
+      </div>
+      <button class="pb-type-delete" data-type-id="${t.id}" title="Удалить тип"
+        style="position:absolute; right:6px; top:8px; background:none; border:none; color:#888; cursor:pointer; font-size:13px; line-height:1">✕</button>
+    </div>`;
+  });
+  const {items} = panelEquipmentList();
+  const quickItems = items.filter(i=>i.modulesEach>0);
+  if(quickItems.length){
+    html += `<div style="font-size:10px; color:#666; margin-top:14px; margin-bottom:6px; text-transform:uppercase">Заготовки из сметы оборудования</div>`;
+    quickItems.forEach((i,idx)=>{
+      html += `<button class="pb-quick-type" data-idx="${idx}"
+        style="display:block; width:100%; text-align:left; padding:6px 10px; margin-bottom:4px; border-radius:6px; cursor:pointer; background:#1c1c1c; border:1px dashed #3a3a3a; color:#999; font-size:11px">+ ${i.name} (${i.modulesEach} мод. × ${i.qty})</button>`;
+    });
+  }
+  html += `<div style="margin-top:14px; padding:12px; background:#181818; border:1px solid #333; border-radius:8px">
+    <div style="font-size:11px; font-weight:600; color:#888; text-transform:uppercase; margin-bottom:10px">Новый тип оборудования</div>
+    <div style="display:flex; flex-direction:column; gap:10px">
+      <label style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#888">Полное название
+        <input type="text" id="pb-type-fullname" class="prop-input" placeholder="Автомат С16 1П">
+      </label>
+      <label style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#888">Аббревиатура (≤5)
+        <input type="text" id="pb-type-abbr" class="prop-input" maxlength="5" placeholder="С16">
+      </label>
+      <label style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#888">Ширина, модулей
+        <input type="number" id="pb-type-modules" class="prop-input" min="1" max="12" step="1" value="1">
+      </label>
+      <label style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#888">Точек сверху
+        <input type="number" id="pb-type-top" class="prop-input" min="0" max="12" step="1" value="1">
+      </label>
+      <label style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#888">Точек снизу
+        <input type="number" id="pb-type-bottom" class="prop-input" min="0" max="12" step="1" value="1">
+      </label>
+      <button id="pb-type-add" style="padding:7px 14px; background:#1a3a5c; border:1px solid #4a9eff; border-radius:6px; color:#7dc4ff; font-size:12px; cursor:pointer">+ Добавить тип</button>
+    </div>
+  </div>`;
+  wrap.innerHTML = html;
+
+  // Native HTML5 drag-and-drop (see chat — the earlier hand-rolled pointer-
+  // capture version wasn't reliably starting a drag from a <button>). This
+  // is the browser's own mechanism for exactly this "drag a palette card
+  // onto a drop target" pattern, and the drop targets (.pb-cell) are wired
+  // up in renderPanelBuilderGrid() with dragover/drop.
+  wrap.querySelectorAll('.pb-type-item').forEach(btn=>{
+    btn.addEventListener('dragstart', (e)=>{
+      let info;
+      if(btn.dataset.kind==='comb'){
+        info = {kind:'comb', name:'Гребёнка', abbr:'⌐'};
+      } else if(btn.dataset.presetId){
+        const t = PB_PRESET_TYPES.find(x=>x.presetId===btn.dataset.presetId);
+        if(!t) return;
+        info = {typeId:null, presetId:t.presetId, name:t.fullName, abbr:t.abbr, modulesEach:t.modulesEach, topPoints:t.topPoints, bottomPoints:t.bottomPoints, kind:'item'};
+      } else {
+        const t = panelEquipTypes.find(x=>x.id===btn.dataset.typeId);
+        if(!t) return;
+        info = {typeId:t.id, name:t.fullName, abbr:t.abbr, modulesEach:t.modulesEach, topPoints:t.topPoints, bottomPoints:t.bottomPoints, kind:'item'};
+      }
+      panelBuilderDragInfo = info;
+      e.dataTransfer.effectAllowed = 'copy';
+      e.dataTransfer.setData('text/plain', 'pb-equip'); // some browsers require real data to allow the drag
+      // Custom drag image proportioned like the real placed box (see
+      // chat — the default browser snapshot of this wide list card read
+      // as "horizontal" no matter what's being dragged).
+      const span = info.kind==='comb' ? 4 : (info.modulesEach||1);
+      const pw = Math.max(20, span*PB_CELL_W + (span-1)*PB_CELL_GAP);
+      const ph = PB_CELL_H;
+      const preview = document.createElement('div');
+      preview.style.cssText = `position:fixed; top:-9999px; left:-9999px; width:${pw}px; height:${ph}px; background:#1a3a5c; border:2px solid #4a9eff; border-radius:4px; display:flex; align-items:center; justify-content:center; writing-mode:${pw<ph?'vertical-rl':'horizontal-tb'}; color:#fff; font-size:12px; font-weight:600`;
+      preview.textContent = info.kind==='comb' ? '⌐' : info.abbr;
+      document.body.appendChild(preview);
+      e.dataTransfer.setDragImage(preview, pw/2, ph/2);
+      setTimeout(()=>preview.remove(), 0); // browser grabs the snapshot synchronously; safe to clean up right after
+    });
+    btn.addEventListener('dragend', ()=>{ panelBuilderDragInfo=null; });
+  });
+  wrap.querySelectorAll('.pb-type-delete').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      panelBuilderSaveHistory();
+      panelEquipTypes = panelEquipTypes.filter(t=>t.id!==btn.dataset.typeId);
+      renderPanelBuilder();
+    });
+  });
+  wrap.querySelectorAll('.pb-quick-type').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const i = quickItems[parseInt(btn.dataset.idx,10)];
+      if(!i) return;
+      const nameEl=document.getElementById('pb-type-fullname');
+      nameEl.value = i.name;
+      document.getElementById('pb-type-abbr').value = i.name.replace(/[^A-Za-zА-Яа-я0-9]/g,'').slice(0,5);
+      document.getElementById('pb-type-modules').value = i.modulesEach;
+      nameEl.scrollIntoView({block:'center', behavior:'smooth'});
+      nameEl.focus();
+    });
+  });
+  document.getElementById('pb-type-add').addEventListener('click', ()=>{
+    const fullName = document.getElementById('pb-type-fullname').value.trim();
+    const abbr = document.getElementById('pb-type-abbr').value.trim().slice(0,5);
+    const modulesEach = Math.max(1, parseInt(document.getElementById('pb-type-modules').value,10)||1);
+    const topPoints = Math.max(0, parseInt(document.getElementById('pb-type-top').value,10)||0);
+    const bottomPoints = Math.max(0, parseInt(document.getElementById('pb-type-bottom').value,10)||0);
+    if(!fullName || !abbr){ alert('Укажите и полное название, и аббревиатуру.'); return; }
+    panelBuilderSaveHistory();
+    panelEquipTypes.push({id:uid(), fullName, abbr, modulesEach, topPoints, bottomPoints});
+    renderPanelBuilder();
+  });
+}
+
+// Made noticeably bigger, and taller-than-wide like a real single-pole
+// breaker (see chat) — was a squat 22×36 box before, now proportioned
+// closer to an actual DIN module.
+// Gaps widened across the board (see chat — the schematic was reading as
+// "tightly packed"): more room between modules, between rows, between
+// wires and everything else, and between busbars and the equipment row.
+const PB_CELL_W = 26, PB_CELL_GAP = 24, PB_PITCH = PB_CELL_W+PB_CELL_GAP, PB_CELL_H = 120, PB_BAR_H = 12;
+const PB_ROW_LABEL_H = 20, PB_ROW_GAP = 150; // extra room for wires to route between rows
+const PB_POINT_R = 6;      // visual/hit radius of a connection-point circle (placements)
+const PB_BUS_POINT_R = 4;  // busbars carry many more points (2 per module) — kept smaller so they don't crowd the bar
+const PB_WIRE_STUB = 26;   // how far a wire exits perpendicular before turning — ≈18мм, one DIN module width, per chat (was 46, now the same value for every wire shape)
+const PB_COLOR_BAND_GAP = 18; // used as a generic spacing estimate for reserved headroom (see chat)
+// Analogous to the main canvas's declutterLine() JOG_LIMIT (15cm there —
+// see chat), but scaled down to this schematic's own much smaller,
+// denser proportions rather than translated literally; small enough that
+// the deliberate ~18мм default stub (PB_WIRE_STUB) is never mistaken for
+// clutter, big enough to actually catch a stray few-pixel drag.
+const PB_JOG_LIMIT = 10;
+const PB_AVOID_STEP = 10;  // increment used when nudging a new wire's default path away from an existing one it would otherwise cross (see chat)
+const PB_BAR_STACK_GAP = 10;  // between individual bars within the same busbar group
+const PB_BAR_ROW_GAP = 70;    // between the busbar stack and the equipment row it feeds — bigger than the inter-bar gap on purpose, per chat
+const PB_BUS_POINTS_PER_MODULE = 2; // "2 точки на ширину модуля" — see chat
+
+function panelPlacementAt(row, col){
+  return panelPlacements.find(p=> p.row===row && col>=p.col && col < p.col + (p.spanCols||p.modulesEach));
+}
+
+// Lays out every row's vertical offset once (used by the DOM boxes, the
+// connection points, AND the SVG wire overlay, so all three agree on the
+// same coordinate space). Also records every individual bar's own
+// position (not just the stack's start) in busbarBars — needed now that
+// each bar carries its own row of connection points.
+function panelBuilderLayout(){
+  const totalW = panelGridCols*PB_PITCH - PB_CELL_GAP;
+  const rows=[];
+  const busbarBars=[];
+  // Reserves headroom above the very first row (see chat) — a top-top
+  // loop that has to clear busbars (their own height, PLUS the loop's
+  // breathing room and stub, PLUS however many lanes stack up) needs
+  // somewhere to go that isn't negative Y, which the scrollable grid
+  // container would just clip. Sized for up to 3 stacked bars and 4
+  // lanes — generous rather than exact, since it only costs blank space.
+  // Reserves headroom above the very first row (see chat) — only matters
+  // when row 0 has NO top busbar (a loop there still clears the row
+  // itself by the standard stub); once a busbar exists, loops route
+  // through its own to-row gap instead, which needs no extra headroom
+  // above the canvas.
+  let y = PB_WIRE_STUB + 5*PB_COLOR_BAND_GAP;
+  for(let r=0;r<panelGridRows;r++){
+    const topBars = panelBusbarGroups.filter(b=>b.row===r && b.pos==='top');
+    const botBars = panelBusbarGroups.filter(b=>b.row===r && b.pos==='bottom');
+    y += PB_ROW_LABEL_H;
+    const topBarsY = y;
+    topBars.forEach(b=>{
+      for(let i=0;i<b.count;i++){
+        busbarBars.push({groupId:b.id, barIndex:i, row:r, pos:'top', kind:b.kind, x:0, y, w:totalW, h:PB_BAR_H});
+        y += PB_BAR_H + PB_BAR_STACK_GAP;
+      }
+    });
+    if(topBars.length) y += PB_BAR_ROW_GAP - PB_BAR_STACK_GAP; // swap the tight inter-bar gap for a generous one right before the row
+    const cellsY = y;
+    y += PB_CELL_H;
+    if(botBars.length) y += PB_BAR_ROW_GAP;
+    const botBarsY = y;
+    botBars.forEach(b=>{
+      for(let i=0;i<b.count;i++){
+        busbarBars.push({groupId:b.id, barIndex:i, row:r, pos:'bottom', kind:b.kind, x:0, y, w:totalW, h:PB_BAR_H});
+        y += PB_BAR_H + PB_BAR_STACK_GAP;
+      }
+    });
+    rows.push({row:r, topBars, botBars, topBarsY, cellsY, botBarsY, labelY:cellsY-PB_ROW_LABEL_H});
+    y += PB_ROW_GAP;
+  }
+  return {totalW, totalH:y, rows, busbarBars};
+}
+
+// A busbar's connection points (see chat: "2 точки на ширину модуля") sit
+// on whichever edge FACES the equipment row it feeds — the underside of a
+// top-positioned bar, the topside of a bottom-positioned one — evenly
+// spaced, 2 per DIN module across its full width.
+function panelBuilderBusPointXY(bar, index){
+  const n = panelGridCols * PB_BUS_POINTS_PER_MODULE;
+  const x = bar.x + (index+0.5) * (bar.w/n);
+  const y = bar.pos==='top' ? bar.y + bar.h : bar.y;
+  return {x,y};
+}
+// The direction a wire naturally exits a busbar point — a top-positioned
+// bar's points face DOWN into the row below (so they behave like a
+// "bottom" point for routing purposes), a bottom-positioned bar's points
+// face UP (behave like "top"). Inverted from bar.pos on purpose.
+function panelBuilderBusPointSide(bar){ return bar.pos==='top' ? 'bottom' : 'top'; }
+
+function panelBuilderBusbarLabel(bar){
+  return `Шина (${bar.kind==='wide'?'широкая':'узкая'}) №${bar.barIndex+1}`;
+}
+
+// Resolves either kind of wire endpoint — a placement's own point, or a
+// busbar's — to the same {xy, row} shape, so routing and rendering don't
+// need to care which one they're looking at. Busbar endpoints are encoded
+// as the synthetic id "bus:<groupId>:<barIndex>" (see chat) rather than
+// adding a whole parallel set of fields to every wire link.
+function panelBuilderEndpointInfo(id, side, index, layout){
+  if(typeof id==='string' && id.indexOf('bus:')===0){
+    const parts=id.split(':');
+    const bar = layout.busbarBars.find(b=>b.groupId===parts[1] && b.barIndex===parseInt(parts[2],10));
+    if(!bar) return null;
+    return {xy: panelBuilderBusPointXY(bar, index), row:bar.row, isBus:true};
+  }
+  const p = panelPlacements.find(x=>x.id===id);
+  if(!p) return null;
+  return {xy: panelBuilderPointXY(p, side, index, layout), row:p.row, isBus:false};
+}
+
+function panelBuilderEndpointName(id){
+  if(typeof id==='string' && id.indexOf('bus:')===0){
+    const parts=id.split(':');
+    const group = panelBusbarGroups.find(g=>g.id===parts[1]);
+    return group ? panelBuilderBusbarLabel({kind:group.kind, barIndex:parseInt(parts[2],10)}) : null;
+  }
+  const p = panelPlacements.find(x=>x.id===id);
+  return p ? p.name : null;
+}
+// Used when pruning wires after a rows/cols shrink (see chat) — a busbar
+// endpoint's "id" doesn't live in panelPlacements at all, so a plain
+// placements-only existence check would wrongly treat every busbar wire
+// as orphaned and delete it even when the busbar itself is still there.
+function panelBuilderEndpointStillExists(id){
+  if(typeof id==='string' && id.indexOf('bus:')===0){
+    const parts=id.split(':');
+    return panelBusbarGroups.some(g=>g.id===parts[1]) && parseInt(parts[2],10) < (panelBusbarGroups.find(g=>g.id===parts[1])||{count:0}).count;
+  }
+  return panelPlacements.some(p=>p.id===id);
+}
+
+function panelBuilderBoxRect(p, layout){
+  const rowInfo = layout.rows[p.row];
+  const span = p.spanCols || p.modulesEach;
+  return {x:p.col*PB_PITCH, y:rowInfo.cellsY, w:span*PB_PITCH-PB_CELL_GAP, h:PB_CELL_H};
+}
+
+// One of a placement's N evenly-spaced connection points along its top or
+// bottom edge (not just a single centre point any more, see chat — a
+// 3-pole contactor has 3 points on top and 3 on the bottom, etc).
+function panelBuilderPointXY(p, side, index, layout){
+  const r = panelBuilderBoxRect(p, layout);
+  const n = Math.max(1, side==='top' ? p.topPoints : p.bottomPoints);
+  return {x: r.x + r.w*(index+1)/(n+1), y: side==='top' ? r.y : r.y + r.h};
+}
+
+// Standard IEC wire-colour conventions (see chat) — N/PE the same in both
+// systems; phase colours depend on panelPhases, which the settings tab
+// already tracks, so the palette here just follows that same setting.
+// L2/L3 only make sense once there's more than one phase to distinguish.
+const PB_WIRE_PALETTE_1PH = [
+  {key:'n',  label:'Ноль (N)',   color:'#2f6fe0'},
+  {key:'pe', label:'Земля (PE)', color:'#3fae3f', stripe:'#e0c93f'},
+  {key:'l',  label:'Фаза (L)',   color:'#8a5a2a'},
+];
+const PB_WIRE_PALETTE_3PH = [
+  {key:'n',  label:'Ноль (N)',    color:'#2f6fe0'},
+  {key:'pe', label:'Земля (PE)',  color:'#3fae3f', stripe:'#e0c93f'},
+  {key:'l1', label:'Фаза L1',     color:'#8a5a2a'},
+  {key:'l2', label:'Фаза L2',     color:'#1a1a1a', halo:'#7a7a7a'}, // black — needs a halo to read against the dark canvas
+  {key:'l3', label:'Фаза L3',     color:'#9a9a9a'},
+];
+function panelWirePalette(){ return panelPhases===3 ? PB_WIRE_PALETTE_3PH : PB_WIRE_PALETTE_1PH; }
+function panelWireColorInfo(key){ return panelWirePalette().find(c=>c.key===key) || panelWirePalette()[0]; }
+
+// Phase-consistency tracking (see chat): the palette gives the user 3
+// phase colours to work with (brown/grey/black, or just brown on a
+// single-phase project) — N and PE aren't phase colours and are never
+// restricted by any of this. The user can START a drag in any phase
+// colour, but once a piece of equipment (or busbar) already has ONE
+// particular phase colour connected to ANY of its points, every further
+// phase-coloured wire touching it must be that SAME colour — this is
+// what actually lets a printed schematic be used to trace which physical
+// phase reaches which breaker, instead of colours drifting arbitrarily
+// as they pass through the panel.
+function panelBuilderIsPhaseColor(colorKey){
+  return colorKey==='l' || colorKey==='l1' || colorKey==='l2' || colorKey==='l3';
+}
+// Every phase colour already connected to ANY point of this endpoint
+// (a placement or a busbar — both just use their own id string, so this
+// works for either without special-casing).
+function panelBuilderEndpointPhaseColors(id){
+  const set = new Set();
+  panelWireLinks.forEach(w=>{
+    if(!panelBuilderIsPhaseColor(w.colorKey)) return;
+    if(w.aId===id || w.bId===id) set.add(w.colorKey);
+  });
+  return set;
+}
+// Returns a human-readable warning if connecting a wire of `colorKey`
+// between aId and bId would mix phase colours on either endpoint, or
+// null if it's fine (including whenever colorKey isn't a phase colour at
+// all — N/PE are always unrestricted).
+function panelBuilderPhaseConflict(aId, bId, colorKey){
+  if(!panelBuilderIsPhaseColor(colorKey)) return null;
+  const label = panelWireColorInfo(colorKey).label;
+  for(const id of [aId, bId]){
+    const established = panelBuilderEndpointPhaseColors(id);
+    if(established.size && !established.has(colorKey)){
+      const otherLabels = [...established].map(k=>panelWireColorInfo(k).label).join(', ');
+      const name = panelBuilderEndpointName(id) || 'этому оборудованию';
+      return `Нельзя подключить ${label} — к «${name}» уже подведена другая фаза (${otherLabels}). Провод не создан.`;
+    }
+  }
+  return null;
+}
+
+// ── Manual wire routing (see chat) — same idea as the main canvas's own
+// "по потолку" line editing: the system proposes a reasonable starting
+// path, and the user grabs any segment of a wire and drags it wherever
+// they want. Fully orthogonal, and overlaps are allowed on purpose —
+// anarchy stage, the user is in control instead of a heuristic trying
+// (and repeatedly failing) to guess a good height on its own.
+//
+// Two shapes, depending on the pair (see chat):
+// - SAME side (top-top / bottom-bottom): the original single bridge —
+//   out from A to height y, across, into B. One drag moves the whole
+//   thing.
+// - MIXED side (bottom-top): a "Z" — a horizontal run right at A's own
+//   height, a vertical bridge, a horizontal run right at B's own height.
+//   The single-bridge shape read as ambiguous here (see chat — dragging
+//   it around made it unclear which point it still connected to); the Z
+//   keeps each end visibly anchored to its own point's height, and has 3
+//   independently draggable segments — the two horizontal ones move up/
+//   down, the central vertical one moves left/right — same as how a
+//   schematic trace is normally nudged, never changing direction.
+function panelBuilderIsMixedSide(w){ return w.aSide !== w.bSide; }
+
+function panelBuilderWireD(aId, aSide, aIdx, bId, bSide, bIdx, layout, y){
+  const A = panelBuilderEndpointInfo(aId, aSide, aIdx, layout);
+  const B = panelBuilderEndpointInfo(bId, bSide, bIdx, layout);
+  if(!A || !B) return '';
+  const pa=A.xy, pb=B.xy;
+  return `M ${pa.x} ${pa.y} L ${pa.x} ${y} L ${pb.x} ${y} L ${pb.x} ${pb.y}`;
+}
+// A starting point for a same-side wire that's never been dragged — exits
+// each end by the standard stub, in its own outward direction, and
+// averages the two. Not meant to be "correct" for every layout, just a
+// reasonable place to start dragging from.
+function panelBuilderDefaultWireY(w, layout){
+  const A = panelBuilderEndpointInfo(w.aId, w.aSide, w.aIndex, layout);
+  const B = panelBuilderEndpointInfo(w.bId, w.bSide, w.bIndex, layout);
+  if(!A || !B) return 0;
+  const exitA = A.xy.y + (w.aSide==='bottom' ? PB_WIRE_STUB : -PB_WIRE_STUB);
+  const exitB = B.xy.y + (w.bSide==='bottom' ? PB_WIRE_STUB : -PB_WIRE_STUB);
+  return (exitA+exitB)/2;
+}
+function panelBuilderWireY(w, layout){
+  return w.y!=null ? w.y : panelBuilderDefaultWireY(w, layout);
+}
+
+// The Z-shape's 3 control values, defaulting to a short perpendicular
+// exit at each end (PB_WIRE_STUB, ≈18мм — see chat: the earlier
+// zero-length default read as too abrupt, not matching how the user
+// actually routes these by hand) bridged at the horizontal midpoint.
+function panelBuilderZGeom(w, layout){
+  const A = panelBuilderEndpointInfo(w.aId, w.aSide, w.aIndex, layout);
+  const B = panelBuilderEndpointInfo(w.bId, w.bSide, w.bIndex, layout);
+  if(!A || !B) return null;
+  const pa=A.xy, pb=B.xy;
+  const y1 = w.zY1!=null ? w.zY1 : pa.y + (w.aSide==='bottom' ? PB_WIRE_STUB : -PB_WIRE_STUB);
+  const y2 = w.zY2!=null ? w.zY2 : pb.y + (w.bSide==='bottom' ? PB_WIRE_STUB : -PB_WIRE_STUB);
+  const midX = w.zMidX!=null ? w.zMidX : (pa.x+pb.x)/2;
+  return {pa, pb, y1, y2, midX};
+}
+function panelBuilderZSegD(z, seg){
+  if(seg==='h1') return `M ${z.pa.x} ${z.pa.y} L ${z.pa.x} ${z.y1} L ${z.midX} ${z.y1}`;
+  if(seg==='v')  return `M ${z.midX} ${z.y1} L ${z.midX} ${z.y2}`;
+  return `M ${z.midX} ${z.y2} L ${z.pb.x} ${z.y2} L ${z.pb.x} ${z.pb.y}`; // h2
+}
+
+// The real "Убрать лишние точки" analog (see chat) — same idea as
+// declutterLine() on the main canvas: a bend is only meaningful if the
+// perpendicular segment right after it is actually long enough to see;
+// otherwise it's collapsed away. Applies to a Z-shaped (mixed-side)
+// wire's own three control values, each independently:
+//  - the lead-in near A (pa.y → zY1): if the user dragged it to within
+//    PB_JOG_LIMIT of A's own height, that lead barely exists — drop it,
+//    reverting to the default (which starts exactly at A anyway).
+//  - the lead-out near B, same idea.
+//  - the central vertical bridge: if y1 and y2 ended up within
+//    PB_JOG_LIMIT of each other, the "step" in the Z is negligible —
+//    snap them to the same height instead of leaving a tiny, pointless
+//    jog in the middle.
+// Same-side (loop) wires are a single bridge with nothing to declutter —
+// there's no second point that could go redundant.
+function panelBuilderDeclutterWire(w, layout){
+  if(!panelBuilderIsMixedSide(w)) return false;
+  const A = panelBuilderEndpointInfo(w.aId, w.aSide, w.aIndex, layout);
+  const B = panelBuilderEndpointInfo(w.bId, w.bSide, w.bIndex, layout);
+  if(!A || !B) return false;
+  let changed=false;
+  if(w.zY1!=null && Math.abs(w.zY1-A.xy.y) < PB_JOG_LIMIT){ delete w.zY1; changed=true; }
+  if(w.zY2!=null && Math.abs(w.zY2-B.xy.y) < PB_JOG_LIMIT){ delete w.zY2; changed=true; }
+  const z = panelBuilderZGeom(w, layout);
+  if(z && Math.abs(z.y1-z.y2) < PB_JOG_LIMIT && z.y1!==z.y2){
+    const mid=(z.y1+z.y2)/2;
+    w.zY1=mid; w.zY2=mid;
+    changed=true;
+  }
+  return changed;
+}
+
+function panelBuilderRenderWireSvg(w, layout){
+  const info = panelWireColorInfo(w.colorKey);
+  const selected = w.id===panelWireSelectedId;
+  if(panelBuilderIsMixedSide(w)){
+    const z = panelBuilderZGeom(w, layout);
+    if(!z) return '';
+    const segs = [
+      {id:'h1', d:panelBuilderZSegD(z,'h1'), cursor:'ns-resize'},
+      {id:'v',  d:panelBuilderZSegD(z,'v'),  cursor:'ew-resize'},
+      {id:'h2', d:panelBuilderZSegD(z,'h2'), cursor:'ns-resize'},
+    ];
+    let s='';
+    if(selected) segs.forEach(seg=>{ s += `<path d="${seg.d}" fill="none" stroke="#fff" stroke-width="8" data-wire-id="${w.id}" data-seg="${seg.id}" style="pointer-events:none; opacity:.4"></path>`; });
+    if(info.halo) segs.forEach(seg=>{ s += `<path d="${seg.d}" fill="none" stroke="${info.halo}" stroke-width="5" data-wire-id="${w.id}" data-seg="${seg.id}" style="pointer-events:none"></path>`; });
+    segs.forEach(seg=>{ s += `<path d="${seg.d}" fill="none" stroke="${info.color}" stroke-width="2" data-wire-id="${w.id}" data-seg="${seg.id}" class="pb-wire pb-wire-seg" style="pointer-events:stroke; cursor:${seg.cursor}"></path>`; });
+    if(info.stripe) segs.forEach(seg=>{ s += `<path d="${seg.d}" fill="none" stroke="${info.stripe}" stroke-width="2" stroke-dasharray="6 6" data-wire-id="${w.id}" data-seg="${seg.id}" style="pointer-events:none"></path>`; });
+    return s;
+  }
+  const y = panelBuilderWireY(w, layout);
+  const d = panelBuilderWireD(w.aId, w.aSide, w.aIndex, w.bId, w.bSide, w.bIndex, layout, y);
+  if(!d) return '';
+  let s='';
+  if(selected) s += `<path d="${d}" fill="none" stroke="#fff" stroke-width="8" data-wire-id="${w.id}" style="pointer-events:none; opacity:.4"></path>`;
+  if(info.halo) s += `<path d="${d}" fill="none" stroke="${info.halo}" stroke-width="5" data-wire-id="${w.id}" style="pointer-events:none"></path>`;
+  s += `<path d="${d}" fill="none" stroke="${info.color}" stroke-width="2" data-wire-id="${w.id}" class="pb-wire" style="pointer-events:stroke; cursor:ns-resize"></path>`;
+  if(info.stripe) s += `<path d="${d}" fill="none" stroke="${info.stripe}" stroke-width="2" stroke-dasharray="6 6" data-wire-id="${w.id}" style="pointer-events:none"></path>`;
+  return s;
+}
+
+// Dragging a whole same-side wire (see chat): pointerdown on it starts
+// tracking; if the pointer moves more than a few px it counts as a real
+// drag — history is saved right at that moment (once, not per pixel) and
+// the wire's own y is live-updated by touching the DOM directly (same
+// technique as the new-wire ghost line) rather than a full re-render per
+// pointermove, which would be far too heavy for smooth dragging. If the
+// pointer never moved enough to count as a drag, it's treated as a
+// click: toggles this wire's selection instead.
+function panelBuilderStartWireMove(e, w, layout){
+  e.preventDefault();
+  e.stopPropagation();
+  const svg = document.getElementById('pb-wires-svg');
+  if(!svg) return;
+  const startClientY = e.clientY;
+  const startY = panelBuilderWireY(w, layout);
+  let moved = false;
+  function paintAt(y){
+    const d = panelBuilderWireD(w.aId,w.aSide,w.aIndex,w.bId,w.bSide,w.bIndex,layout,y);
+    svg.querySelectorAll('[data-wire-id="'+w.id+'"]').forEach(el=>el.setAttribute('d', d));
+  }
+  function onMove(ev){
+    const dy = (ev.clientY - startClientY) / panelBuilderView.s;
+    if(!moved && Math.abs(dy)>3){ moved=true; panelBuilderSaveHistory(); }
+    if(moved){ w.y = startY + dy; paintAt(w.y); }
+  }
+  function onUp(){
+    window.removeEventListener('pointermove', onMove);
+    if(moved){ panelWireSelectedId = w.id; }
+    else { panelWireSelectedId = (panelWireSelectedId===w.id) ? null : w.id; panelBuilderSelectedId=null; }
+    renderPanelBuilder();
+  }
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp, {once:true});
+}
+
+// Dragging ONE segment of a Z-shaped (mixed-side) wire — h1/h2 move
+// vertically (their own y1/y2), v moves horizontally (midX). Same
+// click-vs-drag threshold and live-DOM-update approach as the same-side
+// case above.
+function panelBuilderStartWireSegMove(e, w, segId, layout){
+  e.preventDefault();
+  e.stopPropagation();
+  const svg = document.getElementById('pb-wires-svg');
+  const z0 = panelBuilderZGeom(w, layout);
+  if(!svg || !z0) return;
+  const startClientX = e.clientX, startClientY = e.clientY;
+  const start = {y1:z0.y1, y2:z0.y2, midX:z0.midX};
+  let moved = false;
+  function paint(){
+    const z = {pa:z0.pa, pb:z0.pb, y1:w.zY1!=null?w.zY1:z0.pa.y, y2:w.zY2!=null?w.zY2:z0.pb.y, midX:w.zMidX!=null?w.zMidX:(z0.pa.x+z0.pb.x)/2};
+    ['h1','v','h2'].forEach(seg=>{
+      const d = panelBuilderZSegD(z, seg);
+      svg.querySelectorAll('[data-wire-id="'+w.id+'"][data-seg="'+seg+'"]').forEach(el=>el.setAttribute('d', d));
+    });
+  }
+  function onMove(ev){
+    const dx = (ev.clientX-startClientX)/panelBuilderView.s, dy = (ev.clientY-startClientY)/panelBuilderView.s;
+    if(!moved && (Math.abs(dx)>3 || Math.abs(dy)>3)){ moved=true; panelBuilderSaveHistory(); }
+    if(!moved) return;
+    if(segId==='v') w.zMidX = start.midX + dx;
+    else if(segId==='h1') w.zY1 = start.y1 + dy;
+    else if(segId==='h2') w.zY2 = start.y2 + dy;
+    paint();
+  }
+  function onUp(){
+    window.removeEventListener('pointermove', onMove);
+    if(moved){ panelWireSelectedId = w.id; }
+    else { panelWireSelectedId = (panelWireSelectedId===w.id) ? null : w.id; panelBuilderSelectedId=null; }
+    renderPanelBuilder();
+  }
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp, {once:true});
+}
+
+function renderPanelBuilderGrid(){
+  const wrap=document.getElementById('pb-grid');
+  if(!wrap) return;
+  const layout = panelBuilderLayout();
+  const {totalW, totalH, rows} = layout;
+  let html = `<div style="display:inline-block; min-width:${totalW}px; transform:translate(${panelBuilderView.x}px,${panelBuilderView.y}px) scale(${panelBuilderView.s}); transform-origin:0 0">`;
+  html += `<div style="position:relative; width:${totalW}px; height:${totalH}px">`;
+
+  // Row labels, busbars, empty-cell click targets — all absolutely
+  // positioned in the shared coordinate space from panelBuilderLayout().
+  rows.forEach(ri=>{
+    html += `<div style="position:absolute; left:0; top:${ri.labelY}px; font-size:11px; color:#666">Ряд ${ri.row+1}</div>`;
+    layout.busbarBars.filter(bar=>bar.row===ri.row).forEach(bar=>{
+      html += `<div style="position:absolute; left:0; top:${bar.y}px; width:${bar.w}px; height:${bar.h}px; background:${bar.kind==='wide'?'#8a6a2a':'#5a4a2a'}; border-radius:2px" title="${panelBuilderBusbarLabel(bar)}"></div>`;
+    });
+    // One drop target spanning the WHOLE row (see chat) — individual
+    // 26px-wide cell hints below are purely visual (pointer-events:none);
+    // hitting a specific narrow slot precisely with a native browser drag
+    // was unreliable, so the actual column is computed from where in the
+    // row the pointer lands, same idea as the main canvas's own snapping.
+    html += `<div class="pb-row-dropzone" data-row="${ri.row}" style="position:absolute; left:0; top:${ri.cellsY}px; width:${totalW}px; height:${PB_CELL_H}px"></div>`;
+    for(let c=0;c<panelGridCols;c++){
+      if(panelPlacementAt(ri.row,c)) continue;
+      html += `<div class="pb-cell" data-row="${ri.row}" data-col="${c}" style="position:absolute; left:${c*PB_PITCH}px; top:${ri.cellsY}px; width:${PB_CELL_W}px; height:${PB_CELL_H}px; background:#161616; border:1px dashed #333; border-radius:4px; pointer-events:none"></div>`;
+    }
+  });
+
+  // Wires between equipment, and the live drag ghost — drawn BEFORE the
+  // boxes so the boxes sit on top of the wire ends, like a real terminal.
+  html += `<svg id="pb-wires-svg" width="${totalW}" height="${totalH}" style="position:absolute; left:0; top:0; overflow:visible; pointer-events:none" aria-label="Соединения оборудования">`;
+  panelWireLinks.forEach(w=>{ html += panelBuilderRenderWireSvg(w, layout); });
+  html += `<path id="pb-ghost-wire" d="" fill="none" stroke="#888" stroke-width="3" stroke-dasharray="5 4" style="display:none; pointer-events:none"></path>`;
+  html += `</svg>`;
+
+  // Placed equipment boxes.
+  panelPlacements.forEach(p=>{
+    const r = panelBuilderBoxRect(p,layout);
+    const selected = p.id===panelBuilderSelectedId;
+    const links = panelLinks.filter(l=>l.placementId===p.id);
+    const isComb = p.kind==='comb';
+    const bg = isComb ? '#4a3a1a' : (links.length===1 ? links[0].color : '#1a3a5c');
+    const label = isComb ? '⌐ гребёнка' : (p.rating ? `${p.abbr} ${p.rating}` : p.abbr);
+    const tooltip = isComb ? p.name : (p.rating ? `${p.name}, ${p.rating}` : p.name);
+    html += `<div class="pb-placed" data-id="${p.id}" title="${tooltip}" draggable="true"
+      style="position:absolute; left:${r.x}px; top:${r.y}px; width:${r.w}px; height:${r.h}px;
+      background:${bg}; border:2px solid ${selected?'#fff':'#000'}; border-radius:4px; cursor:grab; user-select:none;
+      display:flex; align-items:center; justify-content:center; overflow:hidden; padding:2px; writing-mode:${r.w<r.h?'vertical-rl':'horizontal-tb'}">
+      <span style="font-size:${isComb?11:12}px; font-weight:600; color:#fff; white-space:nowrap">${label}</span>
+    </div>`;
+  });
+
+  // Connection points, on top of everything — the actual drag handles.
+  panelPlacements.forEach(p=>{
+    for(let i=0;i<p.topPoints;i++){
+      const pt = panelBuilderPointXY(p,'top',i,layout);
+      html += `<div class="pb-point" data-placement-id="${p.id}" data-side="top" data-index="${i}"
+        style="position:absolute; left:${pt.x-PB_POINT_R}px; top:${pt.y-PB_POINT_R}px; width:${PB_POINT_R*2}px; height:${PB_POINT_R*2}px;
+        border-radius:50%; background:#eee; border:2px solid #555; cursor:crosshair"></div>`;
+    }
+    for(let i=0;i<p.bottomPoints;i++){
+      const pt = panelBuilderPointXY(p,'bottom',i,layout);
+      html += `<div class="pb-point" data-placement-id="${p.id}" data-side="bottom" data-index="${i}"
+        style="position:absolute; left:${pt.x-PB_POINT_R}px; top:${pt.y-PB_POINT_R}px; width:${PB_POINT_R*2}px; height:${PB_POINT_R*2}px;
+        border-radius:50%; background:#eee; border:2px solid #555; cursor:crosshair"></div>`;
+    }
+  });
+  // Busbar connection points — 2 per DIN module across the bar's full
+  // width (see chat). Reuses the exact same .pb-point drag mechanism as
+  // placement points (panelBuilderStartWireDrag doesn't care which kind
+  // it's holding, see panelBuilderEndpointInfo) via a synthetic
+  // "bus:<groupId>:<barIndex>" id instead of a real placement id. Smaller
+  // and more muted than equipment points — there can be a lot of these
+  // (up to 2× the module count) and they shouldn't dominate the view.
+  layout.busbarBars.forEach(bar=>{
+    const side = panelBuilderBusPointSide(bar);
+    const n = panelGridCols*PB_BUS_POINTS_PER_MODULE;
+    for(let i=0;i<n;i++){
+      const pt = panelBuilderBusPointXY(bar,i);
+      html += `<div class="pb-point" data-placement-id="bus:${bar.groupId}:${bar.barIndex}" data-side="${side}" data-index="${i}" title="${panelBuilderBusbarLabel(bar)}"
+        style="position:absolute; left:${pt.x-PB_BUS_POINT_R}px; top:${pt.y-PB_BUS_POINT_R}px; width:${PB_BUS_POINT_R*2}px; height:${PB_BUS_POINT_R*2}px;
+        border-radius:50%; background:#e8c98a; border:1px solid #7a5a1a; cursor:crosshair"></div>`;
+    }
+  });
+
+  html += `</div></div>`;
+  wrap.innerHTML = html;
+
+  wrap.querySelectorAll('.pb-placed').forEach(el=>{
+    el.removeAttribute('draggable'); // native DnD is unreliable starting from inside the zoomed/panned transform — see chat; click/select stays a plain click below, moving uses pointer events instead
+    el.addEventListener('pointerdown', e=>{
+      const p = panelPlacements.find(x=>x.id===el.dataset.id);
+      if(p) panelBuilderStartPlacementMove(e, p);
+    });
+  });
+  wrap.querySelectorAll('.pb-wire').forEach(el=>{
+    el.addEventListener('pointerdown', e=>{
+      const w = panelWireLinks.find(x=>x.id===el.dataset.wireId);
+      if(!w) return;
+      if(el.dataset.seg) panelBuilderStartWireSegMove(e, w, el.dataset.seg, layout);
+      else panelBuilderStartWireMove(e, w, layout);
+    });
+  });
+  wrap.querySelectorAll('.pb-point').forEach(el=>{
+    el.addEventListener('pointerdown', e=>panelBuilderStartWireDrag(e, el));
+  });
+  // Drop targets for the native drag-and-drop started in
+  // renderPanelBuilderEquipTab() (new equipment). Both dragenter AND
+  // dragover need preventDefault() — handling only dragover left the
+  // forbidden cursor showing everywhere (see chat): the browser decides
+  // whether a target accepts the drag on dragenter, and only re-checks
+  // when the pointer reaches a genuinely different element, so if
+  // dragenter is never accepted anywhere, nothing downstream ever gets a
+  // chance to be a drop zone regardless of what dragover does.
+  //
+  // Column is always computed against that ROW's own dropzone rect, even
+  // when the actual event target is a .pb-placed box sitting on top of
+  // it (see chat) — otherwise dropping near/over another piece of
+  // equipment, rather than exactly on bare empty space, would silently
+  // fail because the box has no drop handling of its own to fall back on.
+  wrap.querySelectorAll('.pb-row-dropzone').forEach(zone=>{
+    const row = parseInt(zone.dataset.row,10);
+    zone.addEventListener('dragenter', e=>{ e.preventDefault(); e.dataTransfer.dropEffect='copy'; panelBuilderPaintRowHover(row, panelBuilderColAtForRow(row,e.clientX)); });
+    zone.addEventListener('dragover', e=>{ e.preventDefault(); e.dataTransfer.dropEffect='copy'; panelBuilderPaintRowHover(row, panelBuilderColAtForRow(row,e.clientX)); });
+    zone.addEventListener('dragleave', ()=>panelBuilderClearRowHover(row));
+    zone.addEventListener('drop', e=>{
+      e.preventDefault();
+      panelBuilderClearRowHover(row);
+      if(!panelBuilderDragInfo) return;
+      panelBuilderPlaceAt(panelBuilderDragInfo, row, panelBuilderColAtForRow(row,e.clientX));
+      panelBuilderDragInfo=null;
+    });
+  });
+  panelPlacements.forEach(p=>{
+    const el = wrap.querySelector(`.pb-placed[data-id="${p.id}"]`);
+    if(!el) return;
+    el.addEventListener('dragenter', e=>{ if(!panelBuilderDragInfo) return; e.preventDefault(); e.dataTransfer.dropEffect='move'; panelBuilderPaintRowHover(p.row, panelBuilderColAtForRow(p.row,e.clientX)); });
+    el.addEventListener('dragover', e=>{ if(!panelBuilderDragInfo) return; e.preventDefault(); e.dataTransfer.dropEffect='move'; panelBuilderPaintRowHover(p.row, panelBuilderColAtForRow(p.row,e.clientX)); });
+    el.addEventListener('dragleave', ()=>panelBuilderClearRowHover(p.row));
+    el.addEventListener('drop', e=>{
+      if(!panelBuilderDragInfo) return;
+      e.preventDefault();
+      e.stopPropagation();
+      panelBuilderClearRowHover(p.row);
+      panelBuilderPlaceAt(panelBuilderDragInfo, p.row, panelBuilderColAtForRow(p.row,e.clientX));
+      panelBuilderDragInfo=null;
+    });
+  });
+}
+
+// Promoted to top-level (see chat) so both the native-DnD drop handling
+// above AND the pointer-based placement-move below can share the exact
+// same column/row math and hover-highlight behaviour. Always reads
+// #pb-grid fresh rather than closing over a stale `wrap` reference.
+function panelBuilderColAtForRow(row, clientX){
+  const grid = document.getElementById('pb-grid');
+  const zone = grid && grid.querySelector(`.pb-row-dropzone[data-row="${row}"]`);
+  if(!zone) return 0;
+  const rect = zone.getBoundingClientRect();
+  const col = Math.floor((clientX - rect.left) / (PB_PITCH*panelBuilderView.s));
+  return Math.max(0, Math.min(panelGridCols-1, col));
+}
+function panelBuilderPaintRowHover(row, col){
+  const grid = document.getElementById('pb-grid');
+  if(!grid) return;
+  grid.querySelectorAll(`.pb-cell[data-row="${row}"]`).forEach(c=>{ c.style.background='#161616'; });
+  const cell = grid.querySelector(`.pb-cell[data-row="${row}"][data-col="${col}"]`);
+  if(cell) cell.style.background='#2a3a4a';
+}
+function panelBuilderClearRowHover(row){
+  const grid = document.getElementById('pb-grid');
+  if(!grid) return;
+  grid.querySelectorAll(`.pb-cell[data-row="${row}"]`).forEach(c=>{ c.style.background='#161616'; });
+}
+
+// Moving an already-placed item (see chat — replaces an earlier native-
+// HTML5-drag-and-drop version that turned out to be unreliable starting
+// from inside the zoomed/panned transform the grid content sits in).
+// Pointer-based, same technique as wire dragging: track movement past a
+// small threshold before it counts as a real drag (otherwise it's a
+// plain click → select, handled in onUp below); while dragging, use
+// elementFromPoint — which works in screen space and isn't affected by
+// the CSS transform — to find which row/column the pointer is over, and
+// highlight it the same way the native-DnD hover feedback did.
+function panelBuilderStartPlacementMove(e, p){
+  e.preventDefault();
+  const startClientX=e.clientX, startClientY=e.clientY;
+  let moved=false, hoverRow=null;
+  function target(ev){
+    const el = document.elementFromPoint(ev.clientX, ev.clientY);
+    const zone = el && el.closest ? el.closest('.pb-row-dropzone') : null;
+    if(!zone) return null;
+    const row = parseInt(zone.dataset.row,10);
+    return {row, col:panelBuilderColAtForRow(row, ev.clientX)};
+  }
+  function onMove(ev){
+    if(!moved && (Math.abs(ev.clientX-startClientX)>4 || Math.abs(ev.clientY-startClientY)>4)) moved=true;
+    if(!moved) return;
+    if(hoverRow!=null) panelBuilderClearRowHover(hoverRow);
+    const t = target(ev);
+    if(t){ panelBuilderPaintRowHover(t.row, t.col); hoverRow=t.row; } else hoverRow=null;
+  }
+  function onUp(ev){
+    window.removeEventListener('pointermove', onMove);
+    if(hoverRow!=null) panelBuilderClearRowHover(hoverRow);
+    if(!moved){
+      panelBuilderSelectedId = p.id;
+      panelWireSelectedId = null;
+      renderPanelBuilder();
+      return;
+    }
+    const t = target(ev);
+    if(t) panelBuilderPlaceAt({moveId:p.id}, t.row, t.col);
+    else renderPanelBuilder(); // dropped outside any row — just redraw, nothing moved
+  }
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp, {once:true});
+}
+
+// Collects every currently-drawn HORIZONTAL segment (same-side wires
+// have one; Z-shape wires have two, h1/h2 — their vertical bridge isn't
+// checked here) so a new wire's default path can avoid crossing them
+// (see chat). Anarchy-stage simplification: only the NEW wire is nudged
+// out of the way — existing wires are left exactly where the user put
+// them, rather than also shifting neighbours to make room.
+function panelBuilderExistingHSegments(layout, excludeId){
+  const segs = [];
+  panelWireLinks.forEach(w=>{
+    if(w.id===excludeId) return;
+    if(panelBuilderIsMixedSide(w)){
+      const z = panelBuilderZGeom(w, layout);
+      if(!z) return;
+      segs.push({y:z.y1, x1:Math.min(z.pa.x,z.midX), x2:Math.max(z.pa.x,z.midX)});
+      segs.push({y:z.y2, x1:Math.min(z.midX,z.pb.x), x2:Math.max(z.midX,z.pb.x)});
+    } else {
+      const A = panelBuilderEndpointInfo(w.aId,w.aSide,w.aIndex,layout);
+      const B = panelBuilderEndpointInfo(w.bId,w.bSide,w.bIndex,layout);
+      if(!A||!B) return;
+      segs.push({y:panelBuilderWireY(w,layout), x1:Math.min(A.xy.x,B.xy.x), x2:Math.max(A.xy.x,B.xy.x)});
+    }
+  });
+  return segs;
+}
+// Nudges a candidate height away from PB_AVOID_STEP at a time, in
+// whichever direction clears first, until it no longer overlaps any
+// existing segment that shares its X range — same idea as the junction-
+// box "Оптимизировать порты" pass, just for wire height instead of port
+// order.
+function panelBuilderAvoidY(y, x1, x2, segs){
+  const tol=5;
+  function hits(yy){ return segs.some(s=>Math.abs(s.y-yy)<tol && x1<s.x2 && x2>s.x1); }
+  if(!hits(y)) return y;
+  for(let i=1;i<25;i++){
+    if(!hits(y+i*PB_AVOID_STEP)) return y+i*PB_AVOID_STEP;
+    if(!hits(y-i*PB_AVOID_STEP)) return y-i*PB_AVOID_STEP;
+  }
+  return y;
+}
+// Applies panelBuilderAvoidY to a freshly-created wire's own default
+// path — writing the (possibly nudged) result directly onto the wire as
+// its saved y / zY1 / zY2, so the avoidance sticks rather than being
+// recomputed (and potentially drifting) on every render.
+function panelBuilderAssignClearDefault(w, layout){
+  const segs = panelBuilderExistingHSegments(layout, w.id);
+  if(panelBuilderIsMixedSide(w)){
+    const z = panelBuilderZGeom(w, layout);
+    if(!z) return;
+    w.zY1 = panelBuilderAvoidY(z.y1, Math.min(z.pa.x,z.midX), Math.max(z.pa.x,z.midX), segs);
+    w.zY2 = panelBuilderAvoidY(z.y2, Math.min(z.midX,z.pb.x), Math.max(z.midX,z.pb.x), segs);
+  } else {
+    const A = panelBuilderEndpointInfo(w.aId,w.aSide,w.aIndex,layout);
+    const B = panelBuilderEndpointInfo(w.bId,w.bSide,w.bIndex,layout);
+    if(!A||!B) return;
+    const y = panelBuilderWireY(w, layout);
+    w.y = panelBuilderAvoidY(y, Math.min(A.xy.x,B.xy.x), Math.max(A.xy.x,B.xy.x), segs);
+  }
+}
+
+// Drag-and-drop wire creation (see chat): mousedown on a connection point
+// starts a live ghost line that follows the cursor; releasing over a
+// DIFFERENT point completes the wire in whichever colour is currently
+// active in the palette. The ghost line is updated by touching the DOM
+// directly rather than calling renderPanelBuilder() on every pointermove
+// — a full HTML rebuild per pixel of mouse movement would lag badly.
+function panelBuilderStartWireDrag(e, pointEl){
+  e.preventDefault();
+  const aId = pointEl.dataset.placementId, aSide = pointEl.dataset.side, aIndex = parseInt(pointEl.dataset.index,10);
+  const layout = panelBuilderLayout();
+  const A = panelBuilderEndpointInfo(aId, aSide, aIndex, layout);
+  if(!A) return;
+  const start = A.xy;
+  const svg = document.getElementById('pb-wires-svg');
+  const ghost = document.getElementById('pb-ghost-wire');
+  if(!svg || !ghost) return;
+  const svgRect = svg.getBoundingClientRect();
+  const info = panelWireColorInfo(panelWireActiveColorKey);
+  ghost.setAttribute('stroke', info.color);
+  ghost.setAttribute('d', `M ${start.x} ${start.y} L ${start.x} ${start.y}`);
+  ghost.style.display='block';
+  panelWireDrag = {aId, aSide, aIndex};
+
+  function onMove(ev){
+    const x = (ev.clientX - svgRect.left)/panelBuilderView.s, y = (ev.clientY - svgRect.top)/panelBuilderView.s;
+    ghost.setAttribute('d', `M ${start.x} ${start.y} L ${x} ${y}`);
+  }
+  function onUp(ev){
+    window.removeEventListener('pointermove', onMove);
+    ghost.style.display='none';
+    const target = document.elementFromPoint(ev.clientX, ev.clientY);
+    const dropEl = target && target.closest ? target.closest('.pb-point') : null;
+    if(dropEl){
+      const bId=dropEl.dataset.placementId, bSide=dropEl.dataset.side, bIndex=parseInt(dropEl.dataset.index,10);
+      const sameSpot = bId===aId && bSide===aSide && bIndex===aIndex;
+      if(!sameSpot){
+        const conflict = panelBuilderPhaseConflict(aId, bId, panelWireActiveColorKey);
+        if(conflict){ alert(conflict); panelWireDrag=null; renderPanelBuilder(); return; }
+        panelBuilderSaveHistory();
+        const w = {id:uid(), aId, aSide, aIndex, bId, bSide, bIndex, colorKey:panelWireActiveColorKey};
+        panelBuilderAssignClearDefault(w, layout);
+        panelWireLinks.push(w);
+      }
+    }
+    panelWireDrag = null;
+    renderPanelBuilder();
+  }
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp, {once:true});
+}
+
+// Moving an already-placed item (see chat) reuses the same drop path as
+// placing a brand new one from the stock list — info.moveId, set by the
+// .pb-placed dragstart handler, distinguishes the two. Wires never need
+// any special handling here: they're stored by placement id + side +
+// index, not by fixed coordinates, so once the placement's own row/col
+// changes, every connection point it owns — and every wire attached to
+// one — simply recomputes at the new position on the next render. A
+// circuit can't be broken by a move; it can only end up looking odd if a
+// wire's own saved height doesn't suit the new spot (the user can always
+// drag it or hit "Сбросить путь").
+function panelBuilderPlaceAt(info, row, col){
+  if(info.moveId){
+    const p = panelPlacements.find(x=>x.id===info.moveId);
+    if(!p) return;
+    const span = p.spanCols || p.modulesEach;
+    if(col + span > panelGridCols){ alert('Не помещается в ряд — слишком мало места справа.'); return; }
+    for(let c=col; c<col+span; c++){
+      const other = panelPlacementAt(row,c);
+      if(other && other.id!==p.id){ alert('Место уже занято.'); return; }
+    }
+    if(p.row===row && p.col===col) return; // dropped back where it started
+    panelBuilderSaveHistory();
+    p.row=row; p.col=col;
+    panelBuilderSelectedId=p.id;
+    renderPanelBuilder();
+    return;
+  }
+  let span = info.modulesEach;
+  let topPoints = info.topPoints, bottomPoints = info.bottomPoints;
+  if(info.kind==='comb'){
+    span = Math.max(1, parseInt(prompt('Сколько модулей охватывает гребёнка?', '8'),10)||8);
+    topPoints = span; bottomPoints = 0;
+  }
+  if(col + span > panelGridCols){ alert('Не помещается в ряд — слишком мало места справа.'); return; }
+  for(let c=col; c<col+span; c++){
+    if(panelPlacementAt(row,c)){ alert('Место уже занято.'); return; }
+  }
+  // Номинал (see chat) — a free-text rating ("25А", "16А", ...) asked once
+  // per placed instance, since two breakers of the same type commonly get
+  // different ratings. Skipped for a comb bar, which doesn't have one.
+  const rating = info.kind==='comb' ? '' : (prompt('Номинал оборудования (например, 25А, 16А):', '')||'').trim();
+  const p = {id:uid(), typeId: info.kind==='comb'?null:info.typeId, name:info.name, abbr:info.abbr, rating, modulesEach:info.modulesEach||1, spanCols:span, topPoints, bottomPoints, row, col, kind:info.kind};
+  panelBuilderSaveHistory();
+  panelPlacements.push(p);
+  panelBuilderSelectedId=p.id;
+  renderPanelBuilder();
+}
+
+// "Свойства" tab (see chat): whatever's currently selected — a
+// placement's connection-point counts (editable like distribution-box
+// ports — see below), its line-colour links, its rating, and the wires
+// touching it; or a selected wire's own colour/route/delete/reset. Empty
+// hint when nothing's selected.
+function renderPanelBuilderPropsTab(){
+  const wrap=document.getElementById('pb-tab-props');
+  if(!wrap) return;
+  if(panelWireSelectedId){ renderPanelBuilderWireProps(wrap); return; }
+  const p = panelPlacements.find(x=>x.id===panelBuilderSelectedId);
+  if(!p){ wrap.innerHTML=`<p style="font-size:11px; color:#666">Выберите элемент на схеме, чтобы посмотреть и изменить его свойства.</p>`; return; }
+  const links = panelLinks.filter(l=>l.placementId===p.id);
+  const colors = panelBuilderColors();
+  const wires = panelWireLinks.filter(w=>w.aId===p.id||w.bId===p.id);
+  wrap.innerHTML = `
+    <div style="font-size:13px; color:#e0e0e0; font-weight:600; margin-bottom:4px">${p.name}</div>
+    <div style="font-size:11px; color:#888; margin-bottom:12px">Ряд ${p.row+1}, ${p.spanCols||p.modulesEach} мод.</div>
+    ${p.kind==='comb' ? '<p style="font-size:11px; color:#666; margin-bottom:12px">Гребёнка не привязывается к линиям — она просто соединяет вводы автоматов в этом промежутке. Число точек равно её ширине.</p>' : `
+    <div style="font-size:11px; font-weight:600; color:#888; text-transform:uppercase; margin-bottom:6px">Точки подключения</div>
+    <div style="display:flex; gap:10px; align-items:flex-end; margin-bottom:8px">
+      <label style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#888">Сверху
+        <input type="number" id="pb-points-top" class="prop-input" min="0" max="12" step="1" style="width:70px" value="${p.topPoints}">
+      </label>
+      <label style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#888">Снизу
+        <input type="number" id="pb-points-bottom" class="prop-input" min="0" max="12" step="1" style="width:70px" value="${p.bottomPoints}">
+      </label>
+    </div>
+    <button id="pb-trim-points" title="Обрезает число точек до последней реально используемой — не путать с «Убрать лишние точки» у самого провода, это другая функция" style="width:100%; margin-bottom:14px; padding:6px 10px; background:#242424; border:1px solid #444; border-radius:6px; color:#ccc; font-size:11px; cursor:pointer">Убрать неиспользуемые точки</button>
+    <label style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#888; margin-bottom:14px">Номинал
+      <input type="text" id="pb-rating-input" class="prop-input" style="width:100px" value="${p.rating||''}" placeholder="25А">
+    </label>
+    <div style="font-size:11px; color:#888; margin-bottom:6px">Привязанные линии (клик — привязать/отвязать):</div>
+    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px">
+      ${colors.length ? colors.map(c=>{
+        const active = links.some(l=>l.color===c.hex);
+        return `<button class="pb-link-swatch" data-color="${c.hex}"
+          style="display:flex; align-items:center; gap:6px; padding:5px 10px; border-radius:6px; cursor:pointer;
+          background:${active?'#1a3a1a':'#242424'}; border:1px solid ${active?'#2a6a2a':'#3a3a3a'}">
+          <span style="width:12px; height:12px; border-radius:3px; background:${c.hex}; display:inline-block"></span>
+          <span style="font-size:11px; color:${active?'#8aff8a':'#ccc'}">${c.name}</span>
+        </button>`;
+      }).join('') : '<span style="font-size:11px; color:#555">Нет подключённых цветов линий в проекте</span>'}
+    </div>`}
+    <div style="font-size:11px; color:#888; margin-bottom:6px">Провода к другому оборудованию:</div>
+    ${wires.length ? wires.map(w=>{
+      const otherId = w.aId===p.id ? w.bId : w.aId;
+      const myTerm = w.aId===p.id ? w.aSide : w.bSide;
+      const otherName = panelBuilderEndpointName(otherId);
+      const info = panelWireColorInfo(w.colorKey);
+      return `<div style="display:flex; align-items:center; gap:8px; padding:4px 0; font-size:11px; color:#ccc">
+        <span style="width:14px; height:4px; border-radius:2px; background:${info.color}; display:inline-block"></span>
+        <span>${info.label} — ${otherName||'(удалено)'} (${myTerm==='top'?'от верха':'от низа'})</span>
+        <button data-wire-id="${w.id}" class="pb-wire-remove" style="margin-left:auto; background:none; border:none; color:#888; cursor:pointer; font-size:13px; line-height:1">✕</button>
+      </div>`;
+    }).join('') : '<span style="font-size:11px; color:#555">Пока не соединено</span>'}
+    <button id="pb-remove-placement" style="margin-top:16px; width:100%; padding:7px 10px; background:#3a1a1a; border:1px solid #6a2a2a; border-radius:6px; color:#ff8a8a; font-size:11px; cursor:pointer">Удалить</button>`;
+
+  // Point counts — same idea as reordering/resizing a distribution box's
+  // ports (see chat): shrinking drops any wires that were touching a now
+  // out-of-range point, so nothing points at a hole.
+  ['top','bottom'].forEach(side=>{
+    const el = document.getElementById(side==='top'?'pb-points-top':'pb-points-bottom');
+    if(!el) return;
+    el.addEventListener('change', function(){
+      const v = Math.max(0, Math.min(12, parseInt(this.value,10)||0));
+      const key = side==='top'?'topPoints':'bottomPoints';
+      if(v===p[key]) return;
+      panelBuilderSaveHistory();
+      panelWireLinks = panelWireLinks.filter(w=>{
+        if(w.aId===p.id && w.aSide===side && w.aIndex>=v) return false;
+        if(w.bId===p.id && w.bSide===side && w.bIndex>=v) return false;
+        return true;
+      });
+      p[key]=v;
+      renderPanelBuilder();
+    });
+  });
+  document.getElementById('pb-trim-points')?.addEventListener('click', ()=>{
+    // NOT the same thing as the main canvas's "Убрать лишние точки"
+    // (declutterLine) — that cleans up a line's own route geometry
+    // (short, insignificant perpendicular jogs); this trims a piece of
+    // equipment's connection-POINT COUNT down to the highest index
+    // actually touched by a wire, +1 (or 0 if that side has no wires at
+    // all) — removing unused/decorative points, like deleting an empty
+    // port off a distribution box. See panelBuilderDeclutterWire below
+    // for the real geometry-cleanup analog, on the wire's own panel.
+    panelBuilderSaveHistory();
+    ['top','bottom'].forEach(side=>{
+      const key = side==='top'?'topPoints':'bottomPoints';
+      let maxUsed=-1;
+      panelWireLinks.forEach(w=>{
+        if(w.aId===p.id && w.aSide===side) maxUsed=Math.max(maxUsed,w.aIndex);
+        if(w.bId===p.id && w.bSide===side) maxUsed=Math.max(maxUsed,w.bIndex);
+      });
+      p[key]=maxUsed+1;
+    });
+    renderPanelBuilder();
+  });
+  {
+    const ratingEl = document.getElementById('pb-rating-input');
+    if(ratingEl){
+      let ratingBefore = p.rating||'';
+      ratingEl.addEventListener('focus', function(){ ratingBefore = this.value; });
+      ratingEl.addEventListener('input', function(){
+        p.rating = this.value;
+        renderPanelBuilderGrid(); // reflect the new rating on the box label immediately
+      });
+      ratingEl.addEventListener('blur', function(){
+        if(this.value!==ratingBefore){
+          // The value has already been applied live above — this just
+          // backfills one history entry for the whole edit, undoing it
+          // restores the pre-focus value.
+          const after = p.rating;
+          p.rating = ratingBefore;
+          panelBuilderSaveHistory();
+          p.rating = after;
+        }
+      });
+    }
+  }
+  document.getElementById('pb-remove-placement').addEventListener('click', ()=>{
+    panelBuilderSaveHistory();
+    panelPlacements = panelPlacements.filter(x=>x.id!==p.id);
+    panelLinks = panelLinks.filter(l=>l.placementId!==p.id);
+    panelWireLinks = panelWireLinks.filter(w=>w.aId!==p.id && w.bId!==p.id);
+    panelBuilderSelectedId=null;
+    renderPanelBuilder();
+  });
+  wrap.querySelectorAll('.pb-link-swatch').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      panelBuilderSaveHistory();
+      const color = btn.dataset.color;
+      const idx = panelLinks.findIndex(l=>l.placementId===p.id && l.color===color);
+      if(idx>=0) panelLinks.splice(idx,1);
+      else panelLinks.push({placementId:p.id, color});
+      renderPanelBuilder();
+    });
+  });
+  wrap.querySelectorAll('.pb-wire-remove').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      panelBuilderSaveHistory();
+      panelWireLinks = panelWireLinks.filter(w=>w.id!==btn.dataset.wireId);
+      renderPanelBuilder();
+    });
+  });
+}
+
+// Shown instead of the placement panel while a WIRE (not a placement) is
+// selected — its colour/route, which two points it joins, a way to
+// delete it, and a way to reset its path back to the default straight
+// crossing if a drag went somewhere awkward.
+function renderPanelBuilderWireProps(wrap){
+  const w = panelWireLinks.find(x=>x.id===panelWireSelectedId);
+  if(!w){ panelWireSelectedId=null; wrap.innerHTML=''; return; }
+  const info = panelWireColorInfo(w.colorKey);
+  const aName = panelBuilderEndpointName(w.aId) || '(удалено)';
+  const bName = panelBuilderEndpointName(w.bId) || '(удалено)';
+  wrap.innerHTML = `
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px">
+      <span style="width:16px; height:4px; border-radius:2px; background:${info.color}; display:inline-block"></span>
+      <div style="font-size:13px; color:#e0e0e0; font-weight:600">${info.label}</div>
+    </div>
+    <div style="font-size:11px; color:#888; margin-bottom:14px">${aName} (${w.aSide==='top'?'верх':'низ'}) ↔ ${bName} (${w.bSide==='top'?'верх':'низ'})</div>
+    <p style="font-size:11px; color:#666; margin-bottom:14px">${panelBuilderIsMixedSide(w) ? 'Z-образная линия: два горизонтальных отрезка тянутся по вертикали, центральный вертикальный — по горизонтали.' : 'Потяните сам провод на схеме, чтобы изменить его высоту.'} Можно накладывать на другие провода.</p>
+    ${panelBuilderIsMixedSide(w) ? `<button id="pb-wire-declutter" title="Убирает незначительные, случайно получившиеся изгибы пути — как declutterLine в основном черчении" style="width:100%; margin-bottom:8px; padding:7px 10px; background:#242424; border:1px solid #444; border-radius:6px; color:#ccc; font-size:11px; cursor:pointer">Убрать лишние точки</button>` : ''}
+    <button id="pb-wire-reset" style="width:100%; margin-bottom:8px; padding:7px 10px; background:#242424; border:1px solid #444; border-radius:6px; color:#ccc; font-size:11px; cursor:pointer">Сбросить путь</button>
+    <button id="pb-wire-delete" style="width:100%; padding:7px 10px; background:#3a1a1a; border:1px solid #6a2a2a; border-radius:6px; color:#ff8a8a; font-size:11px; cursor:pointer">Удалить</button>`;
+  document.getElementById('pb-wire-declutter')?.addEventListener('click', ()=>{
+    const layout = panelBuilderLayout();
+    panelBuilderSaveHistory();
+    const changed = panelBuilderDeclutterWire(w, layout);
+    if(!changed){ panelBuilderUndoStack.pop(); } // nothing to clean — don't leave a no-op entry in the history
+    renderPanelBuilder();
+  });
+  document.getElementById('pb-wire-reset').addEventListener('click', ()=>{
+    panelBuilderSaveHistory();
+    delete w.y;
+    delete w.zY1; delete w.zY2; delete w.zMidX;
+    renderPanelBuilder();
+  });
+  document.getElementById('pb-wire-delete').addEventListener('click', ()=>{
+    panelBuilderSaveHistory();
+    panelWireLinks = panelWireLinks.filter(x=>x.id!==w.id);
+    panelWireSelectedId=null;
+    renderPanelBuilder();
+  });
+}
+
+// Pan (middle-mouse drag) and zoom (wheel, centred on the cursor) for the
+// grid — same interaction pattern as the "Посчитать подрозетники"
+// module's canvas (podrozetView/podrozetSetupCanvas), just applied to the
+// grid's CSS transform instead of a canvas redraw. During an active pan
+// or zoom the transform is written directly to the DOM (no full re-
+// render) so it stays smooth; a full render only happens for discrete
+// actions (button clicks), not every pointermove.
+function panelBuilderApplyViewTransform(){
+  const content = document.querySelector('#pb-grid > div');
+  if(content) content.style.transform = `translate(${panelBuilderView.x}px,${panelBuilderView.y}px) scale(${panelBuilderView.s})`;
+}
+function panelBuilderSetupPanZoom(){
+  const wrap = document.getElementById('pb-grid-wrap');
+  if(!wrap || wrap._pbPanZoomSetup) return; // guard against re-binding on every openPanelBuilder()
+  wrap._pbPanZoomSetup = true;
+  let panStart = null;
+  wrap.addEventListener('mousedown', e=>{
+    if(e.button!==1) return; // middle-button pan, works regardless of what tool/mode is active
+    e.preventDefault();
+    panStart = {cx:e.clientX, cy:e.clientY, viewX:panelBuilderView.x, viewY:panelBuilderView.y};
+  });
+  window.addEventListener('mousemove', e=>{
+    if(!panStart) return;
+    panelBuilderView.x = panStart.viewX + (e.clientX-panStart.cx);
+    panelBuilderView.y = panStart.viewY + (e.clientY-panStart.cy);
+    panelBuilderApplyViewTransform();
+  });
+  window.addEventListener('mouseup', e=>{ if(e.button===1) panStart=null; });
+  wrap.addEventListener('contextmenu', e=>e.preventDefault()); // middle-click pan shouldn't also open a context menu
+  wrap.addEventListener('wheel', e=>{
+    e.preventDefault();
+    const rect = wrap.getBoundingClientRect();
+    const cx = e.clientX-rect.left, cy = e.clientY-rect.top;
+    const beforeX = (cx-panelBuilderView.x)/panelBuilderView.s, beforeY = (cy-panelBuilderView.y)/panelBuilderView.s;
+    const factor = e.deltaY<0 ? 1.1 : 1/1.1;
+    panelBuilderView.s = Math.max(0.3, Math.min(3, panelBuilderView.s*factor));
+    panelBuilderView.x = cx - beforeX*panelBuilderView.s;
+    panelBuilderView.y = cy - beforeY*panelBuilderView.s;
+    panelBuilderApplyViewTransform();
+    renderPanelBuilderToolbar();
+  }, {passive:false});
+}
+// Tab switching between "Оборудование" and "Свойства" — bound once,
+// since the tab buttons themselves are static HTML, not rebuilt by
+// renderPanelBuilder() each time.
+function panelBuilderSetupTabs(){
+  document.querySelectorAll('.pb-stab').forEach(btn=>{
+    if(btn._pbTabBound) return;
+    btn._pbTabBound = true;
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.pb-stab').forEach(b=>{
+        const active = b===btn;
+        b.style.color = active ? '#e8e8e8' : '#888';
+        b.style.borderBottomColor = active ? '#4a9eff' : 'transparent';
+      });
+      document.querySelectorAll('.pb-spanel').forEach(p=>{
+        p.style.display = (p.id === 'pb-tab-'+btn.dataset.pbtab) ? 'block' : 'none';
+      });
+    });
+  });
+}
+
+// Keyboard shortcuts (see chat) — undo/redo and delete-selected, active
+// only while the builder modal is actually open, and only when focus
+// isn't in a text field (so Ctrl+Z inside the "Номинал" input still does
+// normal text-undo, and Delete/Backspace while typing a name still
+// deletes characters, not the selected placement).
+document.addEventListener('keydown', e=>{
+  const modal = document.getElementById('panel-builder-modal');
+  if(!modal || modal.style.display!=='flex') return;
+  const tag = (document.activeElement && document.activeElement.tagName) || '';
+  if(tag==='INPUT' || tag==='TEXTAREA') return;
+  if((e.ctrlKey||e.metaKey) && !e.shiftKey && e.key.toLowerCase()==='z'){ e.preventDefault(); panelBuilderUndo(); return; }
+  if((e.ctrlKey||e.metaKey) && (e.shiftKey && e.key.toLowerCase()==='z' || e.key.toLowerCase()==='y')){ e.preventDefault(); panelBuilderRedo(); return; }
+  if(e.key==='Escape'){ e.preventDefault(); panelBuilderClearSelection(); return; }
+  if((e.key==='Delete'||e.key==='Backspace') && (panelBuilderSelectedId||panelWireSelectedId)){
+    e.preventDefault();
+    panelBuilderDeleteSelected();
+  }
+});
+
 // ═══════════════════════════════════════════════════════
 // Overall estimate modal — same reactive-rendering split as the panel
 // calc modal: top config rebuilds on select 'change' only; the cable-by-

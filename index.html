@@ -4,8 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Проводка орг (Provodka.org) — Онлайн-конструктор схем электропроводки</title>
-<meta name="description" content="Бесплатная программа на сайте Проводка орг для проектирования электрики в квартире своими руками. Чертите схемы проводки онлайн.">
-<meta name="keywords" content="калькулятор проводки, расчёт кабеля онлайн, схема электропроводки онлайн, сколько метров кабеля, расчёт проводки в квартире, расчёт проводки в доме, электрик калькулятор, метраж проводки, план проводки онлайн, электромонтаж расчёт, ВВГ расчёт метража, калькулятор электрика Казахстан">
+<meta name="description" content="Бесплатная программа на сайте Проводка орг для проектирования электрики в квартире своими руками: чертите схемы проводки и собирайте схему щита в конструкторе.">
+<meta name="keywords" content="калькулятор проводки, расчёт кабеля онлайн, схема электропроводки онлайн, сколько метров кабеля, расчёт проводки в квартире, расчёт проводки в доме, электрик калькулятор, метраж проводки, план проводки онлайн, электромонтаж расчёт, ВВГ расчёт метража, калькулятор электрика Казахстан, конструктор щитка, конструктор электрощита онлайн, схема расключения щита, схема электрощита онлайн, расстановка автоматов в щитке, составить схему щита онлайн">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Provodka.org — калькулятор проводки и конструктор электрощита",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Web",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "KZT" },
+  "featureList": [
+    "Расчёт метража кабеля по плану помещения",
+    "Онлайн-конструктор схем электропроводки",
+    "Конструктор электрощита: автоматы, УЗО, дифавтоматы, шины, контакторы",
+    "Автоматическая разводка проводов от шин в щите",
+    "Экспорт схем в PNG"
+  ],
+  "url": "https://provodka.org/"
+}
+</script>
 <meta name="author" content="Provodka.org">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://provodka.org/">
@@ -835,6 +853,94 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
   </div>
 </div>
 
+<!-- Panel Builder guide modal -->
+<div id="pb-guide-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:720;align-items:center;justify-content:center;overflow:auto;padding:20px">
+  <div style="background:#1e1e1e;border:1px solid #444;border-radius:12px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;padding:28px 30px;position:relative">
+    <button id="pb-guide-close" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#666;font-size:22px;cursor:pointer;line-height:1">✕</button>
+    <h2 data-i18n="pb_guide_h2" style="font-size:18px;font-weight:700;margin-bottom:6px;color:#e8e8e8">Как пользоваться Конструктором щитка</h2>
+    <p data-i18n="pb_guide_sub" style="font-size:12px;color:#555;margin-bottom:20px">Коротко по шагам</p>
+
+    <div class="guide-step">
+      <div class="guide-num">1</div>
+      <div class="guide-body">
+        <div class="guide-title" data-i18n="pb_guide_1_title">Что это и что нет</div>
+        <div class="guide-text" data-i18n-html="pb_guide_1_text">Конструктор нужен, чтобы увидеть щиток целиком и разложить модули и линии так, чтобы схема была понятной. Он <b>ничего не проверяет и не считает</b> — ни токи, ни сечения, ни соответствие норм. Единственное, за чем он реально следит, — наследование фаз: он прослеживает цепочку через все соединения и не даст перепутать фазы на одной шине.</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-num">2</div>
+      <div class="guide-body">
+        <div class="guide-title" data-i18n="pb_guide_2_title">Размер щитка</div>
+        <div class="guide-text" data-i18n-html="pb_guide_2_text">Вверху тулбара — «Рядов» и «Модулей в ряде». Меняйте в любой момент: то, что уже расставлено, пересчитывается заново, а не теряется, пока для него остаётся место.</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-num">3</div>
+      <div class="guide-body">
+        <div class="guide-title" data-i18n="pb_guide_3_title">Штатные нулевые шины</div>
+        <div class="guide-text" data-i18n-html="pb_guide_3_text">Вкладка «Оборудование» → «Шина штатная» — перетащите на одну из полок над или под щитком (полки показаны пунктиром, даже когда пустые). Используйте именно штатные шины, а не гребёнки или отдельные перемычки: по ним сразу видно, какая линия к какому вводу идёт, и для них работает «Оптимизировать шины».</div>
+        <svg viewBox="0 0 400 140" style="width:100%; max-width:360px; margin-top:10px; display:block; background:#141414; border:1px solid #2a2a2a; border-radius:6px">
+          <rect x="20" y="18" width="360" height="14" rx="3" fill="#5a4a2a" stroke="#8a6a2a"/>
+          <circle cx="40" cy="25" r="3.5" fill="#e8c98a"/><circle cx="60" cy="25" r="3.5" fill="#e8c98a"/><circle cx="80" cy="25" r="3.5" fill="#e8c98a"/><circle cx="100" cy="25" r="3.5" fill="#e8c98a"/>
+          <rect x="20" y="38" width="360" height="14" rx="3" fill="none" stroke="#3a4048" stroke-dasharray="4 3"/>
+          <rect x="20" y="70" width="60" height="50" rx="4" fill="#1a3a5c" stroke="#000"/>
+          <rect x="90" y="70" width="60" height="50" rx="4" fill="#1a3a5c" stroke="#000"/>
+          <rect x="160" y="70" width="60" height="50" rx="4" fill="#1a3a5c" stroke="#000"/>
+          <path d="M 170 30 L 90 70" stroke="#e0c020" stroke-width="2" fill="none"/>
+          <path d="M 170 30 L 170 70" stroke="#e0c020" stroke-width="2" fill="none"/>
+          <text x="200" y="100" font-size="11" fill="#666" font-family="sans-serif">перетащить сюда ↑</text>
+          <path d="M 260 95 L 220 50" stroke="#555" stroke-width="1.5" fill="none" marker-end="url(#pbGuideArrow)"/>
+          <defs><marker id="pbGuideArrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#555"/></marker></defs>
+        </svg>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-num">4</div>
+      <div class="guide-body">
+        <div class="guide-title" data-i18n="pb_guide_4_title">Расстановка оборудования</div>
+        <div class="guide-text" data-i18n-html="pb_guide_4_text">Перетащите нужный тип из вкладки «Оборудование» на свободное место в ряду. Уже расставленное двигается мышью; снять с щитка — кнопкой «Удалить» или клавишей Delete.</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-num">5</div>
+      <div class="guide-body">
+        <div class="guide-title" data-i18n="pb_guide_5_title">Соединение модулей</div>
+        <div class="guide-text" data-i18n-html="pb_guide_5_text">Потяните от кружка-точки подключения к другой точке — появится провод. Любой его участок можно подвинуть мышью. Кнопка «🧭 Оптимизировать шины» сама разводит провода от шин: уводит магистраль в боковой канал щита и соблюдает зазор между линиями, чтобы они не сливались друг с другом.</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-num">6</div>
+      <div class="guide-body">
+        <div class="guide-title" data-i18n="pb_guide_6_title">Создание новых типов оборудования</div>
+        <div class="guide-text" data-i18n-html="pb_guide_6_text">Внизу вкладки «Оборудование» — форма «Новый тип оборудования»: название, аббревиатура, ширина в модулях, точки подключения сверху/снизу (или шина, вертикальная/горизонтальная). Уже созданный тип можно изменить значком ✎ в любое время. Осторожно: смена числа точек сбросит все провода на этом типе, а смена ширины может сдвинуть или снять уже расставленные устройства, если им не хватит места — об этом программа предупредит заранее.</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-num">7</div>
+      <div class="guide-body">
+        <div class="guide-title" data-i18n="pb_guide_7_title">Назначение линий с чертежа</div>
+        <div class="guide-text" data-i18n-html="pb_guide_7_text">Вкладка «Линии» показывает все цвета линий основного чертежа и какие из них уже подключены к щитку. Выберите линию и кликните по нужной точке подключения — она окрасится в её цвет. Цвет провода внутри щитка определяется автоматически — по тому, от какого ввода (L1/L2/L3/N/PE) он в итоге запитан через цепочку соединений.</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-num">8</div>
+      <div class="guide-body">
+        <div class="guide-title" data-i18n="pb_guide_8_title">Данные в общей смете</div>
+        <div class="guide-text" data-i18n-html="pb_guide_8_text">В «Общей смете» есть переключатель «Данные из Конструктора щитка». Включите его — и раздел «Оборудование щитка» в смете будет считаться не по цветам линий, а по тому, что реально расставлено здесь: с настоящими названиями и количеством. Пока щиток пуст, переключатель недоступен.</div>
+      </div>
+    </div>
+
+    <button id="pb-guide-close-bottom" data-i18n="pb_guide_close_btn" style="margin-top:18px;width:100%;padding:10px;background:#1a3a5c;border:1px solid #4a9eff;border-radius:7px;color:#7dc4ff;font-size:13px;font-weight:600;cursor:pointer">Понятно</button>
+  </div>
+</div>
+
 <!-- What's New modal -->
 <!-- Overall Estimate modal -->
 <div id="overall-estimate-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;align-items:center;justify-content:center;overflow:auto;padding:20px">
@@ -966,6 +1072,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     </div>
     <div style="font-size:12px;color:#8aff8a;background:#16231a;border:1px solid #234a23;border-radius:7px;padding:10px 12px;margin-top:10px;line-height:1.5">
       <span data-i18n="cable_estimate_shop_promo_hint">Если расчёт щитка не требуется, обращение в магазин через наш сайт с промокодом даст вам скидку. Отправить запрос в магазин можно в разделе «Общая смета».</span>
+      <a href="#" id="cable-estimate-goto-overall" data-i18n="cable_estimate_goto_overall_link" style="color:#8aff8a;text-decoration:underline;display:inline-block;margin-top:4px">Открыть «Общая смета» →</a>
     </div>
     <button id="cable-estimate-close-bottom" data-i18n="wn_close_btn" style="margin-top:16px;width:100%;padding:10px;background:#1a3a5c;border:1px solid #4a9eff;border-radius:7px;color:#7dc4ff;font-size:13px;font-weight:600;cursor:pointer">Понятно</button>
   </div>
@@ -1491,6 +1598,25 @@ const translations = {
     welcome_text1:'Покажем как загрузить план, задать масштаб, провести линии и сразу получить точный расчёт кабеля.',
     welcome_text2:'Кнопка «Обучение» всегда доступна в верхней панели.',
     welcome_later:'Потом', welcome_start:'Пройти обучение',
+    pb_guide_h2:'Как пользоваться Конструктором щитка',
+    pb_guide_sub:'Коротко по шагам',
+    pb_guide_1_title:'Что это и что нет',
+    pb_guide_1_text:'Конструктор нужен, чтобы увидеть щиток целиком и разложить модули и линии так, чтобы схема была понятной. Он <b>ничего не проверяет и не считает</b> — ни токи, ни сечения, ни соответствие норм. Единственное, за чем он реально следит, — наследование фаз: он прослеживает цепочку через все соединения и не даст перепутать фазы на одной шине.',
+    pb_guide_2_title:'Размер щитка',
+    pb_guide_2_text:'Вверху тулбара — «Рядов» и «Модулей в ряде». Меняйте в любой момент: то, что уже расставлено, пересчитывается заново, а не теряется, пока для него остаётся место.',
+    pb_guide_3_title:'Штатные нулевые шины',
+    pb_guide_3_text:'Вкладка «Оборудование» → «Шина штатная» — перетащите на одну из полок над или под щитком (полки показаны пунктиром, даже когда пустые). Используйте именно штатные шины, а не гребёнки или отдельные перемычки: по ним сразу видно, какая линия к какому вводу идёт, и для них работает «Оптимизировать шины».',
+    pb_guide_4_title:'Расстановка оборудования',
+    pb_guide_4_text:'Перетащите нужный тип из вкладки «Оборудование» на свободное место в ряду. Уже расставленное двигается мышью; снять с щитка — кнопкой «Удалить» или клавишей Delete.',
+    pb_guide_5_title:'Соединение модулей',
+    pb_guide_5_text:'Потяните от кружка-точки подключения к другой точке — появится провод. Любой его участок можно подвинуть мышью. Кнопка «🧭 Оптимизировать шины» сама разводит провода от шин: уводит магистраль в боковой канал щита и соблюдает зазор между линиями, чтобы они не сливались друг с другом.',
+    pb_guide_6_title:'Создание новых типов оборудования',
+    pb_guide_6_text:'Внизу вкладки «Оборудование» — форма «Новый тип оборудования»: название, аббревиатура, ширина в модулях, точки подключения сверху/снизу (или шина, вертикальная/горизонтальная). Уже созданный тип можно изменить значком ✎ в любое время. Осторожно: смена числа точек сбросит все провода на этом типе, а смена ширины может сдвинуть или снять уже расставленные устройства, если им не хватит места — об этом программа предупредит заранее.',
+    pb_guide_7_title:'Назначение линий с чертежа',
+    pb_guide_7_text:'Вкладка «Линии» показывает все цвета линий основного чертежа и какие из них уже подключены к щитку. Выберите линию и кликните по нужной точке подключения — она окрасится в её цвет. Цвет провода внутри щитка определяется автоматически — по тому, от какого ввода (L1/L2/L3/N/PE) он в итоге запитан через цепочку соединений.',
+    pb_guide_8_title:'Данные в общей смете',
+    pb_guide_8_text:'В «Общей смете» есть переключатель «Данные из Конструктора щитка». Включите его — и раздел «Оборудование щитка» в смете будет считаться не по цветам линий, а по тому, что реально расставлено здесь: с настоящими названиями и количеством. Пока щиток пуст, переключатель недоступен.',
+    pb_guide_close_btn:'Понятно',
     guide_h2:'Как пользоваться калькулятором проводки',
     tt_whatsnew:'Последние обновления', whatsnew_btn:'Последние обновления',
     whatsnew_h2:'Последние обновления',
@@ -1630,6 +1756,7 @@ const translations = {
     cable_estimate_goto_panel_hint:'Метраж и марки кабеля определены — теперь можно правильно подобрать защитные автоматы и оптимальный размер щитка под них.',
     cable_estimate_goto_panel_link:'Открыть «Щиток» →',
     cable_estimate_shop_promo_hint:'Если расчёт щитка не требуется, обращение в магазин через наш сайт с промокодом даст вам скидку. Отправить запрос в магазин можно в разделе «Общая смета».',
+    cable_estimate_goto_overall_link:'Открыть «Общая смета» →',
     panel_calc_goto_overall_hint:'Кабель и щиток посчитаны — в «Общей смете» соберётся полный список расходников (плюс крепёж и подрозетники), который можно скачать или сразу отправить на расчёт стоимости.',
     panel_calc_goto_overall_link:'Открыть «Общую смету» →',
     tt_panel_calc:'Расчёт состава щитка: автоматы, УЗО/дифавтоматы, контактор, реле напряжения — по линиям проекта',
@@ -1691,6 +1818,7 @@ const translations = {
     overall_item_cable:'Кабель', overall_item_backbox:'Подрозетники',
     overall_item_box_pro:'Коробка наружной установки', overall_item_box_pro_none:'Коробок на схеме не найдено',
     overall_item_box_base:'Коробки (врезные в стену)', overall_ports_total:'портов всего',
+    overall_use_panelbuilder_label:'Данные из Конструктора щитка', overall_use_panelbuilder_disabled_hint:'В конструкторе щитка пока ничего не собрано',
     overall_item_box_extra_info:'Дополнительная информация о коробках', overall_box_extra_ph:'например: 100*100*50',
     shop_request_h2:'Магазины', shop_request_intro:'Отметьте магазины, которым хотите отправить запрос — каждому откроется отдельный чат WhatsApp с готовым сообщением.',
     shop_request_send_btn:'Отправить запрос', shop_request_city_label:'Ваш город', shop_request_send_one_tt:'Написать этому магазину в WhatsApp',
@@ -1921,6 +2049,25 @@ const translations = {
     welcome_text1:"We'll show you how to load a plan, set the scale, draw lines, and get an accurate cable count right away.",
     welcome_text2:'The "Tutorial" button is always available in the top bar.',
     welcome_later:'Later', welcome_start:'Start tutorial',
+    pb_guide_h2:'How to use the Panel builder',
+    pb_guide_sub:'A quick step-by-step overview',
+    pb_guide_1_title:'What it does and doesn\'t do',
+    pb_guide_1_text:'The builder is for seeing the whole panel at once and laying out modules and wires so the schematic reads clearly. It <b>doesn\'t check or calculate anything</b> — not currents, not cable sizes, not code compliance. The one thing it actually tracks is phase inheritance: it traces the chain through every connection and won\'t let you mix up phases on the same busbar.',
+    pb_guide_2_title:'Panel size',
+    pb_guide_2_text:'"Rows" and "Modules per row" sit at the top of the toolbar. Change them any time — whatever is already placed gets recalculated, not lost, as long as there is still room for it.',
+    pb_guide_3_title:'Standard neutral busbars',
+    pb_guide_3_text:'Equipment tab → "Шина штатная" (standard busbar) — drag it onto one of the shelves above or below the panel (shown as a dashed outline even when empty). Use standard busbars rather than comb bars or loose jumpers: they make it obvious which line goes to which supply input, and the "Optimize busbars" button works with them.',
+    pb_guide_4_title:'Placing equipment',
+    pb_guide_4_text:'Drag the type you need from the Equipment tab onto a free spot in a row. Already-placed equipment can be dragged with the mouse; remove it with the Delete button or the Delete key.',
+    pb_guide_5_title:'Connecting modules',
+    pb_guide_5_text:'Drag from a connection-point dot to another point to create a wire. Any segment of it can be moved with the mouse. The "🧭 Optimize busbars" button routes busbar wires on its own: it runs the trunk through the side channel of the panel and keeps every line spaced apart so they never run together.',
+    pb_guide_6_title:'Creating new equipment types',
+    pb_guide_6_text:'At the bottom of the Equipment tab is a "New equipment type" form: name, abbreviation, width in modules, connection points top/bottom (or busbar, vertical/horizontal). An existing type can be edited any time with the ✎ icon. Careful: changing the point count clears every wire on that type, and changing the width can shift or drop already-placed devices if they no longer fit — the app warns you first.',
+    pb_guide_7_title:'Assigning lines from the drawing',
+    pb_guide_7_text:'The "Линии" (Lines) tab lists every line colour from the main drawing and which ones are already connected to the panel. Pick a line, then click the connection point you want — it takes on that colour. A wire\'s colour inside the panel is worked out automatically, from whichever supply input (L1/L2/L3/N/PE) it\'s ultimately fed from through the chain of connections.',
+    pb_guide_8_title:'Using this in the overall estimate',
+    pb_guide_8_text:'The overall estimate has a "Data from Panel builder" toggle. Turn it on and the "Panel equipment" section of the estimate is built from what\'s actually placed here — real names and real quantities — instead of from line colours. The toggle stays off while the panel is empty.',
+    pb_guide_close_btn:'Got it',
     guide_h2:'How to use the wiring calculator',
     tt_whatsnew:'Recent updates', whatsnew_btn:'Recent updates',
     whatsnew_h2:'Recent updates',
@@ -2060,6 +2207,7 @@ const translations = {
     cable_estimate_goto_panel_hint:"Cable metrage and marks are set — now you can properly size the breakers and pick the right panel enclosure for them.",
     cable_estimate_goto_panel_link:'Open "Panel" →',
     cable_estimate_shop_promo_hint:"If you don't need the panel calculation, ordering through a shop on our site with the promo code gets you a discount. You can send the request to a shop from the \"Overall estimate\" section.",
+    cable_estimate_goto_overall_link:'Open "Overall estimate" →',
     panel_calc_goto_overall_hint:'Cable and panel are done — "Overall estimate" will compile the full materials list (plus mounting hardware and back boxes) that you can download or send out for pricing right away.',
     panel_calc_goto_overall_link:'Open "Overall estimate" →',
     tt_panel_calc:'Distribution panel composition: breakers, RCDs/diffavtomats, contactor, voltage relay — based on the project\'s circuits',
@@ -2121,6 +2269,7 @@ const translations = {
     overall_item_cable:'Cable', overall_item_backbox:'Back-boxes',
     overall_item_box_pro:'Surface-mount box', overall_item_box_pro_none:'No boxes found on the scheme',
     overall_item_box_base:'Boxes (flush-mount)', overall_ports_total:'ports total',
+    overall_use_panelbuilder_label:'Data from Panel builder', overall_use_panelbuilder_disabled_hint:'Nothing built in the panel constructor yet',
     overall_item_box_extra_info:'Additional info about the boxes', overall_box_extra_ph:'e.g. 100*100*50',
     shop_request_h2:'Shops', shop_request_intro:'Check the shops you want to send a request to — each one opens its own WhatsApp chat with the message ready to send.',
     shop_request_send_btn:'Send request', shop_request_city_label:'Your city', shop_request_send_one_tt:'Message this shop on WhatsApp',
@@ -2351,6 +2500,25 @@ const translations = {
     welcome_text1:'Le mostraremos cómo cargar un plano, definir la escala, trazar líneas y obtener al instante un cálculo exacto de cable.',
     welcome_text2:'El botón «Tutorial» siempre está disponible en la barra superior.',
     welcome_later:'Más tarde', welcome_start:'Empezar tutorial',
+    pb_guide_h2:'Cómo usar el Constructor de cuadro',
+    pb_guide_sub:'Un resumen rápido, paso a paso',
+    pb_guide_1_title:'Qué hace y qué no hace',
+    pb_guide_1_text:'El constructor sirve para ver el cuadro completo y organizar módulos y cables de forma clara. <b>No comprueba ni calcula nada</b>: ni corrientes, ni secciones, ni cumplimiento normativo. Lo único que realmente vigila es la herencia de fases: sigue la cadena a través de todas las conexiones y no deja mezclar fases en la misma barra.',
+    pb_guide_2_title:'Tamaño del cuadro',
+    pb_guide_2_text:'Arriba de la barra de herramientas están «Filas» y «Módulos por fila». Cámbielos cuando quiera: lo ya colocado se recalcula, no se pierde, mientras siga habiendo sitio para ello.',
+    pb_guide_3_title:'Barras de neutro estándar',
+    pb_guide_3_text:'Pestaña «Equipo» → «Шина штатная» (barra estándar) — arrástrela a uno de los estantes encima o debajo del cuadro (se muestran con línea discontinua incluso vacíos). Use barras estándar en vez de peines o puentes sueltos: dejan claro qué línea va a qué entrada, y con ellas funciona «Optimizar barras».',
+    pb_guide_4_title:'Colocar el equipo',
+    pb_guide_4_text:'Arrastre el tipo que necesite desde la pestaña Equipo a un hueco libre de la fila. Lo ya colocado se mueve con el ratón; para quitarlo use el botón Eliminar o la tecla Supr.',
+    pb_guide_5_title:'Conectar los módulos',
+    pb_guide_5_text:'Arrastre desde un punto de conexión hasta otro punto para crear un cable; cualquier tramo se puede mover con el ratón. El botón «🧭 Optimizar barras» traza solo los cables de las barras: lleva el tronco por el canal lateral del cuadro y mantiene la separación entre líneas para que no se junten.',
+    pb_guide_6_title:'Crear nuevos tipos de equipo',
+    pb_guide_6_text:'Al final de la pestaña Equipo hay un formulario «Nuevo tipo de equipo»: nombre, abreviatura, ancho en módulos, puntos de conexión arriba/abajo (o barra, vertical/horizontal). Un tipo ya creado se puede editar en cualquier momento con el icono ✎. Atención: cambiar el número de puntos borra todos los cables de ese tipo, y cambiar el ancho puede desplazar o quitar equipos ya colocados si ya no caben; la aplicación avisa antes.',
+    pb_guide_7_title:'Asignar líneas del plano',
+    pb_guide_7_text:'La pestaña «Líneas» muestra todos los colores de línea del plano principal y cuáles ya están conectados al cuadro. Elija una línea y haga clic en el punto de conexión que quiera: tomará ese color. El color del cable dentro del cuadro se calcula solo, según de qué entrada (L1/L2/L3/N/PE) acaba alimentándose a través de la cadena de conexiones.',
+    pb_guide_8_title:'Usar estos datos en el presupuesto general',
+    pb_guide_8_text:'El presupuesto general tiene un interruptor «Datos del Constructor de cuadro». Actívelo y la sección «Equipo del cuadro» del presupuesto se calculará con lo realmente colocado aquí —nombres y cantidades reales— en vez de con los colores de línea. El interruptor permanece desactivado mientras el cuadro esté vacío.',
+    pb_guide_close_btn:'Entendido',
     guide_h2:'Cómo usar la calculadora de cableado',
     tt_whatsnew:'Actualizaciones recientes', whatsnew_btn:'Actualizaciones recientes',
     whatsnew_h2:'Actualizaciones recientes',
@@ -2490,6 +2658,7 @@ const translations = {
     cable_estimate_goto_panel_hint:'El metraje y las marcas de cable ya están definidos — ahora puede elegir bien los interruptores automáticos y el tamaño óptimo del cuadro para ellos.',
     cable_estimate_goto_panel_link:'Abrir «Cuadro» →',
     cable_estimate_shop_promo_hint:'Si no necesita el cálculo del cuadro, pedir en una tienda a través de nuestro sitio con el código promocional le da un descuento. Puede enviar el pedido a una tienda desde la sección «Presupuesto general».',
+    cable_estimate_goto_overall_link:'Abrir «Presupuesto general» →',
     panel_calc_goto_overall_hint:'Cable y cuadro ya calculados — en «Presupuesto general» se reunirá la lista completa de materiales (más sujeción y cajas de empotrar), que puede descargar o enviar a cotizar de inmediato.',
     panel_calc_goto_overall_link:'Abrir «Presupuesto general» →',
     tt_panel_calc:'Composición del cuadro eléctrico: interruptores, diferenciales/magnetotérmicos combinados, contactor, relé de tensión — según los circuitos del proyecto',
@@ -2551,6 +2720,7 @@ const translations = {
     overall_item_cable:'Cable', overall_item_backbox:'Cajas de empotrar',
     overall_item_box_pro:'Caja de superficie', overall_item_box_pro_none:'No se encontraron cajas en el esquema',
     overall_item_box_base:'Cajas (empotradas)', overall_ports_total:'puertos en total',
+    overall_use_panelbuilder_label:'Datos del Constructor de cuadro', overall_use_panelbuilder_disabled_hint:'Aún no hay nada montado en el constructor del cuadro',
     overall_item_box_extra_info:'Información adicional sobre las cajas', overall_box_extra_ph:'p. ej.: 100*100*50',
     shop_request_h2:'Tiendas', shop_request_intro:'Marque las tiendas a las que quiere enviar la solicitud — cada una abrirá su propio chat de WhatsApp con el mensaje listo para enviar.',
     shop_request_send_btn:'Enviar solicitud', shop_request_city_label:'Su ciudad', shop_request_send_one_tt:'Escribir a esta tienda por WhatsApp',
@@ -2781,6 +2951,25 @@ const translations = {
     welcome_text1:'Жоспарды қалай жүктеу, масштабты орнату, сызықтарды тарту және кабельдің дәл есебін бірден алу жолын көрсетеміз.',
     welcome_text2:'«Оқыту» түймесі әрқашан жоғарғы панельде қолжетімді.',
     welcome_later:'Кейінірек', welcome_start:'Оқытудан өту',
+    pb_guide_h2:'Щиток конструкторын қалай пайдалану керек',
+    pb_guide_sub:'Қадамдар бойынша қысқаша',
+    pb_guide_1_title:'Бұл не үшін және не үшін емес',
+    pb_guide_1_text:'Конструктор щиктің толық көрінісін көріп, модульдер мен сымдарды түсінікті етіп орналастыру үшін керек. Ол <b>ештеңені тексермейді және есептемейді</b> — токтарды да, қима көлемдерін де, нормаларға сәйкестікті де. Ол нақты қадағалайтын жалғыз нәрсе — фазалардың мұрагерлігі: барлық қосылымдар арқылы тізбекті қадағалап, бір шинада фазаларды шатастыруға жол бермейді.',
+    pb_guide_2_title:'Щиток өлшемі',
+    pb_guide_2_text:'Құралдар тақтасының жоғарғы жағында «Қатарлар» мен «Қатардағы модульдер» бар. Оларды кез келген уақытта өзгертіңіз: орналастырылған заттар жоғалмайды, орын болса, қайта есептеледі.',
+    pb_guide_3_title:'Штаттық нөлдік шиналар',
+    pb_guide_3_text:'«Жабдық» қойындысы → «Шина штатная» (штаттық шина) — оны щиктің үстіндегі немесе астындағы сөрелердің біріне сүйреп апарыңыз (сөрелер бос болса да нүктелі сызықпен көрсетіледі). Тарақтардың немесе бөлек перемычкалардың орнына дәл штаттық шиналарды қолданыңыз: олар қай желі қай енгізуге баратынын бірден көрсетеді, және олар үшін «Шиналарды оңтайландыру» жұмыс істейді.',
+    pb_guide_4_title:'Жабдықты орналастыру',
+    pb_guide_4_text:'«Жабдық» қойындысынан қажетті түрді қатардағы бос орынға сүйреп апарыңыз. Орналастырылған жабдықты тінтуірмен жылжытуға болады; алып тастау үшін «Жою» түймесін немесе Delete пернесін басыңыз.',
+    pb_guide_5_title:'Модульдерді қосу',
+    pb_guide_5_text:'Қосылу нүктесінен басқа нүктеге сүйреңіз — сым пайда болады. Оның кез келген бөлігін тінтуірмен жылжытуға болады. «🧭 Шиналарды оңтайландыру» түймесі шина сымдарын өзі тартады: магистральді щиктің бүйіріндегі арнаға шығарады және желілер бір-біріне қосылып кетпес үшін олардың арасындағы аралықты сақтайды.',
+    pb_guide_6_title:'Жаңа жабдық түрлерін жасау',
+    pb_guide_6_text:'«Жабдық» қойындысының төменгі жағында «Жаңа жабдық түрі» формасы бар: атауы, аббревиатурасы, модульдердегі ені, жоғарғы/төменгі қосылу нүктелері (немесе шина, тік/көлденең). Жасалған түрді кез келген уақытта ✎ белгішесімен өзгертуге болады. Абай болыңыз: нүктелер санын өзгерту осы түрдегі барлық сымдарды тазалайды, ал енін өзгерту орын жетпесе, орналастырылған құрылғыларды ығыстыруы немесе алып тастауы мүмкін — бағдарлама алдын ала ескертеді.',
+    pb_guide_7_title:'Сызбадан желілерді тағайындау',
+    pb_guide_7_text:'«Линии» (Желілер) қойындысында негізгі сызбаның барлық желі түстері және олардың қайсысы щитке қосылғаны көрсетіледі. Желіні таңдап, қажетті қосылу нүктесін басыңыз — ол сол түске боялады. Щик ішіндегі сымның түсі автоматты түрде анықталады — ол қосылымдар тізбегі арқылы қай енгізуден (L1/L2/L3/N/PE) қоректенетініне байланысты.',
+    pb_guide_8_title:'Жалпы сметада деректерді пайдалану',
+    pb_guide_8_text:'Жалпы сметада «Щиток конструкторынан деректер» ауыстырғышы бар. Оны қосыңыз — сметадағы «Щиток жабдығы» бөлімі желі түстері бойынша емес, нақты осында орналастырылғаны бойынша есептеледі: нақты атаулармен және санымен. Щиток бос болған кезде ауыстырғыш өшірулі тұрады.',
+    pb_guide_close_btn:'Түсінікті',
     guide_h2:'Сым калькуляторын қалай пайдалану керек',
     tt_whatsnew:'Соңғы жаңартулар', whatsnew_btn:'Соңғы жаңартулар',
     whatsnew_h2:'Соңғы жаңартулар',
@@ -2920,6 +3109,7 @@ const translations = {
     cable_estimate_goto_panel_hint:'Кабель метражы мен маркалары анықталды — енді қорғаныш автоматтары мен оларға сай щит өлшемін дұрыс таңдауға болады.',
     cable_estimate_goto_panel_link:'«Щитті» ашу →',
     cable_estimate_shop_promo_hint:'Щитті есептеу қажет болмаса, сайтымыз арқылы дүкенге промокодпен жүгінсеңіз, сізге жеңілдік беріледі. Дүкенге сұрау жіберуді «Жалпы смета» бөлімінен жасауға болады.',
+    cable_estimate_goto_overall_link:'«Жалпы смета» ашу →',
     panel_calc_goto_overall_hint:'Кабель мен щит есептелді — «Жалпы смета» бөлімінде толық шығын тізімі (крепеж бен подрозетниктермен қоса) жиналады, оны жүктеп алуға немесе бағасын есептеуге дереу жіберуге болады.',
     panel_calc_goto_overall_link:'«Жалпы сметаны» ашу →',
     tt_panel_calc:'Щиток құрамын есептеу: автоматтар, УЗО/дифавтоматтар, контактор, кернеу релесі — жоба сызықтары бойынша',
@@ -2981,6 +3171,7 @@ const translations = {
     overall_item_cable:'Кабель', overall_item_backbox:'Астаушалар',
     overall_item_box_pro:'Сыртқы орнату қорабы', overall_item_box_pro_none:'Схемада қораптар табылмады',
     overall_item_box_base:'Қораптар (ендірме)', overall_ports_total:'барлығы порт',
+    overall_use_panelbuilder_label:'Щиток конструкторынан деректер', overall_use_panelbuilder_disabled_hint:'Щиток конструкторында әлі ештеңе жиналмаған',
     overall_item_box_extra_info:'Қораптар туралы қосымша ақпарат', overall_box_extra_ph:'мысалы: 100*100*50',
     shop_request_h2:'Дүкендер', shop_request_intro:'Сұрау жібергіңіз келетін дүкендерді белгілеңіз — әрқайсысына дайын хабарламасы бар жеке WhatsApp чаты ашылады.',
     shop_request_send_btn:'Сұрау жіберу', shop_request_city_label:'Сіздің қалаңыз', shop_request_send_one_tt:'Осы дүкенге WhatsApp арқылы жазу',
@@ -3229,7 +3420,22 @@ let colorBreakerRating = {};         // {hex: 'С16'} — user-editable, one per
 // {id, fullName, abbr (≤5 chars), modulesEach, topPoints, bottomPoints} —
 // a user-defined equipment type, unlimited placements each (like
 // markerTypes on the main canvas — no per-type stock/quantity tracking).
-let panelEquipTypes = [];
+// The panel builder's permanent equipment library (see chat) — these 6
+// are seeded into every new project so common devices don't need
+// recreating each time, but they're otherwise ordinary panelEquipTypes
+// entries: fully editable (✎) and deletable (✕) like anything the person
+// adds themselves, and saved/loaded with the project from here on.
+function panelBuilderDefaultEquipTypes(){
+  return [
+    {id:uid(), fullName:'Автомат однополюсный', abbr:'Авт 1-пол', kind:'item', modulesEach:1, topPoints:1, bottomPoints:1},
+    {id:uid(), fullName:'Шина штатная', abbr:'Шина штат', kind:'busbar', busOrientation:'horizontal', busSide:'top'},
+    {id:uid(), fullName:'Дифференциальный автомат 1 фазный', abbr:'дифавтомат', kind:'item', modulesEach:2, topPoints:2, bottomPoints:2},
+    {id:uid(), fullName:'Реле напряжения однофазное', abbr:'Реле напр 1ф', kind:'item', modulesEach:2, topPoints:2, bottomPoints:2},
+    {id:uid(), fullName:'Контактор 1 фазный', abbr:'Конт 1 фаз', kind:'item', modulesEach:2, topPoints:3, bottomPoints:3},
+    {id:uid(), fullName:'Модуль разветвительный', abbr:'Разветв', kind:'item', modulesEach:2, topPoints:3, bottomPoints:3},
+  ];
+}
+let panelEquipTypes = panelBuilderDefaultEquipTypes();
 let panelGridRows = 1;
 let panelGridCols = 18;              // DIN modules per row (default per chat)
 // {id, row, pos:'top'|'bottom', kind:'wide'|'narrow', count}
@@ -3264,6 +3470,7 @@ let panelBuilderLastAnnotClick = {id:null, t:0};
 // / panelBuilderPlaceAt below — so there's no more "armed, waiting for a
 // cell click" state)
 let panelBuilderSelectedId = null;
+let panelBuilderEditingTypeId = null;   // interaction-only — which equipment type's inline edit form is open
 let panelWireSelectedId = null;       // a selected WIRE (see chat) — separate from panelBuilderSelectedId, which is a selected placement
 let panelWireActiveColorKey = null;  // which palette colour new drags use; lazily defaulted to the palette's first entry
 let panelWireDrag = null;            // {aId, aSide, aIndex} while a drag is in progress — the ghost line itself is pure DOM, not re-rendered from this
@@ -3283,6 +3490,13 @@ const PB_HISTORY_LIMIT = 60;
 // defaults, and manual overrides for items that can't be auto-derived
 // (back-box count, base-mode box size) or that the user commonly adjusts.
 let overallHasMountingGun = false;
+// Per chat: lets the person pull "Оборудование щитка" straight from what
+// they actually built in the panel constructor (specific named devices,
+// real quantities) instead of the generic estimate derived from circuit
+// colours. Off by default — someone may have opened the constructor just
+// to try it out and not want a half-built layout driving the estimate;
+// they switch it on deliberately once it reflects the real panel.
+let overallUsePanelBuilderData = false;
 let overallMarginPct = 15;
 let overallBackBoxCountOverride = null; // null = auto (count of point-kind markers)
 let overallBoxSizeText = '';            // base-mode only: user-entered box dimension
@@ -10549,7 +10763,7 @@ function doSaveProject(){
   const data={version:10,pro:true,projectName:name,scale,scaleIsGuessed,segments,lines,markers,walls,measurements,annotations,markerTypes,colorLabels,colorCableTypes,hiddenColors:[...hiddenColors],bg:bgImgDataUrl,bgX,bgY,bgS,bgOpacity,bgWhiten,markerSnapRadius,crossingPenaltyCm,autoFixupEnabled,zones,ceilingHeightM,defaultRouteHeightM,defaultRouteHeightRef,colorRouteHeight,nextBoxNum,
     panelPhases,panelHasInputBreaker,panelInputBreakerRating,panelHasVoltageRelay,panelHasContactor,panelContactorRating,panelVoltageRelayRating,panelProtectionScheme,panelRcdCount,panelRcdRating,panelNeutralBusChoice,panelMountType,colorBreakerRating,
     panelEquipTypes,panelGridRows,panelGridCols,panelBusbarGroups,panelPlacements,panelLinks,panelWireLinks,panelAnnotations,
-    overallHasMountingGun,overallMarginPct,overallBackBoxCountOverride,overallBoxSizeText,overallBoxBaseCount,overallBoxExtraInfo,cableMarkNotes,overallRowNotes,overallRowConfig};
+    overallHasMountingGun,overallUsePanelBuilderData,overallMarginPct,overallBackBoxCountOverride,overallBoxSizeText,overallBoxBaseCount,overallBoxExtraInfo,cableMarkNotes,overallRowNotes,overallRowConfig};
   const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download=safeFileName(name)+'.wiring';a.click();
@@ -10599,7 +10813,7 @@ function applyProjectData(d){
   panelNeutralBusChoice=d.panelNeutralBusChoice||'own';
   panelMountType=d.panelMountType||'flush';
   colorBreakerRating=d.colorBreakerRating||{};
-  panelEquipTypes=d.panelEquipTypes||[];
+  panelEquipTypes=d.panelEquipTypes||panelBuilderDefaultEquipTypes(); // old saves predate the permanent set (see chat) — give them one too, rather than an empty library
   panelGridRows=d.panelGridRows!=null?d.panelGridRows:1;
   panelGridCols=d.panelGridCols!=null?d.panelGridCols:18;
   panelBusbarGroups=d.panelBusbarGroups||[];
@@ -10613,6 +10827,7 @@ function applyProjectData(d){
   panelWireActiveColorKey=null;
   panelWireDrag=null;
   overallHasMountingGun=!!d.overallHasMountingGun;
+  overallUsePanelBuilderData=!!d.overallUsePanelBuilderData;
   overallMarginPct=d.overallMarginPct!=null?d.overallMarginPct:15;
   overallBackBoxCountOverride=d.overallBackBoxCountOverride!=null?d.overallBackBoxCountOverride:null;
   overallBoxSizeText=d.overallBoxSizeText||'';
@@ -10907,6 +11122,35 @@ function panelModuleCounts(circuits){
 // per spec: input breaker, voltage relay, contactor, RCD, circuit breakers/
 // diffavtomats, neutral bars, enclosure. Each item carries its own
 // per-unit module count for the summary table's "modules" column.
+// Оборудование щитка read straight from the panel constructor (see
+// chat) — an alternative to panelEquipmentList()'s colour-based estimate,
+// used when overallUsePanelBuilderData is on. Groups placements by their
+// displayed name (device name + rating, so different ratings of the same
+// device type show as separate rows, the same way the colour-based
+// estimate already groups breakers by rating) and sizes the enclosure
+// from the constructor's own grid dimensions rather than a computed
+// guess — that grid IS the enclosure the person actually laid out.
+function panelBuilderEquipmentList(){
+  const groups = new Map();
+  panelPlacements.forEach(p=>{
+    let name, modulesEach;
+    if(p.kind==='item' || p.kind==='comb'){
+      name = p.rating ? `${p.name} ${p.rating}`.trim() : p.name;
+      modulesEach = p.modulesEach || p.spanCols || 1;
+    } else if(p.kind==='bus-v'){
+      name = p.name; modulesEach = p.modulesEach || 1;
+    } else if(p.kind==='bus-h'){
+      name = p.name; modulesEach = 0; // floor busbars don't occupy a row slot
+    } else return;
+    if(!groups.has(name)) groups.set(name, {name, qty:0, modulesEach});
+    groups.get(name).qty++;
+  });
+  const items = Array.from(groups.values());
+  const totalModules = panelGridRows * panelGridCols;
+  const mountLabel = panelMountType==='flush' ? t('panel_mount_flush') : t('panel_mount_surface');
+  items.push({name:`${t('panel_item_enclosure')} ${mountLabel} ${t('panel_modules_suffix').replace('{n}', totalModules)}`, qty:1, modulesEach:0});
+  return {items};
+}
 function panelEquipmentList(){
   const circuits=panelCircuitList();
   const mc=panelModuleCounts(circuits);
@@ -11086,7 +11330,9 @@ function computeOverallEstimate(){
 
   const backBoxCount = overallBackBoxCountOverride!=null ? overallBackBoxCountOverride : defaultBackBoxCount();
   const boxes = overallBoxRows();
-  const panel = panelEquipmentList();
+  // Per chat: use what's actually built in the panel constructor when
+  // the person has switched that on (and there's something there to use).
+  const panel = (overallUsePanelBuilderData && panelPlacements.length) ? panelBuilderEquipmentList() : panelEquipmentList();
 
   return {cableRows, rowPurchases, materialTotals, backBoxCount, boxes, panel, marginMult};
 }
@@ -11260,6 +11506,11 @@ document.getElementById('cable-estimate-goto-panel').addEventListener('click', e
   e.preventDefault();
   document.getElementById('cable-estimate-modal').style.display='none';
   document.getElementById('btn-panel-calc').click();
+});
+document.getElementById('cable-estimate-goto-overall').addEventListener('click', e=>{
+  e.preventDefault();
+  document.getElementById('cable-estimate-modal').style.display='none';
+  document.getElementById('btn-overall-estimate').click();
 });
 document.getElementById('panel-calc-goto-overall').addEventListener('click', e=>{
   e.preventDefault();
@@ -13257,6 +13508,9 @@ document.querySelectorAll('input[name="exp-q"],input[name="exp-scope"]').forEach
 document.getElementById('guide-close').addEventListener('click',()=>{ document.getElementById('guide-modal').style.display='none'; });
 document.getElementById('guide-close-bottom').addEventListener('click',()=>{ document.getElementById('guide-modal').style.display='none'; });
 document.getElementById('guide-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) e.currentTarget.style.display='none'; });
+document.getElementById('pb-guide-close').addEventListener('click',()=>{ document.getElementById('pb-guide-modal').style.display='none'; });
+document.getElementById('pb-guide-close-bottom').addEventListener('click',()=>{ document.getElementById('pb-guide-modal').style.display='none'; });
+document.getElementById('pb-guide-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) e.currentTarget.style.display='none'; });
 
 document.getElementById('cable-estimate-close').addEventListener('click',()=>{ document.getElementById('cable-estimate-modal').style.display='none'; });
 document.getElementById('cable-estimate-close-bottom').addEventListener('click',()=>{ document.getElementById('cable-estimate-modal').style.display='none'; });
@@ -13464,7 +13718,7 @@ function panelBuilderSnapshot(){
 }
 function panelBuilderApplySnapshot(json){
   const d = JSON.parse(json);
-  panelEquipTypes=d.panelEquipTypes; panelGridRows=d.panelGridRows; panelGridCols=d.panelGridCols;
+  panelEquipTypes=d.panelEquipTypes||panelBuilderDefaultEquipTypes(); panelGridRows=d.panelGridRows; panelGridCols=d.panelGridCols;
   panelBusbarGroups=d.panelBusbarGroups; panelPlacements=d.panelPlacements; panelLinks=d.panelLinks; panelWireLinks=d.panelWireLinks;
   panelAnnotations=d.panelAnnotations||[];
   panelBuilderSelectedId=null;
@@ -13531,6 +13785,10 @@ function renderPanelBuilderToolbar(){
         </div>
         <button id="pb-delete-selected" ${hasSelection?'':'disabled'}
           style="padding:5px 12px; background:${hasSelection?'#3a1a1a':'#2a2a2a'}; border:1px solid ${hasSelection?'#6a2a2a':'#444'}; border-radius:6px; color:${hasSelection?'#ff8a8a':'#555'}; font-size:11px; cursor:${hasSelection?'pointer':'default'}">🗑 Удалить${hasSelection?'':' (ничего не выбрано)'}</button>
+        <button id="pb-clear-all" title="Убрать с этой схемы всё оборудование, провода и примечания. Размер щитка, число фаз и свои типы оборудования сохранятся."
+          style="padding:5px 12px; background:#2a2a2a; border:1px solid #444; border-radius:6px; color:#ccc; font-size:11px; cursor:pointer">✕ Очистить схему</button>
+        <button id="pb-guide-btn" title="Как пользоваться конструктором щитка — по шагам"
+          style="padding:5px 12px; background:#2a2a2a; border:1px solid #444; border-radius:6px; color:#ccc; font-size:11px; cursor:pointer">🎓 Обучение</button>
         <button id="pb-optimize-btn" title="Оптимизировать линии шин: магистрали уходят в боковой канал щита, на нужном этаже входят к устройству, линии разведены (спросит, если часть вы двигали вручную)"
           style="padding:5px 12px; background:#2a2a2a; border:1px solid #444; border-radius:6px; color:#ccc; font-size:11px; cursor:pointer">🧭 Оптимизировать шины</button>
         <button id="pb-annot-btn" title="Примечание: текст со стрелкой на нужном месте схемы (двойной клик по примечанию — изменить текст)"
@@ -13567,6 +13825,22 @@ function renderPanelBuilderToolbar(){
     </div>`;
   document.getElementById('pb-close').addEventListener('click', ()=>{ document.getElementById('panel-builder-modal').style.display='none'; });
   document.getElementById('pb-download').addEventListener('click', panelBuilderDownloadSchematic);
+  document.getElementById('pb-clear-all').addEventListener('click', ()=>{
+    if(!panelPlacements.length && !panelWireLinks.length && !panelAnnotations.length && !panelBusbarGroups.length) return; // already empty — nothing to confirm
+    if(!confirm('Убрать со схемы всё оборудование, провода и примечания?\n\nРазмер щитка, число фаз и свои типы оборудования останутся как есть. Отменить можно кнопкой "Отменить" (Ctrl+Z).')) return;
+    panelBuilderSaveHistory();
+    panelPlacements = [];
+    panelWireLinks = [];
+    panelAnnotations = [];
+    panelBusbarGroups = [];
+    panelBuilderSelectedId = null;
+    panelWireSelectedId = null;
+    panelAnnotationSelectedId = null;
+    panelAnnotationMode = false;
+    panelBuilderEditingTypeId = null;
+    renderPanelBuilder();
+  });
+  document.getElementById('pb-guide-btn').addEventListener('click', ()=>{ document.getElementById('pb-guide-modal').style.display='flex'; });
   document.getElementById('pb-optimize-btn').addEventListener('click', panelBuilderOptimizeBusWires);
   document.getElementById('pb-annot-btn').addEventListener('click', ()=>{ panelAnnotationMode=!panelAnnotationMode; renderPanelBuilder(); });
   document.getElementById('pb-select-tool').addEventListener('click', panelBuilderClearSelection);
@@ -13690,13 +13964,6 @@ function renderPanelBuilderBusbarList(){
   });
 }
 
-// Built-in presets (see chat) — always available, not editable/deletable
-// like user-created panelEquipTypes, so they don't need to be saved with
-// the project at all; re-derived fresh every time.
-const PB_PRESET_TYPES = [
-  {presetId:'breaker1p', fullName:'Автомат однополюсный', abbr:'АВ1П', modulesEach:1, topPoints:1, bottomPoints:1},
-  {presetId:'difavto',   fullName:'Дифавтомат',            abbr:'ДИФ',  modulesEach:2, topPoints:2, bottomPoints:2},
-];
 
 // "Оборудование" tab (see chat — analogous to the main canvas's marker-
 // type editor): the equipment-type LIBRARY (unlimited placements each,
@@ -13710,36 +13977,76 @@ function renderPanelBuilderEquipTab(){
   if(!wrap) return;
   let html = `<div style="font-size:11px; font-weight:600; color:#888; margin-bottom:2px; text-transform:uppercase">Оборудование</div>
   <div style="font-size:10px; color:#666; margin-bottom:8px">Перетащите на схему</div>`;
-  html += `<div class="pb-type-item" data-kind="comb" tabindex="0"
-    style="display:block; width:100%; text-align:left; padding:8px 10px; margin-bottom:6px; border-radius:6px; cursor:grab; user-select:none; box-sizing:border-box;
-    background:#242424; border:1px solid #3a3a3a">
-    <div style="font-size:12px; color:#e0e0e0">⌐ Гребёнка</div>
-    <div style="font-size:10px; color:#888; margin-top:2px">ширина и точки — по месту</div>
-  </div>`;
-  PB_PRESET_TYPES.forEach(t=>{
-    html += `<div class="pb-type-item" data-preset-id="${t.presetId}" tabindex="0"
-      style="display:block; width:100%; text-align:left; padding:8px 10px; margin-bottom:6px; border-radius:6px; cursor:grab; user-select:none; box-sizing:border-box;
-      background:#20242c; border:1px solid #34404f">
-      <div style="font-size:12px; color:#e0e0e0">${t.abbr} · ${t.fullName} <span style="color:#5a7ba0; font-size:9px">встроенный</span></div>
-      <div style="font-size:10px; color:#888; margin-top:2px">${t.modulesEach} мод. · сверху ${t.topPoints}, снизу ${t.bottomPoints}</div>
-    </div>`;
-  });
   panelEquipTypes.forEach(t=>{
     const isBus = t.kind==='busbar';
     let subtitle;
     if(!isBus) subtitle = `${t.modulesEach} мод. · сверху ${t.topPoints}, снизу ${t.bottomPoints}`;
     else if(t.busOrientation==='vertical') subtitle = `⏐ шина, 1 мод. · ${t.busPoints} точек · выход ${t.busSide==='left'?'влево':'вправо'}`;
     else subtitle = `— шина, ширина при размещении · ${t.busSide==='top'?'сверху щитка':'снизу щитка'}`;
+    const editing = panelBuilderEditingTypeId===t.id;
     html += `<div style="position:relative; margin-bottom:6px">
       <div class="pb-type-item" data-type-id="${t.id}" tabindex="0"
-        style="display:block; width:100%; text-align:left; padding:8px 28px 8px 10px; border-radius:6px; cursor:grab; user-select:none; box-sizing:border-box;
+        style="display:block; width:100%; text-align:left; padding:8px 50px 8px 10px; border-radius:6px; cursor:grab; user-select:none; box-sizing:border-box;
         background:${isBus?'#242018':'#242424'}; border:1px solid ${isBus?'#5a4a2a':'#3a3a3a'}">
         <div style="font-size:12px; color:#e0e0e0">${t.abbr} · ${t.fullName}</div>
         <div style="font-size:10px; color:#888; margin-top:2px">${subtitle}</div>
       </div>
+      <button class="pb-type-edit" data-type-id="${t.id}" title="Изменить тип"
+        style="position:absolute; right:26px; top:8px; background:none; border:none; color:${editing?'#7dc4ff':'#888'}; cursor:pointer; font-size:13px; line-height:1">✎</button>
       <button class="pb-type-delete" data-type-id="${t.id}" title="Удалить тип"
         style="position:absolute; right:6px; top:8px; background:none; border:none; color:#888; cursor:pointer; font-size:13px; line-height:1">✕</button>
     </div>`;
+    if(editing){
+      const nameFields = `
+          <label style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#888">Полное название
+            <input type="text" id="pb-type-edit-fullname" class="prop-input" value="${panelEsc(t.fullName)}">
+          </label>
+          <label style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#888">Аббревиатура
+            <input type="text" id="pb-type-edit-abbr" class="prop-input" value="${panelEsc(t.abbr)}">
+          </label>`;
+      let fields;
+      if(!isBus){
+        fields = nameFields + `
+          <label style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#888">Ширина, модулей
+            <input type="number" id="pb-type-edit-modules" class="prop-input" min="1" max="12" step="1" value="${t.modulesEach}">
+          </label>
+          <label style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#888">Точек сверху
+            <input type="number" id="pb-type-edit-top" class="prop-input" min="0" max="12" step="1" value="${t.topPoints}">
+          </label>
+          <label style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#888">Точек снизу
+            <input type="number" id="pb-type-edit-bottom" class="prop-input" min="0" max="12" step="1" value="${t.bottomPoints}">
+          </label>`;
+      } else if(t.busOrientation==='vertical'){
+        fields = nameFields + `
+          <label style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#888">Точек (6–18)
+            <input type="number" id="pb-type-edit-buspoints" class="prop-input" min="6" max="18" step="1" value="${t.busPoints}">
+          </label>
+          <label style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#888">Сторона выхода провода
+            <select id="pb-type-edit-busside" class="prop-input">
+              <option value="left" ${t.busSide==='left'?'selected':''}>Влево</option>
+              <option value="right" ${t.busSide==='right'?'selected':''}>Вправо</option>
+            </select>
+          </label>`;
+      } else {
+        fields = nameFields + `
+          <label style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#888">Расположение
+            <select id="pb-type-edit-busside" class="prop-input">
+              <option value="top" ${t.busSide==='top'?'selected':''}>Сверху ряда</option>
+              <option value="bottom" ${t.busSide==='bottom'?'selected':''}>Снизу ряда</option>
+            </select>
+          </label>
+          <div style="font-size:10px; color:#666">Уже размещённых шин это не сдвинет — коснётся только новых.</div>`;
+      }
+      html += `<div style="margin:-2px 0 6px; padding:10px; background:#181818; border:1px solid #3a4a5c; border-radius:8px">
+        <div style="display:flex; flex-direction:column; gap:8px">
+          ${fields}
+          <div style="display:flex; gap:6px">
+            <button id="pb-type-edit-save" data-type-id="${t.id}" style="flex:1; padding:6px; background:#1a3a5c; border:1px solid #4a9eff; border-radius:6px; color:#7dc4ff; font-size:11px; cursor:pointer">Сохранить</button>
+            <button id="pb-type-edit-cancel" style="flex:1; padding:6px; background:#242424; border:1px solid #3a3a3a; border-radius:6px; color:#999; font-size:11px; cursor:pointer">Отмена</button>
+          </div>
+        </div>
+      </div>`;
+    }
   });
   const {items} = panelEquipmentList();
   const quickItems = items.filter(i=>i.modulesEach>0);
@@ -13756,8 +14063,8 @@ function renderPanelBuilderEquipTab(){
       <label style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#888">Полное название
         <input type="text" id="pb-type-fullname" class="prop-input" placeholder="Автомат С16 1П">
       </label>
-      <label style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#888">Аббревиатура (≤5)
-        <input type="text" id="pb-type-abbr" class="prop-input" maxlength="5" placeholder="С16">
+      <label style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#888">Аббревиатура
+        <input type="text" id="pb-type-abbr" class="prop-input" placeholder="С16">
       </label>
       <div style="display:flex; gap:6px">
         <button type="button" class="pb-type-kind-btn active" data-kind="item" style="flex:1; padding:6px; border-radius:6px; cursor:pointer; font-size:11px; background:#2a3a4a; border:1px solid #4a9eff; color:#e0e0e0">Общее</button>
@@ -13839,10 +14146,6 @@ function renderPanelBuilderEquipTab(){
       let info;
       if(btn.dataset.kind==='comb'){
         info = {kind:'comb', name:'Гребёнка', abbr:'⌐'};
-      } else if(btn.dataset.presetId){
-        const t = PB_PRESET_TYPES.find(x=>x.presetId===btn.dataset.presetId);
-        if(!t) return;
-        info = {typeId:null, presetId:t.presetId, name:t.fullName, abbr:t.abbr, modulesEach:t.modulesEach, topPoints:t.topPoints, bottomPoints:t.bottomPoints, kind:'item'};
       } else {
         const t = panelEquipTypes.find(x=>x.id===btn.dataset.typeId);
         if(!t) return;
@@ -13964,13 +14267,29 @@ function renderPanelBuilderEquipTab(){
       renderPanelBuilder();
     });
   });
+  wrap.querySelectorAll('.pb-type-edit').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      panelBuilderEditingTypeId = (panelBuilderEditingTypeId===btn.dataset.typeId) ? null : btn.dataset.typeId;
+      renderPanelBuilder();
+    });
+  });
+  document.getElementById('pb-type-edit-save')?.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    panelBuilderApplyTypeEdit(document.getElementById('pb-type-edit-save').dataset.typeId);
+  });
+  document.getElementById('pb-type-edit-cancel')?.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    panelBuilderEditingTypeId = null;
+    renderPanelBuilder();
+  });
   wrap.querySelectorAll('.pb-quick-type').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const i = quickItems[parseInt(btn.dataset.idx,10)];
       if(!i) return;
       const nameEl=document.getElementById('pb-type-fullname');
       nameEl.value = i.name;
-      document.getElementById('pb-type-abbr').value = i.name.replace(/[^A-Za-zА-Яа-я0-9]/g,'').slice(0,5);
+      document.getElementById('pb-type-abbr').value = i.name.replace(/[^A-Za-zА-Яа-я0-9]/g,'');
       document.getElementById('pb-type-modules').value = i.modulesEach;
       nameEl.scrollIntoView({block:'center', behavior:'smooth'});
       nameEl.focus();
@@ -13978,7 +14297,7 @@ function renderPanelBuilderEquipTab(){
   });
   document.getElementById('pb-type-add').addEventListener('click', ()=>{
     const fullName = document.getElementById('pb-type-fullname').value.trim();
-    const abbr = document.getElementById('pb-type-abbr').value.trim().slice(0,5);
+    const abbr = document.getElementById('pb-type-abbr').value.trim();
     if(!fullName || !abbr){ alert('Укажите и полное название, и аббревиатуру.'); return; }
     const isBus = wrap.querySelector('.pb-type-kind-btn[data-kind="busbar"]').classList.contains('active');
     panelBuilderSaveHistory();
@@ -14073,6 +14392,175 @@ const PB_BAR_STACK_GAP = 10;  // between individual bars within the same busbar 
 const PB_BAR_ROW_GAP = 70;    // between the busbar stack and the equipment row it feeds — bigger than the inter-bar gap on purpose, per chat
 const PB_BUS_POINTS_PER_MODULE = 2; // "2 точки на ширину модуля" — see chat
 
+// Nearest column (same row) where a placement of the given width fits
+// without overlapping any OTHER placement, searching outward left/right
+// from its preferred (usually current) column — used when a type's width
+// changes and a placement needs to "shift left or right" to stay put (see
+// chat). null means nothing in the row works and it has to come off.
+// Resolves where each placement in `list` lands after its width changes
+// to modulesEach — tries staying put, then searches outward (see
+// panelBuilderFindFitCol). `list` must already be part of whatever
+// panelPlacements currently IS (the real array for an actual apply, or a
+// temporary swapped-in array of clones for a dry run — see
+// panelBuilderApplyTypeEdit), since the fit check reads neighbours
+// through panelPlacementAt, which reads panelPlacements directly.
+// Processes one at a time and commits each survivor's col/spanCols
+// immediately after resolving it, NOT before (see chat): checking fit
+// first against the OLD span is what lets a real neighbour's claim on a
+// cell actually show up — pre-committing the new (wider) span let a
+// placement's own expanded footprint satisfy its own collision check
+// before any neighbour was even considered, so it could grow straight
+// through whatever was next to it instead of being stopped by it.
+// Committing one at a time (rather than all at once afterward) is also
+// what lets a second placement of the same type correctly route around
+// the first one once IT has already moved.
+function panelBuilderResolveWidthFits(list, modulesEach){
+  const cols = new Map(), dropIds = [];
+  list.forEach(p=>{
+    const col = panelBuilderFindFitCol(p.row, modulesEach, p.id, p.col);
+    if(col==null){ dropIds.push(p.id); return; }
+    cols.set(p.id, col);
+    p.col = col;
+    p.spanCols = modulesEach;
+  });
+  return {cols, dropIds};
+}
+function panelBuilderFindFitCol(row, span, excludeId, preferCol){
+  const fits = c0=>{
+    if(c0<0 || c0+span>panelGridCols) return false;
+    for(let c=c0;c<c0+span;c++){
+      const occ = panelPlacementAt(row,c);
+      if(occ && occ.id!==excludeId) return false;
+    }
+    return true;
+  };
+  if(fits(preferCol)) return preferCol;
+  for(let d=1; d<panelGridCols; d++){
+    if(fits(preferCol-d)) return preferCol-d;
+    if(fits(preferCol+d)) return preferCol+d;
+  }
+  return null;
+}
+// Applies an edit to an existing equipment type (see chat). Changing the
+// connection-point counts resets every wire on placements of this type —
+// an old wire's point index could land past the new count, so rather than
+// guess which ones still make sense, all of them go. Changing the width
+// can knock a placement off the schematic entirely if it and its
+// neighbours can no longer share the row: panelBuilderFindFitCol tries
+// shifting it left or right first, only dropping it if nothing fits. Runs
+// a dry pass first so the confirmation names real numbers, not a vague
+// "this might affect something".
+function panelBuilderApplyTypeEdit(typeId){
+  const t = panelEquipTypes.find(x=>x.id===typeId);
+  if(!t) return;
+  if(t.kind==='busbar') panelBuilderApplyBusTypeEdit(t);
+  else panelBuilderApplyItemTypeEdit(t);
+}
+// Шина (either orientation) — see chat, "любые параметры". A vertical
+// bus's point count is baked into each placement the same way an item's
+// top/bottom points are, so changing it carries the same consequence
+// (existing wires reset — an old wire's index could land past the new
+// count). A horizontal bus's width and point count are chosen per
+// placement, not from the type, so only its name/abbr/side are type-level
+// at all — editing those doesn't touch anything already on the schematic,
+// only what a fresh drag from the palette starts with from now on.
+function panelBuilderApplyBusTypeEdit(t){
+  const fullName = document.getElementById('pb-type-edit-fullname').value.trim();
+  const abbr = document.getElementById('pb-type-edit-abbr').value.trim();
+  if(!fullName || !abbr){ alert('Укажите и полное название, и аббревиатуру.'); return; }
+  const busSide = document.getElementById('pb-type-edit-busside').value;
+
+  if(t.busOrientation==='vertical'){
+    const busPoints = Math.max(6, Math.min(18, parseInt(document.getElementById('pb-type-edit-buspoints').value,10)||12));
+    const pointsChanged = busPoints!==t.busPoints;
+    const affected = panelPlacements.filter(p=>p.typeId===t.id);
+    let wireCount = 0;
+    if(pointsChanged){
+      const ids = new Set(affected.map(p=>p.id));
+      wireCount = panelWireLinks.filter(w=>ids.has(w.aId)||ids.has(w.bId)).length;
+    }
+    if(wireCount>0 && !confirm(`Изменение типа затронет уже размещённое оборудование:\n— будет удалено подключений: ${wireCount}\n\nПродолжить?`)) return;
+    panelBuilderSaveHistory();
+    t.fullName=fullName; t.abbr=abbr; t.busPoints=busPoints; t.busSide=busSide;
+    if(pointsChanged){
+      const ids = new Set(affected.map(p=>p.id));
+      panelWireLinks = panelWireLinks.filter(w=>!ids.has(w.aId) && !ids.has(w.bId));
+    }
+    affected.forEach(p=>{ p.name=fullName; p.abbr=abbr; p.busPoints=busPoints; p.busSide=busSide; });
+  } else {
+    panelBuilderSaveHistory();
+    t.fullName=fullName; t.abbr=abbr; t.busSide=busSide;
+    panelPlacements.filter(p=>p.typeId===t.id).forEach(p=>{ p.name=fullName; p.abbr=abbr; }); // busSide on an already-placed bar stays where it was placed
+  }
+  panelBuilderEditingTypeId = null;
+  renderPanelBuilder();
+}
+function panelBuilderApplyItemTypeEdit(t){
+  const fullName = document.getElementById('pb-type-edit-fullname').value.trim();
+  const abbr = document.getElementById('pb-type-edit-abbr').value.trim();
+  const modulesEach = Math.max(1, Math.min(12, parseInt(document.getElementById('pb-type-edit-modules').value,10)||1));
+  const topPoints = Math.max(0, Math.min(12, parseInt(document.getElementById('pb-type-edit-top').value,10)||0));
+  const bottomPoints = Math.max(0, Math.min(12, parseInt(document.getElementById('pb-type-edit-bottom').value,10)||0));
+  if(!fullName || !abbr){ alert('Укажите и полное название, и аббревиатуру.'); return; }
+
+  const pointsChanged = topPoints!==t.topPoints || bottomPoints!==t.bottomPoints;
+  const widthChanged = modulesEach!==t.modulesEach;
+  const affected = panelPlacements.filter(p=>p.typeId===t.id);
+
+  let wireCount = 0;
+  if(pointsChanged){
+    const ids = new Set(affected.map(p=>p.id));
+    wireCount = panelWireLinks.filter(w=>ids.has(w.aId)||ids.has(w.bId)).length;
+  }
+  // Dry run (see chat): figure out the real drop count on a throwaway set
+  // of clones, swapped in for panelPlacements just long enough for
+  // panelBuilderFindFitCol's lookups to see them — never touches the
+  // actual placements. The same resolver runs again, for real, further
+  // down once the person has confirmed, so the number shown here and
+  // what actually happens can't drift apart.
+  let dropIds = [];
+  if(widthChanged){
+    const others = panelPlacements.filter(p=>p.typeId!==t.id);
+    const clones = affected.map(p=>({...p}));
+    const saved = panelPlacements;
+    panelPlacements = others.concat(clones);
+    dropIds = panelBuilderResolveWidthFits(clones, modulesEach).dropIds;
+    panelPlacements = saved;
+  }
+
+  if(wireCount>0 || dropIds.length>0){
+    const lines=[];
+    if(wireCount>0) lines.push(`— будет удалено подключений: ${wireCount}`);
+    if(dropIds.length>0) lines.push(`— будет снято со схемы устройств (не помещаются на прежнем месте): ${dropIds.length} из ${affected.length}`);
+    if(!confirm(`Изменение типа затронет уже размещённое оборудование:\n${lines.join('\n')}\n\nПродолжить?`)) return;
+  }
+
+  panelBuilderSaveHistory();
+  t.fullName = fullName; t.abbr = abbr; t.modulesEach = modulesEach; t.topPoints = topPoints; t.bottomPoints = bottomPoints;
+
+  if(pointsChanged){
+    const ids = new Set(affected.map(p=>p.id));
+    panelWireLinks = panelWireLinks.filter(w=>!ids.has(w.aId) && !ids.has(w.bId));
+  }
+  // Same resolver, same inputs as the dry run above — now against the
+  // real placements (already live in panelPlacements), so it both
+  // decides the final drop list and commits each survivor's new col/
+  // spanCols as it goes.
+  if(widthChanged) dropIds = panelBuilderResolveWidthFits(affected, modulesEach).dropIds;
+  affected.forEach(p=>{
+    p.name = fullName; p.abbr = abbr;
+    p.modulesEach = modulesEach;
+    p.topPoints = topPoints; p.bottomPoints = bottomPoints;
+    if(!widthChanged) p.spanCols = modulesEach; // resolver already set it for a width change; keep it in sync otherwise too
+  });
+  if(dropIds.length){
+    panelPlacements = panelPlacements.filter(p=>!dropIds.includes(p.id));
+    panelWireLinks = panelWireLinks.filter(w=>!dropIds.includes(w.aId) && !dropIds.includes(w.bId));
+    if(panelBuilderSelectedId && dropIds.includes(panelBuilderSelectedId)) panelBuilderSelectedId=null;
+  }
+  panelBuilderEditingTypeId = null;
+  renderPanelBuilder();
+}
 function panelPlacementAt(row, col){
   return panelPlacements.find(p=> p.kind!=='bus-h' && p.row===row && col>=p.col && col < p.col + (p.spanCols||p.modulesEach));
 }
@@ -16306,6 +16794,13 @@ function renderOverallTop(){
   const wrap=document.getElementById('overall-cfg-top');
   if(!wrap) return;
   wrap.innerHTML=`
+    <div class="panel-cfg-row" style="display:flex;align-items:center;gap:10px;margin-bottom:8px" title="${panelPlacements.length ? '' : t('overall_use_panelbuilder_disabled_hint')}">
+      <label style="flex:1;font-size:12px;color:${panelPlacements.length?'#aaa':'#666'}">${t('overall_use_panelbuilder_label')}</label>
+      <select id="oe-use-panelbuilder" class="prop-input" style="width:90px" ${panelPlacements.length?'':'disabled'}>
+        <option value="0" ${!overallUsePanelBuilderData?'selected':''}>${t('panel_no')}</option>
+        <option value="1" ${overallUsePanelBuilderData?'selected':''}>${t('panel_yes')}</option>
+      </select>
+    </div>
     <div class="panel-cfg-row" style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
       <label style="flex:1;font-size:12px;color:#aaa">${t('overall_gun_label')}</label>
       <select id="oe-gun" class="prop-input" style="width:90px">
@@ -16318,6 +16813,7 @@ function renderOverallTop(){
       <input type="number" id="oe-margin" class="prop-input" min="0" step="1" style="width:70px" value="${overallMarginPct}"> %
     </div>`;
   document.getElementById('oe-gun').addEventListener('change',function(){ overallHasMountingGun=this.value==='1'; renderOverallSummary(); });
+  document.getElementById('oe-use-panelbuilder')?.addEventListener('change',function(){ overallUsePanelBuilderData=this.value==='1'; renderOverallSummary(); });
   document.getElementById('oe-margin').addEventListener('input',function(){ overallMarginPct=Math.max(0,parseFloat(this.value)||0); renderOverallCableList(); renderOverallMountTable(); renderOverallSummary(); });
 }
 
@@ -17637,6 +18133,20 @@ if(!localStorage.getItem('wiringSeenWelcome') && !isMobileMode()){
   <h2>Как рассчитать метраж проводки</h2>
   <p>Для расчёта количества кабеля на квартиру или дом: загрузите план помещения, укажите масштаб (например, нарисовав линию по известному расстоянию), расставьте значки розеток, выключателей и распредкоробок, затем нарисуйте трассы прокладки кабеля. Калькулятор автоматически посчитает метраж по каждой марке кабеля с учётом нормы расхода на каждый прибор.</p>
   <p>Сервис бесплатный. Казахстан, все города: Алматы, Астана, Шымкент, Караганда, Усть-Каменогорск, Актобе, Тараз, Семей, Павлодар, Атырау, Костанай, Уральск, Петропавловск, Актау, Кызылорда.</p>
+  <h2>Конструктор электрощита онлайн — схема расключения щитка</h2>
+  <p>На Provodka.org также есть бесплатный конструктор электрощита — визуальный редактор для составления схемы расключения распределительного щита: ввод (фазы, ноль, земля), нулевые и защитные шины, автоматы, УЗО, дифавтоматы, контакторы, реле напряжения и другое оборудование.</p>
+  <h2>Для кого конструктор щитка</h2>
+  <p>Инструмент для электриков и электромонтажников, которым нужно до монтажа увидеть расположение модулей и проводов в щите, спланировать расстановку автоматов по рядам и свериться с самим собой, прежде чем разводить реальный щиток. Конструктор не считает номиналы автоматов, сечения кабеля и не проверяет соответствие ПУЭ — он визуализирует и помогает спланировать расположение.</p>
+  <h2>Что умеет конструктор щитка</h2>
+  <ul>
+    <li>Расстановка автоматов, дифавтоматов, УЗО, контакторов, реле напряжения и другого оборудования по рядам щитка</li>
+    <li>Штатные нулевые и защитные шины с автоматической разводкой проводов от шины до оборудования</li>
+    <li>Отслеживание фазы: цвет провода внутри щитка определяется автоматически по вводу, от которого запитана цепь, без риска перепутать фазы на одной шине</li>
+    <li>Собственные типы оборудования — название, аббревиатура, ширина в модулях, число точек подключения</li>
+    <li>Назначение линий основного чертежа электропроводки прямо на схему щитка</li>
+    <li>Экспорт готовой схемы щитка в PNG</li>
+    <li>Данные конструктора можно подставить прямо в общую смету на оборудование щитка</li>
+  </ul>
 </footer>
 </body>
 </html>

@@ -1853,7 +1853,7 @@ const translations = {
     res_lines_prefix:'Линии',
     no_connected_lines:'Нет подключённых линий', conn_connected:'Подключён',
     tt_toggle_conn_type:'Переключить тип', partner_fallback:'Партнёр', unit_cm:'см', unit_pcs:'шт',
-    ad_placeholder_name:'Место для вашей рекламы', ad_placeholder_whatsapp_msg:'Здравствуйте! Хочу разместить рекламу в калькуляторе проводки (provodka.org)',
+    ad_placeholder_name:'Место для вашей рекламы', ad_placeholder_name_city:'Реклама по вашему городу', ad_placeholder_name_country:'Реклама по вашей стране', ad_placeholder_whatsapp_msg:'Здравствуйте! Хочу разместить рекламу в калькуляторе проводки (provodka.org)',
     ropt_calculating:'Считаю…',
     ropt_no_nets:'Нет линий с обоими подключёнными концами — нечего трассировать.',
     ropt_no_grid:'Не удалось построить сетку (нет ни зон, ни содержимого чертежа).',
@@ -2304,7 +2304,7 @@ const translations = {
     res_lines_prefix:'Lines',
     no_connected_lines:'No connected lines', conn_connected:'Connected',
     tt_toggle_conn_type:'Toggle type', partner_fallback:'Partner', unit_cm:'cm', unit_pcs:'pc',
-    ad_placeholder_name:'Advertise here', ad_placeholder_whatsapp_msg:'Hello! I\'d like to advertise on the wiring calculator (provodka.org)',
+    ad_placeholder_name:'Advertise here', ad_placeholder_name_city:'Advertise here — your city', ad_placeholder_name_country:'Advertise here — your country', ad_placeholder_whatsapp_msg:'Hello! I\'d like to advertise on the wiring calculator (provodka.org)',
     ropt_calculating:'Calculating…',
     ropt_no_nets:'No lines with both ends connected — nothing to route.',
     ropt_no_grid:'Could not build a grid (no zones, no drawing content).',
@@ -2755,7 +2755,7 @@ const translations = {
     res_lines_prefix:'Líneas',
     no_connected_lines:'Sin líneas conectadas', conn_connected:'Conectado',
     tt_toggle_conn_type:'Cambiar tipo', partner_fallback:'Socio', unit_cm:'cm', unit_pcs:'ud',
-    ad_placeholder_name:'Anúnciese aquí', ad_placeholder_whatsapp_msg:'¡Hola! Quiero anunciarme en la calculadora de cableado (provodka.org)',
+    ad_placeholder_name:'Anúnciese aquí', ad_placeholder_name_city:'Anúnciese aquí — su ciudad', ad_placeholder_name_country:'Anúnciese aquí — su país', ad_placeholder_whatsapp_msg:'¡Hola! Quiero anunciarme en la calculadora de cableado (provodka.org)',
     ropt_calculating:'Calculando…',
     ropt_no_nets:'No hay líneas con ambos extremos conectados — no hay nada que trazar.',
     ropt_no_grid:'No se pudo construir la cuadrícula (no hay zonas ni contenido en el plano).',
@@ -3206,7 +3206,7 @@ const translations = {
     res_lines_prefix:'Сызықтар',
     no_connected_lines:'Қосылған сызықтар жоқ', conn_connected:'Қосылған',
     tt_toggle_conn_type:'Түрді ауыстыру', partner_fallback:'Серіктес', unit_cm:'см', unit_pcs:'дана',
-    ad_placeholder_name:'Жарнамаңыз үшін орын', ad_placeholder_whatsapp_msg:'Сәлеметсіз бе! Сым калькуляторында (provodka.org) жарнама орналастырғым келеді',
+    ad_placeholder_name:'Жарнамаңыз үшін орын', ad_placeholder_name_city:'Қалаңыз бойынша жарнама', ad_placeholder_name_country:'Еліңіз бойынша жарнама', ad_placeholder_whatsapp_msg:'Сәлеметсіз бе! Сым калькуляторында (provodka.org) жарнама орналастырғым келеді',
     ropt_calculating:'Есептеп жатыр…',
     ropt_no_nets:'Екі ұшы да қосылған сызықтар жоқ — тарта ешнәрсе жоқ.',
     ropt_no_grid:'Тор құру мүмкін болмады (зоналар да, сызба мазмұны да жоқ).',
@@ -10462,14 +10462,23 @@ function getCityAliases(){
 // so a person always sees a recognisable ad graphic there, rather than
 // plain text that could be mistaken for part of the app itself. A plain
 // inline SVG data URI — no extra file, works everywhere, never 404s.
-const AD_PLACEHOLDER_IMG = 'data:image/svg+xml;utf8,' + encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 210">'
-  + '<rect width="400" height="210" fill="#1a1e24"/>'
-  + '<rect x="2" y="2" width="396" height="206" fill="none" stroke="#3a4048" stroke-width="2" stroke-dasharray="7 7"/>'
-  + '<text x="200" y="98" font-family="sans-serif" font-size="22" font-weight="700" fill="#5a6270" text-anchor="middle">РЕКЛАМА</text>'
-  + '<text x="200" y="124" font-family="sans-serif" font-size="12" fill="#4a5058" text-anchor="middle">место для баннера партнёра</text>'
-  + '</svg>'
-);
+// Two variants, not one (see chat) — with a single generic "РЕКЛАМА" image
+// an advertiser looking at an empty slot had no way to tell that the city
+// banner and the country banner are actually two DIFFERENT, separately
+// sellable placements. The second line now says which is which.
+function pbAdPlaceholderSvg(sub){
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 210">'
+    + '<rect width="400" height="210" fill="#1a1e24"/>'
+    + '<rect x="2" y="2" width="396" height="206" fill="none" stroke="#3a4048" stroke-width="2" stroke-dasharray="7 7"/>'
+    + '<text x="200" y="98" font-family="sans-serif" font-size="22" font-weight="700" fill="#5a6270" text-anchor="middle">РЕКЛАМА</text>'
+    + '<text x="200" y="124" font-family="sans-serif" font-size="12" fill="#4a5058" text-anchor="middle">'+sub+'</text>'
+    + '</svg>'
+  );
+}
+const AD_PLACEHOLDER_IMG = pbAdPlaceholderSvg('место для баннера партнёра');
+const AD_PLACEHOLDER_IMG_CITY = pbAdPlaceholderSvg('реклама по вашему городу');
+const AD_PLACEHOLDER_IMG_COUNTRY = pbAdPlaceholderSvg('реклама по вашей стране');
 
 let userCity = null;          // resolved Cyrillic city key, or null if unknown/undetected
 let userCountry = null;       // ISO 3166-1 alpha-2 country code (e.g. "KZ"), or null if unknown/undetected
@@ -10574,7 +10583,7 @@ async function showPartnerCard(onContinue){
     // owner's own contact instead of just skipping the card, so a shop
     // owner using the calculator actually discovers the opportunity
     // exists (see chat: a slot nobody can see can't be sold either).
-    p = { name: t('ad_placeholder_name'), whatsapp: adWhatsapp, whatsappMsg: t('ad_placeholder_whatsapp_msg') };
+    p = { name: t('ad_placeholder_name_city'), whatsapp: adWhatsapp, whatsappMsg: t('ad_placeholder_whatsapp_msg') };
     isPlaceholder = true;
   }
   if(!p){
@@ -10597,9 +10606,9 @@ async function showPartnerCard(onContinue){
   // an ad slot rather than just vanishing.
   bannerLink.href = p.website || (p.whatsapp ? `https://wa.me/${p.whatsapp}?text=${encodeURIComponent(p.whatsappMsg||'')}` : '#');
   bannerLink.onclick = ()=>{ if(typeof gtag==='function') gtag('event', 'partner_click', {partner_name:p.name||'unknown', kind:'banner'}); };
-  banner.onerror = ()=>{ if(banner.src!==AD_PLACEHOLDER_IMG) banner.src = AD_PLACEHOLDER_IMG; };
+  banner.onerror = ()=>{ if(banner.src!==AD_PLACEHOLDER_IMG_CITY) banner.src = AD_PLACEHOLDER_IMG_CITY; };
   banner.onload = ()=>{ bannerLink.style.display='block'; };
-  banner.src = p.image || AD_PLACEHOLDER_IMG;
+  banner.src = p.image || AD_PLACEHOLDER_IMG_CITY;
 
   const addrRow = document.getElementById('partner-address-row');
   if(p.address){ addrRow.style.display='flex'; document.getElementById('partner-address').textContent = p.address; }
@@ -10661,7 +10670,7 @@ function paintPropsCityAdBanner(wrap, city){
   if(!p && adWhatsapp){
     // Slot not sold for this city yet — same placeholder treatment as the
     // other two ad slots, so this one stays discoverable too.
-    p = { name: t('ad_placeholder_name'), whatsapp: adWhatsapp, whatsappMsg: t('ad_placeholder_whatsapp_msg') };
+    p = { name: t('ad_placeholder_name_city'), whatsapp: adWhatsapp, whatsappMsg: t('ad_placeholder_whatsapp_msg') };
     isPlaceholder = true;
   }
   if(!p){ wrap.style.display='none'; return; }
@@ -10671,7 +10680,7 @@ function paintPropsCityAdBanner(wrap, city){
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid #2a2a2a">
       <a href="${href}" target="_blank" rel="noopener" data-track-partner="${(p.name||'').replace(/"/g,'&quot;')}"
         style="display:block;position:relative;width:100%;aspect-ratio:1/1;border-radius:8px;overflow:hidden;background:#1a1a1a">
-        <img src="${p.image || AD_PLACEHOLDER_IMG}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.src='${AD_PLACEHOLDER_IMG}'">
+        <img src="${p.image || AD_PLACEHOLDER_IMG_CITY}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.src='${AD_PLACEHOLDER_IMG_CITY}'">
         <div style="position:absolute;left:0;right:0;bottom:0;padding:8px;background:linear-gradient(to top,rgba(0,0,0,.75),transparent);font-size:11px;font-weight:600;color:#fff">${safeName}</div>
       </a>
     </div>`;
@@ -10713,13 +10722,13 @@ function paintPropsAdBanner(wrap, country){
     // they're not actively editing something, arguably more visible than
     // the save/export modal card.
     const adWhatsapp=partnersConfig && partnersConfig._ad_slot_whatsapp;
-    if(adWhatsapp) p={ name:t('ad_placeholder_name'), whatsapp:adWhatsapp, whatsappMsg:t('ad_placeholder_whatsapp_msg') };
+    if(adWhatsapp) p={ name:t('ad_placeholder_name_country'), whatsapp:adWhatsapp, whatsappMsg:t('ad_placeholder_whatsapp_msg') };
   }
   if(!p){ wrap.style.display='none'; return; }
-  const imgSrc = p.image || AD_PLACEHOLDER_IMG;
+  const imgSrc = p.image || AD_PLACEHOLDER_IMG_COUNTRY;
   wrap.innerHTML=`
     <div style="margin-top:10px;padding:12px;padding-top:14px;border-top:1px solid #2a2a2a;background:#1a1a1a;border-radius:8px">
-      <a href="${(p.website || (p.whatsapp?`https://wa.me/${p.whatsapp}?text=${encodeURIComponent(p.whatsappMsg||'')}`:'#')).replace(/"/g,'&quot;')}" target="_blank" rel="noopener" style="display:block;margin-bottom:8px;width:100%;aspect-ratio:1.91/1;border-radius:6px;overflow:hidden;background:#12151b" data-track-partner="${(p.name||'').replace(/"/g,'&quot;')}"><img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.src='${AD_PLACEHOLDER_IMG}'"></a>
+      <a href="${(p.website || (p.whatsapp?`https://wa.me/${p.whatsapp}?text=${encodeURIComponent(p.whatsappMsg||'')}`:'#')).replace(/"/g,'&quot;')}" target="_blank" rel="noopener" style="display:block;margin-bottom:8px;width:100%;aspect-ratio:1.91/1;border-radius:6px;overflow:hidden;background:#12151b" data-track-partner="${(p.name||'').replace(/"/g,'&quot;')}"><img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.src='${AD_PLACEHOLDER_IMG_COUNTRY}'"></a>
       <div style="font-size:12px;font-weight:600;color:#ccc;margin-bottom:8px">${p.name||t('partner_fallback')}</div>
       <div id="props-ad-actions" style="display:flex;gap:6px;flex-wrap:wrap"></div>
     </div>`;

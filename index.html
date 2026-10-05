@@ -853,6 +853,19 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
   </div>
 </div>
 
+<!-- Panel Builder single-line diagram modal -->
+<div id="pb-sl-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:720;align-items:center;justify-content:center;overflow:auto;padding:20px">
+  <div style="background:#1e1e1e;border:1px solid #444;border-radius:12px;max-width:1000px;width:100%;max-height:92vh;overflow-y:auto;padding:24px 26px;position:relative">
+    <button id="pb-sl-close" style="position:absolute;top:12px;right:14px;background:none;border:none;color:#666;font-size:22px;cursor:pointer;line-height:1">✕</button>
+    <h2 style="font-size:18px;font-weight:700;margin-bottom:12px;color:#e8e8e8">Однолинейная схема щита</h2>
+    <div id="pb-sl-content"></div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button id="pb-sl-download" style="flex:1;padding:10px;background:#1a3a5c;border:1px solid #4a9eff;border-radius:7px;color:#7dc4ff;font-size:13px;font-weight:600;cursor:pointer">⬇ Скачать PNG</button>
+      <button id="pb-sl-close2" style="padding:10px 18px;background:#242424;border:1px solid #3a3a3a;border-radius:7px;color:#999;font-size:13px;cursor:pointer">Закрыть</button>
+    </div>
+  </div>
+</div>
+
 <!-- Panel Builder guide modal -->
 <div id="pb-guide-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:720;align-items:center;justify-content:center;overflow:auto;padding:20px">
   <div style="background:#1e1e1e;border:1px solid #444;border-radius:12px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;padding:28px 30px;position:relative">
@@ -3425,15 +3438,100 @@ let colorBreakerRating = {};         // {hex: 'С16'} — user-editable, one per
 // recreating each time, but they're otherwise ordinary panelEquipTypes
 // entries: fully editable (✎) and deletable (✕) like anything the person
 // adds themselves, and saved/loaded with the project from here on.
+// Тип оборудования (see chat) — decides which conventional graphic symbol
+// (УГО) the single-line diagram export draws for a device, and nothing else
+// in the builder. "Прочее" is the catch-all so an unusual device never
+// breaks the diagram. Polarity ("Полюсов") is a separate 1-4 field because
+// it changes how the symbol is drawn (pole ticks) and can't be reliably
+// guessed from a free-text name or the module width.
+const PB_DEVICE_TYPES = [
+  {id:'breaker',       label:'Автоматический выключатель', poles:1},
+  {id:'difavto',       label:'Дифференциальный автомат',   poles:2},
+  {id:'rcd',           label:'УЗО (ВДТ)',                  poles:2},
+  {id:'contactor',     label:'Контактор',                  poles:2},
+  {id:'voltage_relay', label:'Реле напряжения',            poles:2},
+  {id:'load_switch',   label:'Выключатель нагрузки',       poles:1},
+  {id:'spd',           label:'УЗИП',                       poles:1},
+  {id:'meter',         label:'Счётчик электроэнергии',     poles:1},
+  {id:'splitter',      label:'Разветвитель',               poles:1},
+  {id:'other',         label:'Прочее',                     poles:1},
+];
+function panelBuilderDevTypeLabel(id){
+  const d = PB_DEVICE_TYPES.find(x=>x.id===id);
+  return d ? d.label : 'Прочее';
+}
+function panelBuilderDevTypeOptions(selected){
+  return PB_DEVICE_TYPES.map(d=>`<option value="${d.id}" ${d.id===selected?'selected':''}>${d.label}</option>`).join('');
+}
+// Best guess from a free-text name — used to fill in the type for equipment
+// that was created before the field existed (older saved projects, custom
+// types), and for the quick-fill buttons. Order matters: "дифференциальный
+// автомат" must be caught before plain "автомат", "выключатель нагрузки"
+// before plain "выключатель".
+function panelBuilderGuessDevType(name){
+  const s = String(name||'').toLowerCase();
+  if(/узип/.test(s)) return 'spd';
+  if(/диф/.test(s)) return 'difavto';
+  if(/узо|вдт/.test(s)) return 'rcd';
+  if(/контактор/.test(s)) return 'contactor';
+  if(/реле/.test(s) && /напряж/.test(s)) return 'voltage_relay';
+  if(/выключатель нагрузки|рубильник/.test(s)) return 'load_switch';
+  if(/счётчик|счетчик/.test(s)) return 'meter';
+  if(/разветв|кросс|крсм/.test(s)) return 'splitter';
+  if(/автомат|выключатель/.test(s)) return 'breaker';
+  return 'other';
+}
+function panelBuilderGuessPoles(name, devType){
+  const s = String(name||'').toLowerCase();
+  if(/(одно|1)[\s-]?пол|(^|[^а-яa-z0-9])1п(?![а-яa-z0-9])/.test(s)) return 1;
+  if(/(двух|2)[\s-]?пол|(^|[^а-яa-z0-9])2п(?![а-яa-z0-9])/.test(s)) return 2;
+  if(/(трёх|трех|3)[\s-]?пол|(^|[^а-яa-z0-9])3п(?![а-яa-z0-9])/.test(s)) return 3;
+  if(/(четырёх|четырех|4)[\s-]?пол|(^|[^а-яa-z0-9])4п(?![а-яa-z0-9])/.test(s)) return 4;
+  const d = PB_DEVICE_TYPES.find(x=>x.id===devType);
+  return d ? d.poles : 1;
+}
+// Fills devType/poles on every equipment type that lacks them (older saves).
+function panelBuilderEnsureDevTypes(){
+  panelEquipTypes.forEach(t=>{
+    if(t.kind!=='item') return;
+    if(!t.devType) t.devType = panelBuilderGuessDevType(t.fullName+' '+t.abbr);
+    if(!(t.poles>=1)) t.poles = panelBuilderGuessPoles(t.fullName+' '+t.abbr, t.devType);
+  });
+}
+// A placed device's type/poles: its own copy if it has one, else its type's,
+// else a guess from its name (type deleted, or placed before the field).
+function panelBuilderPlacementDevType(p){
+  if(p.devType) return p.devType;
+  const t = p.typeId ? panelEquipTypes.find(x=>x.id===p.typeId) : null;
+  return (t && t.devType) || panelBuilderGuessDevType(p.name);
+}
+function panelBuilderPlacementPoles(p){
+  if(p.poles>=1) return p.poles;
+  const t = p.typeId ? panelEquipTypes.find(x=>x.id===p.typeId) : null;
+  return (t && t.poles>=1) ? t.poles : panelBuilderGuessPoles(p.name, panelBuilderPlacementDevType(p));
+}
 function panelBuilderDefaultEquipTypes(){
   return [
-    {id:uid(), fullName:'Автомат однополюсный', abbr:'Авт 1-пол', kind:'item', modulesEach:1, topPoints:1, bottomPoints:1},
+    {id:uid(), fullName:'Автомат однополюсный', abbr:'Авт 1-пол', kind:'item', devType:'breaker', poles:1, modulesEach:1, topPoints:1, bottomPoints:1},
     {id:uid(), fullName:'Шина штатная', abbr:'Шина штат', kind:'busbar', busOrientation:'horizontal', busSide:'top'},
-    {id:uid(), fullName:'Дифференциальный автомат 1 фазный', abbr:'дифавтомат', kind:'item', modulesEach:2, topPoints:2, bottomPoints:2},
-    {id:uid(), fullName:'Реле напряжения однофазное', abbr:'Реле напр 1ф', kind:'item', modulesEach:2, topPoints:2, bottomPoints:2},
-    {id:uid(), fullName:'Контактор 1 фазный', abbr:'Конт 1 фаз', kind:'item', modulesEach:2, topPoints:3, bottomPoints:3},
-    {id:uid(), fullName:'Модуль разветвительный', abbr:'Разветв', kind:'item', modulesEach:2, topPoints:3, bottomPoints:3},
+    {id:uid(), fullName:'Дифференциальный автомат 1 фазный', abbr:'дифавтомат', kind:'item', devType:'difavto', poles:2, modulesEach:2, topPoints:2, bottomPoints:2},
+    {id:uid(), fullName:'Реле напряжения однофазное', abbr:'Реле напр 1ф', kind:'item', devType:'voltage_relay', poles:2, modulesEach:2, topPoints:2, bottomPoints:2},
+    {id:uid(), fullName:'Контактор 1 фазный', abbr:'Конт 1 фаз', kind:'item', devType:'contactor', poles:2, modulesEach:2, topPoints:3, bottomPoints:3},
+    {id:uid(), fullName:'Модуль разветвительный', abbr:'Разветв', kind:'item', devType:'splitter', poles:1, modulesEach:2, topPoints:3, bottomPoints:3},
+    panelBuilderUzoType(),
   ];
+}
+function panelBuilderUzoType(){
+  return {id:uid(), fullName:'УЗО', abbr:'УЗО', kind:'item', devType:'rcd', poles:2, modulesEach:2, topPoints:2, bottomPoints:2};
+}
+// Bumped when the permanent set gains an entry (see chat). A project saved
+// before that gets the missing entry added ONCE on load — not re-added
+// afterwards if the person deletes it.
+const PB_EQUIP_SEED_VER = 2;
+let panelEquipSeedVer = PB_EQUIP_SEED_VER;
+function panelBuilderApplySeedMigration(savedVer){
+  if((savedVer||1) < 2 && !panelEquipTypes.some(t=>t.kind==='item' && t.devType==='rcd')) panelEquipTypes.push(panelBuilderUzoType());
+  panelEquipSeedVer = PB_EQUIP_SEED_VER;
 }
 let panelEquipTypes = panelBuilderDefaultEquipTypes();
 let panelGridRows = 1;
@@ -3461,6 +3559,11 @@ let panelWireLinks = [];
 // tip in schematic coordinates, (dx,dy) is the offset of the text label's
 // top-left corner from that tip. Saved with the project.
 let panelAnnotations = [];
+// Однолинейная схема (see chat): optional hand-typed power. Declared up here, with
+// the other project state, because loading a project can run before the
+// diagram code further down has been evaluated.
+let panelGroupPower = {};      // placementId -> power text (kW)
+let panelDeclaredPower = '';   // whole-panel declared power (kW)
 let panelAnnotationSelectedId = null;   // interaction-only
 let panelAnnotationMode = false;        // "next click on the schematic places a note"
 let panelBuilderIgnoreClickUntil = 0;   // swallows the click that follows a note being created/dragged so it can't deselect it
@@ -10771,7 +10874,7 @@ function doSaveProject(){
   const name=getProjectName();
   const data={version:10,pro:true,projectName:name,scale,scaleIsGuessed,segments,lines,markers,walls,measurements,annotations,markerTypes,colorLabels,colorCableTypes,hiddenColors:[...hiddenColors],bg:bgImgDataUrl,bgX,bgY,bgS,bgOpacity,bgWhiten,markerSnapRadius,crossingPenaltyCm,autoFixupEnabled,zones,ceilingHeightM,defaultRouteHeightM,defaultRouteHeightRef,colorRouteHeight,nextBoxNum,
     panelPhases,panelHasInputBreaker,panelInputBreakerRating,panelHasVoltageRelay,panelHasContactor,panelContactorRating,panelVoltageRelayRating,panelProtectionScheme,panelRcdCount,panelRcdRating,panelNeutralBusChoice,panelMountType,colorBreakerRating,
-    panelEquipTypes,panelGridRows,panelGridCols,panelBusbarGroups,panelPlacements,panelLinks,panelWireLinks,panelAnnotations,
+    panelEquipTypes,panelGridRows,panelGridCols,panelBusbarGroups,panelPlacements,panelLinks,panelWireLinks,panelAnnotations,panelEquipSeedVer,panelGroupPower,panelDeclaredPower,
     overallHasMountingGun,overallUsePanelBuilderData,overallMarginPct,overallBackBoxCountOverride,overallBoxSizeText,overallBoxBaseCount,overallBoxExtraInfo,cableMarkNotes,overallRowNotes,overallRowConfig};
   const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
@@ -10823,6 +10926,9 @@ function applyProjectData(d){
   panelMountType=d.panelMountType||'flush';
   colorBreakerRating=d.colorBreakerRating||{};
   panelEquipTypes=d.panelEquipTypes||panelBuilderDefaultEquipTypes(); // old saves predate the permanent set (see chat) — give them one too, rather than an empty library
+  panelBuilderEnsureDevTypes(); // and give older types a device type + poles (see chat)
+  panelBuilderApplySeedMigration(d.panelEquipSeedVer);
+  panelGroupPower=d.panelGroupPower||{}; panelDeclaredPower=d.panelDeclaredPower||'';
   panelGridRows=d.panelGridRows!=null?d.panelGridRows:1;
   panelGridCols=d.panelGridCols!=null?d.panelGridCols:18;
   panelBusbarGroups=d.panelBusbarGroups||[];
@@ -13517,6 +13623,10 @@ document.querySelectorAll('input[name="exp-q"],input[name="exp-scope"]').forEach
 document.getElementById('guide-close').addEventListener('click',()=>{ document.getElementById('guide-modal').style.display='none'; });
 document.getElementById('guide-close-bottom').addEventListener('click',()=>{ document.getElementById('guide-modal').style.display='none'; });
 document.getElementById('guide-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) e.currentTarget.style.display='none'; });
+document.getElementById('pb-sl-close').addEventListener('click', ()=>panelBuilderCloseSingleLine());
+document.getElementById('pb-sl-close2').addEventListener('click', ()=>panelBuilderCloseSingleLine());
+document.getElementById('pb-sl-download').addEventListener('click', ()=>panelBuilderDownloadSingleLine());
+document.getElementById('pb-sl-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) panelBuilderCloseSingleLine(); });
 document.getElementById('pb-guide-close').addEventListener('click',()=>{ document.getElementById('pb-guide-modal').style.display='none'; });
 document.getElementById('pb-guide-close-bottom').addEventListener('click',()=>{ document.getElementById('pb-guide-modal').style.display='none'; });
 document.getElementById('pb-guide-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) e.currentTarget.style.display='none'; });
@@ -13727,7 +13837,7 @@ function panelBuilderSnapshot(){
 }
 function panelBuilderApplySnapshot(json){
   const d = JSON.parse(json);
-  panelEquipTypes=d.panelEquipTypes||panelBuilderDefaultEquipTypes(); panelGridRows=d.panelGridRows; panelGridCols=d.panelGridCols;
+  panelEquipTypes=d.panelEquipTypes||panelBuilderDefaultEquipTypes(); panelBuilderEnsureDevTypes(); panelGridRows=d.panelGridRows; panelGridCols=d.panelGridCols;
   panelBusbarGroups=d.panelBusbarGroups; panelPlacements=d.panelPlacements; panelLinks=d.panelLinks; panelWireLinks=d.panelWireLinks;
   panelAnnotations=d.panelAnnotations||[];
   panelBuilderSelectedId=null;
@@ -13796,6 +13906,8 @@ function renderPanelBuilderToolbar(){
           style="padding:5px 12px; background:${hasSelection?'#3a1a1a':'#2a2a2a'}; border:1px solid ${hasSelection?'#6a2a2a':'#444'}; border-radius:6px; color:${hasSelection?'#ff8a8a':'#555'}; font-size:11px; cursor:${hasSelection?'pointer':'default'}">🗑 Удалить${hasSelection?'':' (ничего не выбрано)'}</button>
         <button id="pb-clear-all" title="Убрать с этой схемы всё оборудование, провода и примечания. Размер щитка, число фаз и свои типы оборудования сохранятся."
           style="padding:5px 12px; background:#2a2a2a; border:1px solid #444; border-radius:6px; color:#ccc; font-size:11px; cursor:pointer">✕ Очистить схему</button>
+        <button id="pb-sl-btn" title="Однолинейная схема щита: скачать картинкой"
+          style="padding:5px 12px; background:#2a2a2a; border:1px solid #444; border-radius:6px; color:#ccc; font-size:11px; cursor:pointer">📐 Однолинейная схема</button>
         <button id="pb-guide-btn" title="Как пользоваться конструктором щитка — по шагам"
           style="padding:5px 12px; background:#2a2a2a; border:1px solid #444; border-radius:6px; color:#ccc; font-size:11px; cursor:pointer">🎓 Обучение</button>
         <button id="pb-optimize-btn" title="Оптимизировать линии шин: магистрали уходят в боковой канал щита, на нужном этаже входят к устройству, линии разведены (спросит, если часть вы двигали вручную)"
@@ -13849,6 +13961,7 @@ function renderPanelBuilderToolbar(){
     panelBuilderEditingTypeId = null;
     renderPanelBuilder();
   });
+  document.getElementById('pb-sl-btn').addEventListener('click', panelBuilderOpenSingleLine);
   document.getElementById('pb-guide-btn').addEventListener('click', ()=>{ document.getElementById('pb-guide-modal').style.display='flex'; });
   document.getElementById('pb-optimize-btn').addEventListener('click', panelBuilderOptimizeBusWires);
   document.getElementById('pb-annot-btn').addEventListener('click', ()=>{ panelAnnotationMode=!panelAnnotationMode; renderPanelBuilder(); });
@@ -13989,7 +14102,7 @@ function renderPanelBuilderEquipTab(){
   panelEquipTypes.forEach(t=>{
     const isBus = t.kind==='busbar';
     let subtitle;
-    if(!isBus) subtitle = `${t.modulesEach} мод. · сверху ${t.topPoints}, снизу ${t.bottomPoints}`;
+    if(!isBus) subtitle = `${panelBuilderDevTypeLabel(t.devType || panelBuilderGuessDevType(t.fullName))} · ${t.modulesEach} мод. · сверху ${t.topPoints}, снизу ${t.bottomPoints}`;
     else if(t.busOrientation==='vertical') subtitle = `⏐ шина, 1 мод. · ${t.busPoints} точек · выход ${t.busSide==='left'?'влево':'вправо'}`;
     else subtitle = `— шина, ширина при размещении · ${t.busSide==='top'?'сверху щитка':'снизу щитка'}`;
     const editing = panelBuilderEditingTypeId===t.id;
@@ -14016,6 +14129,12 @@ function renderPanelBuilderEquipTab(){
       let fields;
       if(!isBus){
         fields = nameFields + `
+          <label style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#888">Тип (для линейной схемы)
+            <select id="pb-type-edit-devtype" class="prop-input">${panelBuilderDevTypeOptions(t.devType || panelBuilderGuessDevType(t.fullName))}</select>
+          </label>
+          <label style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#888">Полюсов (1–4)
+            <input type="number" id="pb-type-edit-poles" class="prop-input" min="1" max="4" step="1" value="${t.poles>=1 ? t.poles : 1}">
+          </label>
           <label style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#888">Ширина, модулей
             <input type="number" id="pb-type-edit-modules" class="prop-input" min="1" max="12" step="1" value="${t.modulesEach}">
           </label>
@@ -14080,6 +14199,12 @@ function renderPanelBuilderEquipTab(){
         <button type="button" class="pb-type-kind-btn" data-kind="busbar" style="flex:1; padding:6px; border-radius:6px; cursor:pointer; font-size:11px; background:#242424; border:1px solid #3a3a3a; color:#999">Шина</button>
       </div>
       <div id="pb-type-fields-item">
+        <label style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#888; margin-bottom:10px">Тип (для линейной схемы)
+          <select id="pb-type-devtype" class="prop-input">${panelBuilderDevTypeOptions('breaker')}</select>
+        </label>
+        <label style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#888; margin-bottom:10px">Полюсов (1–4)
+          <input type="number" id="pb-type-poles" class="prop-input" min="1" max="4" step="1" value="1">
+        </label>
         <label style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#888; margin-bottom:10px">Ширина, модулей
           <input type="number" id="pb-type-modules" class="prop-input" min="1" max="12" step="1" value="1">
         </label>
@@ -14300,6 +14425,9 @@ function renderPanelBuilderEquipTab(){
       nameEl.value = i.name;
       document.getElementById('pb-type-abbr').value = i.name.replace(/[^A-Za-zА-Яа-я0-9]/g,'');
       document.getElementById('pb-type-modules').value = i.modulesEach;
+      const guessed = panelBuilderGuessDevType(i.name);
+      document.getElementById('pb-type-devtype').value = guessed;
+      document.getElementById('pb-type-poles').value = panelBuilderGuessPoles(i.name, guessed);
       nameEl.scrollIntoView({block:'center', behavior:'smooth'});
       nameEl.focus();
     });
@@ -14324,7 +14452,9 @@ function renderPanelBuilderEquipTab(){
       const modulesEach = Math.max(1, parseInt(document.getElementById('pb-type-modules').value,10)||1);
       const topPoints = Math.max(0, parseInt(document.getElementById('pb-type-top').value,10)||0);
       const bottomPoints = Math.max(0, parseInt(document.getElementById('pb-type-bottom').value,10)||0);
-      panelEquipTypes.push({id:uid(), fullName, abbr, kind:'item', modulesEach, topPoints, bottomPoints});
+      const devType = document.getElementById('pb-type-devtype').value || 'other';
+      const poles = Math.max(1, Math.min(4, parseInt(document.getElementById('pb-type-poles').value,10)||1));
+      panelEquipTypes.push({id:uid(), fullName, abbr, kind:'item', devType, poles, modulesEach, topPoints, bottomPoints});
     }
     renderPanelBuilder();
   });
@@ -14510,6 +14640,8 @@ function panelBuilderApplyItemTypeEdit(t){
   const modulesEach = Math.max(1, Math.min(12, parseInt(document.getElementById('pb-type-edit-modules').value,10)||1));
   const topPoints = Math.max(0, Math.min(12, parseInt(document.getElementById('pb-type-edit-top').value,10)||0));
   const bottomPoints = Math.max(0, Math.min(12, parseInt(document.getElementById('pb-type-edit-bottom').value,10)||0));
+  const devType = document.getElementById('pb-type-edit-devtype').value || 'other';
+  const poles = Math.max(1, Math.min(4, parseInt(document.getElementById('pb-type-edit-poles').value,10)||1));
   if(!fullName || !abbr){ alert('Укажите и полное название, и аббревиатуру.'); return; }
 
   const pointsChanged = topPoints!==t.topPoints || bottomPoints!==t.bottomPoints;
@@ -14546,6 +14678,7 @@ function panelBuilderApplyItemTypeEdit(t){
 
   panelBuilderSaveHistory();
   t.fullName = fullName; t.abbr = abbr; t.modulesEach = modulesEach; t.topPoints = topPoints; t.bottomPoints = bottomPoints;
+  t.devType = devType; t.poles = poles;
 
   if(pointsChanged){
     const ids = new Set(affected.map(p=>p.id));
@@ -14558,6 +14691,7 @@ function panelBuilderApplyItemTypeEdit(t){
   if(widthChanged) dropIds = panelBuilderResolveWidthFits(affected, modulesEach).dropIds;
   affected.forEach(p=>{
     p.name = fullName; p.abbr = abbr;
+    p.devType = devType; p.poles = poles;
     p.modulesEach = modulesEach;
     p.topPoints = topPoints; p.bottomPoints = bottomPoints;
     if(!widthChanged) p.spanCols = modulesEach; // resolver already set it for a width change; keep it in sync otherwise too
@@ -16298,6 +16432,8 @@ function panelBuilderPlaceAt(info, dest){
   const rating = (info.kind==='comb' || isBus) ? '' : (prompt('Номинал оборудования (например, 25А, 16А):', '')||'').trim();
   const p = {id:uid(), typeId: (info.kind==='comb')?null:info.typeId, presetId: info.kind==='comb'?null:(info.presetId||null), name:info.name, abbr:info.abbr, rating, modulesEach:info.modulesEach||1, spanCols:span, topPoints, bottomPoints, row, col, kind:info.kind,
     busPoints:info.busPoints, busSide: info.busSide};
+  const _ty = info.typeId ? panelEquipTypes.find(x=>x.id===info.typeId) : null;
+  if(_ty && _ty.kind==='item'){ p.devType = _ty.devType; p.poles = _ty.poles; }
   panelBuilderSaveHistory();
   panelPlacements.push(p);
   panelBuilderSelectedId=p.id;
@@ -16525,6 +16661,521 @@ function renderPanelBuilderWireProps(wrap){
 // Strips the live view's pan/zoom transform first so it renders at a
 // natural 1:1 scale regardless of however the user last left the canvas
 // positioned.
+// ── Однолинейная схема щита (see chat) ───────────────────────────────
+// Built purely from what the builder already knows: which devices exist,
+// how their points are wired, the phase each wire carries, and the lines
+// assigned to devices (name, cable, length from the main drawing). Nothing
+// is calculated — power is an optional, hand-typed field per group.
+// Symbols are simplified drawings of the conventional ones (ГОСТ 2.755
+// style), black on white so it prints. N and PE are deliberately NOT drawn
+// as separate lines (ГОСТ 21.613-2014 п. 6.1.7), and each phase gets its
+// own line — a two-phase panel shows two lines, not one that secretly
+// carries both (see chat).
+const PB_SL = {COL_W:170, SYM_L:52, V_GAP:46, MARGIN:30, POLE_DX:14, LANE_DY:7};
+const PB_SL_REF = {breaker:'QF', difavto:'QFD', rcd:'QSD', load_switch:'QS', contactor:'KM', voltage_relay:'KV', spd:'FV', meter:'PI'};
+let panelSLView = {x:0, y:0, s:1, w:1, h:1};   // preview pan/zoom, interaction-only
+
+function panelBuilderColorLengthM(hex){
+  let m = 0;
+  segments.forEach(seg=>{ if(seg.color===hex) m += (seg.real||0); });
+  lines.forEach(line=>{
+    if(line.color!==hex) return;
+    const l = lineLengthWithVerticalsM(line);
+    if(l!=null) m += l;
+  });
+  return m;
+}
+function panelBuilderSLPhaseLabel(key){ return key==='l' ? 'L' : String(key).toUpperCase(); }
+// A cross-module / branching block is a junction, not a load: whatever hangs
+// on the same net hangs off IT (see chat — КРСМ hands L1 on to the
+// contactor and a master breaker). Recognised by type, or by name for
+// equipment typed "Прочее".
+function panelBuilderSLIsSplitter(p){
+  const t = panelBuilderPlacementDevType(p);
+  return t==='splitter' || (t==='other' && /кросс|крсм|разветв/i.test((p.name||'')+' '+(p.abbr||'')));
+}
+
+// Supply tree, built from the loads UP (see chat). Terminals joined by
+// phase-coloured wires form nets. A device takes its supply on its top
+// points (on its bottom ones only if that's the only side wired) and hands
+// current on through the other side. Starting from each device: the net it
+// is supplied from → whoever hands current onto that net (or, if a branching
+// block sits on the net, that block) → that device's own supply net → ... →
+// an input. Each phase is its own lane: a device fed from two places (a
+// contactor behind two single-phase relays) simply has one feed per phase.
+// N/PE wires and buses carrying them never take part.
+function panelBuilderSLModel(){
+  const devs = panelPlacements.filter(p=>p.kind==='item');
+  const devIds = new Set(devs.map(p=>p.id));
+  const linkedIds = new Set(panelLinks.map(l=>l.placementId));
+  const spec = panelBuilderInputSpec();
+  const tk = (id,side,index)=> devIds.has(id) ? id+'|'+side+'|'+index : 'x:'+id;   // a bus/comb/input is one terminal
+  const par = new Map();
+  const find = k=>{
+    if(!par.has(k)) par.set(k,k);
+    let r = k; while(par.get(r)!==r) r = par.get(r);
+    while(par.get(k)!==r){ const nx = par.get(k); par.set(k,r); k = nx; }
+    return r;
+  };
+  const touched = new Set(), inputKeys = [], wiredTerm = new Set();
+  panelWireLinks.forEach(w=>{
+    [w.aId,w.bId].forEach(id=>{
+      if(devIds.has(id)) touched.add(id);
+      if(typeof id==='string' && id.indexOf('input:')===0){
+        const s = spec[parseInt(id.split(':')[1],10)];
+        if(s && !inputKeys.includes(s.key)) inputKeys.push(s.key);
+      }
+    });
+    if(!panelBuilderIsPhaseColor(w.colorKey)) return;
+    const ka = tk(w.aId,w.aSide,w.aIndex), kb = tk(w.bId,w.bSide,w.bIndex);
+    wiredTerm.add(ka); wiredTerm.add(kb);
+    const a = find(ka), b = find(kb);
+    if(a!==b) par.set(a,b);
+  });
+  const used = devs.filter(p=>touched.has(p.id) || linkedIds.has(p.id));
+  if(!used.length) return null;
+  const ord = (a,b)=> (a.row-b.row) || (a.col-b.col);
+  used.sort(ord);
+  // A cross-module / branching block is ONE conductor inside: every point
+  // wired to it is the same net, whichever of its points a wire lands on.
+  used.forEach(d=>{
+    if(!panelBuilderSLIsSplitter(d)) return;
+    let first = null;
+    ['top','bottom'].forEach(side=>{
+      const n = (side==='top' ? d.topPoints : d.bottomPoints) || 0;
+      for(let i=0;i<n;i++){
+        const k = tk(d.id,side,i);
+        if(!wiredTerm.has(k)) continue;
+        const r = find(k);
+        if(first===null) first = r; else if(r!==first) par.set(r, first);
+      }
+    });
+  });
+
+  const srcLabels = new Map();
+  spec.forEach((s,i)=>{
+    if(!panelBuilderIsPhaseColor(s.key)) return;
+    const net = find('x:input:'+i);
+    if(!srcLabels.has(net)) srcLabels.set(net,new Set());
+    srcLabels.get(net).add(panelBuilderSLPhaseLabel(s.key));
+  });
+  const wiredIdx = (d,side)=>{
+    const n = side==='top' ? (d.topPoints||0) : (d.bottomPoints||0), r = [];
+    for(let i=0;i<n;i++) if(wiredTerm.has(tk(d.id,side,i))) r.push(i);
+    return r;
+  };
+  const info = new Map();
+  used.forEach(d=>{
+    const wt = wiredIdx(d,'top'), wb = wiredIdx(d,'bottom');
+    const supply = (wb.length && !wt.length) ? 'bottom' : 'top';
+    info.set(d.id, {supply, out: supply==='top' ? 'bottom' : 'top', sIdx: supply==='top' ? wt : wb, oIdx: supply==='top' ? wb : wt});
+  });
+  const netCons = new Map(), netOuts = new Map();
+  const push = (m,k,v)=>{ if(!m.has(k)) m.set(k,[]); m.get(k).push(v); };
+  used.forEach(d=>{
+    const f = info.get(d.id);
+    f.sIdx.forEach(i=>push(netCons, find(tk(d.id,f.supply,i)), {d, i}));
+    f.oIdx.forEach(i=>push(netOuts, find(tk(d.id,f.out,i)), {d, i}));
+  });
+
+  // Which phases a net carries: a source's own phase, or whatever the device
+  // handing current onto it takes in on the SAME pole (else on all of them).
+  const phaseMemo = new Map(), visiting = new Set();
+  const netPhases = net=>{
+    if(phaseMemo.has(net)) return phaseMemo.get(net);
+    if(visiting.has(net)) return new Set();
+    visiting.add(net);
+    const set = new Set();
+    (srcLabels.get(net)||[]).forEach(l=>set.add(l));
+    (netOuts.get(net)||[]).forEach(o=>{
+      const f = info.get(o.d.id);
+      const idxs = f.sIdx.includes(o.i) ? [o.i] : f.sIdx;
+      idxs.forEach(i=>netPhases(find(tk(o.d.id,f.supply,i))).forEach(l=>set.add(l)));
+    });
+    visiting.delete(net); phaseMemo.set(net,set); return set;
+  };
+
+  const nodes = new Map(used.map(p=>[p.id,{p, children:[], parent:null, feeds:new Map(), lanes:[], depth:0, isSplitter:panelBuilderSLIsSplitter(p), x:0}]));
+  used.forEach(c=>{
+    const n = nodes.get(c.id), f = info.get(c.id), seen = new Set(), lanes = new Set();
+    f.sIdx.forEach(i=>{
+      const net = find(tk(c.id,f.supply,i));
+      if(seen.has(net)) return; seen.add(net);
+      const phases = [...netPhases(net)];
+      phases.forEach(l=>lanes.add(l));
+      const cons = netCons.get(net)||[], outs = netOuts.get(net)||[];
+      const junction = cons.map(x=>x.d).filter(d=>nodes.get(d.id).isSplitter).sort(ord)[0];
+      let parentDev = null;
+      if(junction && junction.id!==c.id) parentDev = junction;
+      else parentDev = [...new Map(outs.map(o=>[o.d.id,o.d])).values()].filter(d=>d.id!==c.id).sort(ord)[0] || null;
+      if(!parentDev) return;                       // fed straight from a source (or an orphan net)
+      (phases.length ? phases : ['']).forEach(l=>{ if(!n.feeds.has(l)) n.feeds.set(l, nodes.get(parentDev.id)); });
+    });
+    n.lanes = lanes.size ? [...lanes] : [''];
+  });
+  const laneOrder = [...new Set([...nodes.values()].flatMap(n=>n.lanes))].sort();
+  nodes.forEach(n=>{ n.lanes.sort((a,b)=>laneOrder.indexOf(a)-laneOrder.indexOf(b)); });
+
+  // depth = longest way down from a source, so every device sits below all of its feeders
+  const dm = new Map(), vis = new Set();
+  const depthOf = n=>{
+    if(dm.has(n)) return dm.get(n);
+    if(vis.has(n)) return 0;
+    vis.add(n);
+    let d = 0; n.feeds.forEach(p=>{ d = Math.max(d, depthOf(p)+1); });
+    vis.delete(n); dm.set(n,d); return d;
+  };
+  nodes.forEach(n=>{ n.depth = depthOf(n); });
+  nodes.forEach(n=>{ [...n.feeds.entries()].forEach(([l,p])=>{ if(p.depth>=n.depth) n.feeds.delete(l); }); });   // wiring loops
+  nodes.forEach(n=>{
+    const ps = [...new Set(n.feeds.values())].sort((a,b)=>(b.depth-a.depth) || ord(a.p,b.p));
+    n.parent = ps[0] || null;                      // the nearest feeder places it; the others become extra lines
+  });
+  const feeder = new Set(); nodes.forEach(n=>n.feeds.forEach(p=>feeder.add(p)));
+  nodes.forEach(n=>{ if(n.parent) n.parent.children.push(n); });
+  const lane0 = n=>{ for(const [l,p] of n.feeds) if(p===n.parent) return laneOrder.indexOf(l); return 0; };
+  const multiFed = n=>new Set(n.feeds.values()).size>1 ? 1 : 0;
+  nodes.forEach(n=>n.children.sort((a,b)=>(lane0(a)-lane0(b)) || (multiFed(a)-multiFed(b)) || ord(a.p,b.p)));
+  const roots = used.filter(p=>!nodes.get(p.id).parent).map(p=>nodes.get(p.id));
+
+  const COL_W = PB_SL.COL_W;
+  let maxDepth = 0;
+  const layout = (n, left)=>{
+    if(n.depth>maxDepth) maxDepth = n.depth;
+    if(!n.children.length){ n.w = COL_W; n.left = left; n.cx = left + COL_W/2; return; }
+    let x = left;
+    n.children.forEach(ch=>{ layout(ch, x); x += ch.w; });
+    n.w = Math.max(COL_W, x-left); n.left = left;
+    n.cx = (n.children[0].cx + n.children[n.children.length-1].cx)/2;
+  };
+  let x = 0;
+  roots.forEach(r=>{ layout(r, x); x += r.w; });
+  const totalW = x;
+
+  const counters = {}; const leaves = [];
+  const walk = n=>{
+    const prefix = PB_SL_REF[panelBuilderPlacementDevType(n.p)];
+    if(prefix){ counters[prefix] = (counters[prefix]||0)+1; n.ref = prefix + counters[prefix]; } else n.ref = '';
+    if(!n.children.length && !feeder.has(n)){
+      const cols = panelLinks.filter(l=>l.placementId===n.p.id).map(l=>l.color);
+      const cables = [...new Set(cols.map(c=>colorCableTypes[c]).filter(Boolean))];
+      const lenM = cols.reduce((s,c)=>s+panelBuilderColorLengthM(c), 0);
+      n.group = {
+        num: leaves.length+1, id: n.p.id,
+        name: cols.map(c=>colorLabels[c]||colorName(c)).join(', ') || n.p.name,
+        cable: cables.join(' / '), lengthM: lenM>0 ? lenM : null,
+        phase: n.lanes.filter(Boolean).join(', ')
+      };
+      leaves.push(n);
+    }
+    n.children.forEach(walk);
+  };
+  roots.forEach(walk);
+  return {roots, leaves, nodes, totalW, maxDepth, inputKeys, laneOrder, feeder};
+}
+
+// "Ввод: 2 фазы (L1, L2), N, PE" — only what is actually wired to a device
+// (see chat: a 3-phase panel supplied with two phases must say two).
+function panelBuilderSLInputText(inputKeys){
+  const order = ['l','l1','l2','l3'];
+  const ph = order.filter(k=>inputKeys.includes(k)).map(panelBuilderSLPhaseLabel);
+  const parts = [];
+  if(ph.length) parts.push(ph.length+' '+(ph.length===1 ? 'фаза' : 'фазы')+' ('+ph.join(', ')+')');
+  if(inputKeys.includes('n')) parts.push('N');
+  if(inputKeys.includes('pe')) parts.push('PE');
+  return 'Ввод' + (parts.length ? ': '+parts.join(', ') : '');
+}
+
+function panelBuilderSLWrap(ctx, text, maxW, maxLines){
+  const words = String(text).split(/\s+/).filter(Boolean); const out = []; let cur = '';
+  words.forEach(w=>{
+    const t = cur ? cur+' '+w : w;
+    if(!cur || ctx.measureText(t).width<=maxW) cur = t; else { out.push(cur); cur = w; }
+  });
+  if(cur) out.push(cur);
+  if(out.length>maxLines){
+    out.length = maxLines;
+    let last = out[maxLines-1];
+    while(last.length>1 && ctx.measureText(last+'…').width>maxW) last = last.slice(0,-1);
+    out[maxLines-1] = last+'…';
+  }
+  return out.map(l=>{ while(l.length>1 && ctx.measureText(l).width>maxW) l = l.slice(0,-1); return l; });
+}
+
+// One device symbol, current flowing down, one pole per x in `xs` (several
+// poles = several phases, each drawn separately and tied by a dashed line).
+function panelBuilderSLDrawSymbol(ctx, type, poles, xs, y){
+  const L = PB_SL.SYM_L, m = xs.length, cx = (xs[0]+xs[m-1])/2;
+  ctx.strokeStyle = '#000'; ctx.fillStyle = '#000'; ctx.lineWidth = 1.4; ctx.lineCap = 'round';
+  const ln = (x1,y1,x2,y2)=>{ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); };
+  const ticks = x=>{ for(let k=0;k<poles && poles>=2 && m===1;k++){ const yy = y+L-12+k*3; ln(x-3,yy+1.5,x+3,yy-1.5); } };
+  const contact = (x, cross, arc)=>{
+    ln(x,y, x,y+14);
+    ln(x,y+14, x-8,y+L-18);
+    ln(x,y+L-14, x,y+L);
+    if(cross){ ln(x-3.5,y+10.5,x+3.5,y+17.5); ln(x+3.5,y+10.5,x-3.5,y+17.5); }
+    if(arc){ ctx.beginPath(); ctx.arc(x, y+L-14, 4, Math.PI, 0); ctx.stroke(); }
+    ticks(x);
+  };
+  const circleOnWire = x=>{ ctx.beginPath(); ctx.arc(x, y+5, 3.6, 0, Math.PI*2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.stroke(); ctx.fillStyle = '#000'; };
+  const linked = ()=>{ if(m<2) return; ctx.save(); ctx.setLineDash([3,3]); ln(xs[0]-4, y+L/2, xs[m-1]-4, y+L/2); ctx.restore(); };   // mechanical link between poles
+  const box = inner=>{
+    xs.forEach(x=>{ ln(x,y, x,y+12); ln(x,y+L-12, x,y+L); });
+    ctx.strokeRect(xs[0]-9, y+12, xs[m-1]-xs[0]+18, L-24);
+    if(inner){ ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(inner, cx, y+L/2); }
+  };
+  switch(type){
+    case 'breaker': xs.forEach(x=>contact(x,true,false)); linked(); break;
+    case 'difavto': xs.forEach(x=>{ contact(x,true,false); circleOnWire(x); }); linked(); break;
+    case 'rcd': xs.forEach(x=>{ contact(x,false,false); circleOnWire(x); }); linked(); break;
+    case 'load_switch': xs.forEach(x=>contact(x,false,false)); linked(); break;
+    case 'contactor': xs.forEach(x=>contact(x,false,true)); linked(); break;
+    case 'voltage_relay': box('U'); break;
+    case 'spd': box(''); ln(cx-5,y+L-18,cx+5,y+18); break;
+    case 'meter':
+      xs.forEach(x=>{ ln(x,y, x,y+14); ln(x,y+L-14, x,y+L); });
+      ctx.beginPath(); ctx.arc(cx, y+L/2, 12, 0, Math.PI*2); ctx.stroke();
+      ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('Wh', cx, y+L/2); break;
+    case 'splitter':
+      xs.forEach(x=>{ ln(x,y, x,y+L); ctx.beginPath(); ctx.arc(x, y+L/2, 3.6, 0, Math.PI*2); ctx.fill(); });
+      if(m>1) ln(xs[0], y+L/2, xs[m-1], y+L/2);
+      break;
+    default: box('');
+  }
+}
+
+function panelBuilderRenderSingleLine(scale){
+  const model = panelBuilderSLModel();
+  if(!model) return null;
+  const {roots, leaves, nodes, totalW, maxDepth, inputKeys, laneOrder, feeder} = model;
+  const {SYM_L, V_GAP, MARGIN, POLE_DX, LANE_DY} = PB_SL;
+  const realLanes = laneOrder.filter(Boolean), nl = Math.max(1, realLanes.length);
+  const TOP_BUS = 100, INPUT_DY = 14, ROOT_Y = TOP_BUS + nl*INPUT_DY + 22;
+  const baseY = ROOT_Y + maxDepth*(SYM_L+V_GAP) + SYM_L + 26;
+  const W = Math.max(totalW + MARGIN*2, 560), H = baseY + 160;
+  scale = Math.min(scale, 16000/Math.max(W,H));            // stay inside the browser's canvas size limit
+  const offX = MARGIN + (W - MARGIN*2 - totalW)/2;
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(W*scale); canvas.height = Math.round(H*scale);
+  canvas._lw = W; canvas._lh = H;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(scale, scale);
+  ctx.fillStyle = '#fff'; ctx.fillRect(0,0,W,H);
+  const stroke = ()=>{ ctx.strokeStyle = '#000'; ctx.fillStyle = '#000'; ctx.lineWidth = 1.4; ctx.lineCap = 'round'; };
+  stroke();
+  const ln = (x1,y1,x2,y2)=>{ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); };
+  const dot = (x,y)=>{ ctx.beginPath(); ctx.arc(x,y,2.6,0,Math.PI*2); ctx.fill(); };
+  const X = n=>offX+n.cx, Y = n=>ROOT_Y + n.depth*(SYM_L+V_GAP);
+  const li = l=>Math.max(0, realLanes.indexOf(l));
+  const xp = (n,l)=>{ const k = n.lanes.indexOf(l); return X(n) + ((k<0?0:k) - (n.lanes.length-1)/2)*POLE_DX; };
+  const small = (text,x,y)=>{ ctx.font = '9.5px sans-serif'; ctx.fillStyle = '#444'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillText(text,x,y); ctx.fillStyle = '#000'; };
+
+  // Title block
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.font = 'bold 17px sans-serif'; ctx.fillText('Однолинейная схема щита', MARGIN, 32);
+  const pn = (document.getElementById('project-name')||{}).value;
+  if(pn && pn.trim()){ ctx.font = '12px sans-serif'; ctx.fillStyle = '#444'; ctx.fillText(pn.trim(), MARGIN, 52); ctx.fillStyle = '#000'; }
+  if(String(panelDeclaredPower).trim()){
+    ctx.textAlign = 'right'; ctx.font = '12px sans-serif';
+    ctx.fillText('Заявленная мощность: '+String(panelDeclaredPower).trim()+' кВт', W-MARGIN, 32); ctx.textAlign = 'left';
+  }
+
+  // Supply: one input line per phase. The lane that ends furthest right takes
+  // the upper line, so no phase's line has to cross another's drop.
+  ctx.font = '11px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText(panelBuilderSLInputText(inputKeys), MARGIN+14, TOP_BUS-20);
+  const lanesIn = realLanes.length ? realLanes : [''];
+  lanesIn.forEach(l=>{
+    const y = TOP_BUS + (lanesIn.length-1-li(l))*INPUT_DY;
+    const rs = roots.filter(r=>r.lanes.includes(l));
+    if(!rs.length) return;
+    const xs = rs.map(r=>xp(r,l)), x2 = Math.max(...xs);
+    ln(MARGIN, y, x2, y);
+    ctx.beginPath(); ctx.moveTo(MARGIN+9,y); ctx.lineTo(MARGIN,y-3.5); ctx.lineTo(MARGIN,y+3.5); ctx.closePath(); ctx.fill();
+    if(l) small(l, MARGIN+14, y-4);
+    rs.forEach(r=>{ const x = xp(r,l); ln(x, y, x, ROOT_Y); if(x<x2) dot(x,y); });
+  });
+
+  // Devices
+  const isGroup = n=>!n.children.length && !feeder.has(n);
+  nodes.forEach(n=>{
+    const y0 = Y(n), p = n.p, xs = n.lanes.map(l=>xp(n,l));
+    const type = n.isSplitter ? 'splitter' : panelBuilderPlacementDevType(p), poles = panelBuilderPlacementPoles(p);
+    panelBuilderSLDrawSymbol(ctx, type, poles, xs, y0);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = '#000';
+    // Full name, not the abbreviation (see chat): designation and rating on
+    // one bold line, then the name wrapped to at most three lines — which is
+    // as far as it can go before it would run into the bus line below.
+    const lx = xs[xs.length-1]+14, avail = PB_SL.COL_W - 28 - (xs[xs.length-1]-X(n));
+    let ty = y0 + 16;
+    const head = [n.ref, p.rating].filter(Boolean).join('  ');
+    if(head){ ctx.font = 'bold 11px sans-serif'; ctx.fillText(head, lx, ty); ty += 13; }
+    ctx.font = '10.5px sans-serif';
+    panelBuilderSLWrap(ctx, p.name || p.abbr || '', avail, head ? 3 : 4).forEach(l=>{ ctx.fillText(l, lx, ty); ty += 12; });
+    stroke();
+  });
+
+  // Lines, phase by phase: from a device's pole straight down to a bus at that
+  // phase's own height, along it, and down into each child's pole for the same phase.
+  const groups = new Map();
+  nodes.forEach(c=>c.feeds.forEach((p,l)=>{
+    const key = p.p.id+'|'+l;
+    if(!groups.has(key)) groups.set(key,{p,l,kids:[]});
+    groups.get(key).kids.push(c);
+  }));
+  groups.forEach(g=>{
+    const {p,l,kids} = g;
+    const sx = xp(p,l), yb = Y(p)+SYM_L+10+li(l)*LANE_DY;
+    const cxs = kids.map(c=>xp(c,l));
+    const x1 = Math.min(sx,...cxs), x2 = Math.max(sx,...cxs);
+    ln(sx, Y(p)+SYM_L, sx, yb);
+    ln(x1, yb, x2, yb);
+    [sx,...cxs].forEach(x=>{ if(x>x1+0.5 && x<x2-0.5) dot(x,yb); });
+    kids.forEach(c=>{
+      const x = xp(c,l);
+      ln(x, yb, x, Y(c));
+      // name the phase where lines of different phases sit side by side
+      if(l && !isGroup(c) && (c.lanes.length>1 || p.lanes.length>1)){
+        const left = c.lanes.length>1 && c.lanes.indexOf(l) < c.lanes.length/2;   // keep neighbouring phase tags apart
+        if(left){ ctx.font = '9.5px sans-serif'; ctx.fillStyle = '#444'; ctx.textAlign = 'right'; ctx.fillText(l, x-4, Y(c)-5); ctx.fillStyle = '#000'; ctx.textAlign = 'left'; }
+        else small(l, x+4, Y(c)-5);
+      }
+    });
+  });
+  // groups: carry each pole's line down to the common baseline, then the annotation
+  leaves.forEach(n=>{
+    const cx = X(n), y0 = Y(n), g = n.group, maxW = PB_SL.COL_W-14;
+    n.lanes.forEach(l=>{ const x = xp(n,l); ln(x, y0+SYM_L, x, baseY); ctx.beginPath(); ctx.arc(x, baseY, 3, 0, Math.PI*2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.stroke(); ctx.fillStyle = '#000'; });
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    let yy = baseY + 18;
+    ctx.font = 'bold 12px sans-serif'; ctx.fillText('Гр. '+g.num, cx, yy); yy += 14;
+    ctx.font = 'bold 11px sans-serif';
+    panelBuilderSLWrap(ctx, g.name, maxW, 2).forEach(l=>{ ctx.fillText(l, cx, yy); yy += 13; });
+    ctx.font = '10.5px sans-serif'; ctx.fillStyle = '#333';
+    if(g.cable) panelBuilderSLWrap(ctx, g.cable, maxW, 2).forEach(l=>{ ctx.fillText(l, cx, yy); yy += 13; });
+    if(g.lengthM!=null){ ctx.fillText('≈ '+g.lengthM.toFixed(1)+' м', cx, yy); yy += 13; }
+    if(g.phase){ ctx.fillText((g.phase.indexOf(',')>=0 ? 'Фазы ' : 'Фаза ')+g.phase, cx, yy); yy += 13; }
+    const pw = String(panelGroupPower[g.id]||'').trim();
+    if(pw){ ctx.fillStyle = '#000'; ctx.fillText('P = '+pw+' кВт', cx, yy); yy += 13; }
+    stroke(); ctx.textAlign = 'left';
+  });
+  ctx.font = '9px sans-serif'; ctx.fillStyle = '#777'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText('Условные обозначения упрощённые. N и PE отдельными линиями не показаны. Схема составлена на provodka.org', MARGIN, H-10);
+  return canvas;
+}
+
+function panelBuilderCloseSingleLine(){ document.getElementById('pb-sl-modal').style.display = 'none'; }
+function panelBuilderSLApplyView(){
+  const img = document.getElementById('pb-sl-preview'); if(!img) return;
+  img.style.transform = 'translate('+panelSLView.x+'px,'+panelSLView.y+'px) scale('+panelSLView.s+')';
+}
+function panelBuilderSLFit(){
+  const v = document.getElementById('pb-sl-view'); if(!v) return;
+  panelSLView.s = Math.max(0.05, Math.min(1, (v.clientWidth-16)/panelSLView.w));
+  panelSLView.x = 8; panelSLView.y = 8;
+  panelBuilderSLApplyView();
+}
+function panelBuilderSLZoomAt(factor, mx, my){
+  const v = panelSLView, ns = Math.max(0.05, Math.min(8, v.s*factor));
+  v.x = mx - (mx - v.x)*(ns/v.s); v.y = my - (my - v.y)*(ns/v.s); v.s = ns;
+  panelBuilderSLApplyView();
+}
+function panelBuilderSLPreview(fit){
+  const img = document.getElementById('pb-sl-preview'); if(!img) return;
+  const c = panelBuilderRenderSingleLine(2);
+  if(!c) return;
+  panelSLView.w = c._lw; panelSLView.h = c._lh;
+  img.style.width = c._lw+'px';
+  img.src = c.toDataURL('image/png');
+  if(fit) panelBuilderSLFit(); else panelBuilderSLApplyView();
+}
+// Wheel zooms around the cursor; the middle button (or a plain drag) pans,
+// the same way the main drawing and the builder canvas behave.
+function panelBuilderSLBindView(){
+  const v = document.getElementById('pb-sl-view'); if(!v) return;
+  v.addEventListener('wheel', e=>{
+    e.preventDefault();
+    const r = v.getBoundingClientRect();
+    panelBuilderSLZoomAt(Math.exp(-e.deltaY*0.0015), e.clientX-r.left, e.clientY-r.top);
+  }, {passive:false});
+  v.addEventListener('mousedown', e=>{ if(e.button===1) e.preventDefault(); });   // no browser autoscroll on the middle button
+  v.addEventListener('auxclick', e=>e.preventDefault());
+  let pan = null;
+  v.addEventListener('pointerdown', e=>{
+    if(e.button!==0 && e.button!==1) return;
+    e.preventDefault();
+    pan = {x:e.clientX, y:e.clientY, ox:panelSLView.x, oy:panelSLView.y};
+    v.setPointerCapture(e.pointerId); v.style.cursor = 'grabbing';
+  });
+  v.addEventListener('pointermove', e=>{
+    if(!pan) return;
+    panelSLView.x = pan.ox + (e.clientX-pan.x); panelSLView.y = pan.oy + (e.clientY-pan.y);
+    panelBuilderSLApplyView();
+  });
+  const end = ()=>{ pan = null; v.style.cursor = 'grab'; };
+  v.addEventListener('pointerup', end); v.addEventListener('pointercancel', end);
+  const center = f=>{ panelBuilderSLZoomAt(f, v.clientWidth/2, v.clientHeight/2); };
+  document.getElementById('pb-sl-zin').addEventListener('click', ()=>center(1.25));
+  document.getElementById('pb-sl-zout').addEventListener('click', ()=>center(0.8));
+  document.getElementById('pb-sl-fit').addEventListener('click', panelBuilderSLFit);
+}
+function panelBuilderOpenSingleLine(){
+  const modal = document.getElementById('pb-sl-modal');
+  const box = document.getElementById('pb-sl-content');
+  const model = panelBuilderSLModel();
+  modal.style.display = 'flex';
+  if(!model){
+    box.innerHTML = '<p style="font-size:13px;color:#aaa;line-height:1.5">В схеме щитка пока нет оборудования с подключениями. Расставьте аппараты и соедините их проводами — тогда здесь появится схема.</p>';
+    document.getElementById('pb-sl-download').style.display = 'none';
+    return;
+  }
+  document.getElementById('pb-sl-download').style.display = '';
+  const th = 'text-align:left;padding:4px 8px;color:#777;font-weight:600;border-bottom:1px solid #333';
+  const td = 'padding:4px 8px;border-bottom:1px solid #2a2a2a;color:#ccc';
+  let rows = '';
+  model.leaves.forEach(n=>{
+    const g = n.group, p = n.p;
+    rows += `<tr><td style="${td}">${g.num}</td><td style="${td}">${panelEsc(g.name)}</td>
+      <td style="${td}">${panelEsc((p.name||p.abbr||'')+(p.rating?' '+p.rating:''))}</td>
+      <td style="${td}">${panelEsc(g.cable||'—')}</td>
+      <td style="${td}">${g.lengthM!=null ? '≈ '+g.lengthM.toFixed(1)+' м' : '—'}</td>
+      <td style="${td}">${panelEsc(g.phase||'—')}</td>
+      <td style="${td}"><input class="pb-sl-power prop-input" data-id="${g.id}" type="text" inputmode="decimal" placeholder="—" value="${panelEsc(panelGroupPower[g.id]||'')}" style="width:64px"></td></tr>`;
+  });
+  box.innerHTML = `
+    <p style="font-size:12px;color:#888;line-height:1.5;margin-bottom:12px">Схема строится по тому, что собрано в конструкторе. Ничего не рассчитывается: мощность — необязательное поле, заполняйте только там, где она вам известна (плита, духовка, бойлер).</p>
+    <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#aaa;margin-bottom:12px">Заявленная мощность щита, кВт
+      <input id="pb-sl-declared" class="prop-input" type="text" inputmode="decimal" placeholder="—" value="${panelEsc(panelDeclaredPower)}" style="width:80px"></label>
+    <div style="overflow:auto;max-height:26vh;margin-bottom:14px"><table style="border-collapse:collapse;font-size:12px;width:100%">
+      <thead><tr><th style="${th}">№</th><th style="${th}">Группа</th><th style="${th}">Аппарат</th><th style="${th}">Кабель</th><th style="${th}">Длина</th><th style="${th}">Фаза</th><th style="${th}">P, кВт</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+      <button id="pb-sl-zout" style="width:28px;height:26px;background:#2a2a2a;border:1px solid #444;border-radius:5px;color:#ccc;cursor:pointer">−</button>
+      <button id="pb-sl-zin" style="width:28px;height:26px;background:#2a2a2a;border:1px solid #444;border-radius:5px;color:#ccc;cursor:pointer">+</button>
+      <button id="pb-sl-fit" style="height:26px;padding:0 10px;background:#2a2a2a;border:1px solid #444;border-radius:5px;color:#ccc;font-size:11px;cursor:pointer">Вписать</button>
+      <span style="font-size:11px;color:#666">колёсико — масштаб, зажатое колёсико или перетаскивание — сдвиг</span>
+    </div>
+    <div id="pb-sl-view" style="position:relative;overflow:hidden;height:46vh;background:#fff;border-radius:6px;cursor:grab;touch-action:none"><img id="pb-sl-preview" alt="Однолинейная схема щита" draggable="false" style="position:absolute;left:0;top:0;transform-origin:0 0;max-width:none;user-select:none;-webkit-user-drag:none"></div>`;
+  let t = null;
+  const later = ()=>{ clearTimeout(t); t = setTimeout(()=>panelBuilderSLPreview(false), 250); };
+  box.querySelectorAll('.pb-sl-power').forEach(inp=>inp.addEventListener('input', ()=>{ panelGroupPower[inp.dataset.id] = inp.value; later(); }));
+  document.getElementById('pb-sl-declared').addEventListener('input', e=>{ panelDeclaredPower = e.target.value; later(); });
+  panelBuilderSLBindView();
+  panelBuilderSLPreview(true);
+}
+function panelBuilderDownloadSingleLine(){
+  const c = panelBuilderRenderSingleLine(2);
+  if(!c){ alert('Нечего рисовать — в схеме щитка нет оборудования с подключениями.'); return; }
+  c.toBlob(blob=>{
+    if(!blob){ alert('Не удалось сформировать PNG.'); return; }
+    const pn = ((document.getElementById('project-name')||{}).value||'').trim() || 'щиток';
+    const a = document.createElement('a'); const url = URL.createObjectURL(blob);
+    a.href = url; a.download = pn.replace(/[\\/:*?"<>|]+/g,'_')+' — однолинейная схема.png';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 2000);
+  }, 'image/png');
+}
+
 function panelBuilderDownloadSchematic(){
   let canvas;
   try { canvas = panelBuilderRenderToCanvas(2); }

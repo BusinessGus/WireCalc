@@ -15042,6 +15042,8 @@ function panelBuilderPhaseConflict(aId, aSide, aIndex, bId, bSide, bIndex, color
   if(!panelBuilderIsPhaseColor(colorKey)) return null;
   const resolved = panelBuilderTraceToInput(aId, aSide, aIndex, new Set())
                 || panelBuilderTraceToInput(bId, bSide, bIndex, new Set())
+                || panelBuilderPointExistingPhaseColor(aId, aSide, aIndex)
+                || panelBuilderPointExistingPhaseColor(bId, bSide, bIndex)
                 || colorKey;
   const endpoints=[[aId,aSide,aIndex],[bId,bSide,bIndex]];
   for(const [devId, side, index] of endpoints){
@@ -15535,6 +15537,7 @@ function panelBuilderStartRouteSegMove(e, w, segId, layout, svg){
 function renderPanelBuilderGrid(){
   const wrap=document.getElementById('pb-grid');
   if(!wrap) return;
+  panelBuilderEnsureBusVRoutes();
   const layout = panelBuilderLayout();
   const {totalW, totalH, rows} = layout;
   let html = `<div style="display:inline-block; box-sizing:content-box; padding:0 ${PB_GRID_SIDE_PAD}px; min-width:${totalW}px; transform:translate(${panelBuilderView.x}px,${panelBuilderView.y}px) scale(${panelBuilderView.s}); transform-origin:0 0">`;
@@ -15871,12 +15874,77 @@ function panelBuilderAssignClearDefault(w, layout){
 // OTHER wire (see chat — dragging a second, parallel wire off a point
 // that already has a phase connected should just inherit it, the same
 // physical terminal can't sensibly carry two different phases)?
+
+// Фазный провод нельзя соединять с нулевым/земляным в одной точке (see chat).
+function panelBuilderPointKindConflict(id, side, index, colorKey){
+  const newIsPhase = panelBuilderIsPhaseColor(colorKey);
+  for(const w of panelWireLinks){
+    const touches = (w.aId===id && w.aSide===side && w.aIndex===index) || (w.bId===id && w.bSide===side && w.bIndex===index);
+    if(!touches) continue;
+    const exIsPhase = panelBuilderIsPhaseColor(panelBuilderResolvePhaseColor(w));
+    if(exIsPhase!==newIsPhase){
+      const name = panelBuilderEndpointName(id) || 'этой точке';
+      return `Нельзя соединять фазный провод с нулевым или земляным в одной точке («${name}»: уже подключён ${panelWireColorInfo(panelBuilderResolvePhaseColor(w)).label}, а вы тянете ${panelWireColorInfo(colorKey).label}). Провод не создан.`;
+    }
+  }
+  return null;
+}
+
+// ── Линии от вертикальной (модульной) шины (see chat) ──
+// Из точки шины: по горизонтали в сторону выхода шины → на 90° к уровню
+// точки подключения → на 90° к точке → на 90° в точку. Поворот скруглён.
+function panelBuilderIsVBusId(id){
+  return typeof id==='string' && panelPlacements.some(p=>p.id===id && p.kind==='bus-v');
+}
+function panelBuilderBusVEligible(w){
+  const aV = panelBuilderIsVBusId(w.aId), bV = panelBuilderIsVBusId(w.bId);
+  if(aV===bV) return false;
+  const eqId = aV ? w.bId : w.aId;
+  const eq = panelPlacements.find(p=>p.id===eqId);
+  return !!(eq && eq.row>=0 && eq.kind!=='bus-h' && eq.kind!=='bus-v' && eq.kind!=='comb');
+}
+function panelBuilderMakeBusVRoute(w){
+  if(w.route || !panelBuilderBusVEligible(w)) return false;
+  if(w.zY1!=null || w.zY2!=null || w.zMidX!=null || w.y!=null || w.xA!=null || w.xB!=null) return false; // moved by hand in the old shape
+  w.route=true; w.busv=true; delete w.manualEdit;
+  w.pts=[{x:0,y:0},{x:0,y:0},{x:0,y:0}];
+  return true;
+}
+function panelBuilderEnsureBusVRoutes(){
+  panelWireLinks.forEach(w=>{ if(!w.route) panelBuilderMakeBusVRoute(w); });
+}
+const PB_BUSV_OUT = 20;
+// Waypoints in A→B order.
+function panelBuilderBusVDefaultPts(w, A, B){
+  const aIsBus = panelBuilderIsVBusId(w.aId);
+  const bus = panelPlacements.find(p=>p.id===(aIsBus?w.aId:w.bId));
+  const P = aIsBus ? A.xy : B.xy, T = aIsBus ? B.xy : A.xy;
+  const tSide = aIsBus ? w.bSide : w.aSide;
+  const R = PB_WIRE_STUB + PB_WIRE_CORNER_RADIUS;
+  const xOut = P.x + (bus.busSide==='left' ? -PB_BUSV_OUT : PB_BUSV_OUT);
+  const yT = T.y + (tSide==='bottom' ? R : -R);
+  const wp = [{x:xOut,y:P.y},{x:xOut,y:yT},{x:T.x,y:yT}];
+  return aIsBus ? wp : wp.reverse();
+}
+
 function panelBuilderPointExistingPhaseColor(id, side, index){
   for(const w of panelWireLinks){
     const touches = (w.aId===id && w.aSide===side && w.aIndex===index) || (w.bId===id && w.bSide===side && w.bIndex===index);
     if(!touches) continue;
     const resolved = panelBuilderResolvePhaseColor(w);
     if(panelBuilderIsPhaseColor(resolved)) return resolved;
+  }
+  // Nothing on this very point yet: the phase passes THROUGH the device
+  // (same pole, opposite side) — a wire continuing from the bottom of a
+  // device fed by L2/L3 on top must be L2/L3 too, not the toolbar default.
+  if(typeof id==='string' && id.indexOf('input:')!==0){
+    const opp = side==='top' ? 'bottom' : 'top';
+    for(const w of panelWireLinks){
+      const touches = (w.aId===id && w.aSide===opp && w.aIndex===index) || (w.bId===id && w.bSide===opp && w.bIndex===index);
+      if(!touches) continue;
+      const resolved = panelBuilderResolvePhaseColor(w);
+      if(panelBuilderIsPhaseColor(resolved)) return resolved;
+    }
   }
   return null;
 }
@@ -15992,6 +16060,13 @@ function panelBuilderWirePolyline(w, layout){
   const A = panelBuilderEndpointInfo(w.aId, w.aSide, w.aIndex, layout);
   const B = panelBuilderEndpointInfo(w.bId, w.bSide, w.bIndex, layout);
   if(!A || !B) return null;
+  if(panelBuilderConnKind(w)==='route' && w.busv){
+    if(!w.manualEdit || w.pts.length!==3) w.pts = panelBuilderBusVDefaultPts(w, A, B);
+    const wp = w.pts.map(p=>({x:p.x, y:p.y}));
+    if(panelBuilderIsVBusId(w.aId)){ wp[0].y=A.xy.y; wp[1].x=wp[0].x; wp[2].y=wp[1].y; wp[2].x=B.xy.x; }
+    else { wp[2].y=B.xy.y; wp[2].x=wp[1].x; wp[1].y=wp[0].y; wp[0].x=A.xy.x; }
+    return [A.xy, ...wp, B.xy];
+  }
   if(panelBuilderConnKind(w)==='route'){
     const wp = w.pts.map(p=>({x:p.x, y:p.y}));
     // the first/last legs stay vertical even when the equipment is moved sideways
@@ -16328,10 +16403,13 @@ function panelBuilderStartWireDrag(e, pointEl){
           const inherited = panelBuilderPointExistingPhaseColor(aId,finalASide,aIndex) || panelBuilderPointExistingPhaseColor(bId,finalBSide,bIndex);
           if(inherited) colorKey = inherited;
         }
-        const conflict = panelBuilderPhaseConflict(aId, finalASide, aIndex, bId, finalBSide, bIndex, colorKey);
+        const conflict = panelBuilderPointKindConflict(aId, finalASide, aIndex, colorKey)
+                      || panelBuilderPointKindConflict(bId, finalBSide, bIndex, colorKey)
+                      || panelBuilderPhaseConflict(aId, finalASide, aIndex, bId, finalBSide, bIndex, colorKey);
         if(conflict){ alert(conflict); panelWireDrag=null; renderPanelBuilder(); return; }
         panelBuilderSaveHistory();
         const w = {id:uid(), aId, aSide:finalASide, aIndex, bId, bSide:finalBSide, bIndex, colorKey};
+        panelBuilderMakeBusVRoute(w);
         panelBuilderAssignClearDefault(w, layout);
         panelWireLinks.push(w);
         // A new busbar-to-equipment wire is routed by the bus rules straight away (see chat).
@@ -16635,7 +16713,7 @@ function renderPanelBuilderWireProps(wrap){
     panelBuilderSaveHistory();
     delete w.y; delete w.xA; delete w.xB;
     delete w.zY1; delete w.zY2; delete w.zMidX;
-    delete w.flowX; delete w.route; delete w.pts; delete w.manualEdit;
+    delete w.flowX; delete w.route; delete w.pts; delete w.manualEdit; delete w.busv;
     renderPanelBuilder();
   });
   document.getElementById('pb-wire-delete').addEventListener('click', ()=>{
